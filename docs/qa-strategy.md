@@ -27,8 +27,9 @@ sheet of the Excel report — evidence, not silent filtering.
   content too short).
 - AI calls are wrapped: invalid JSON triggers one self-fix retry, then a fallback to the
   local analyzer. A missing API key never breaks the run.
-- Best-effort scrapers (remoteok, generic) catch network errors and return empty lists with
-  a warning instead of crashing the pipeline.
+- Best-effort sources (remoteok, remotive, themuse, greenhouse, lever and generic) catch
+  network/configuration errors and return empty lists with a warning instead of crashing the
+  pipeline.
 
 ## Logging
 

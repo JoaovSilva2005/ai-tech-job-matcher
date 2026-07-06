@@ -1,0 +1,117 @@
+import type { ScrapedJob, ScrapeOptions } from '../types';
+import { getEnv } from '../../config/env';
+import { classifyRole } from '../../matcher/classifyRole';
+import { nowIso } from '../../utils/date';
+import { normalizeWhitespace, stripHtml } from '../../utils/text';
+import { logger } from '../../utils/logger';
+import { normalizeWorkMode } from './sampleHtmlScraper';
+import { fetchPublicJson, parseCommaList } from './publicApiUtils';
+
+const GREENHOUSE_API = 'https://boards-api.greenhouse.io/v1/boards';
+const MAX_GREENHOUSE_JOBS = 20;
+const DEFAULT_GREENHOUSE_TOKENS = ['stripe'];
+
+interface GreenhouseResponse {
+  jobs?: GreenhouseJob[];
+}
+
+interface GreenhouseJob {
+  id?: number;
+  title?: string;
+  absolute_url?: string;
+  content?: string;
+  location?: { name?: string };
+  company_name?: string;
+  departments?: { name?: string }[];
+  offices?: { name?: string; location?: string }[];
+}
+
+export async function scrapeGreenhouseJobs(options: ScrapeOptions): Promise<ScrapedJob[]> {
+  const envTokens = parseCommaList(getEnv().GREENHOUSE_BOARD_TOKENS);
+  const boardTokens = envTokens.length > 0 ? envTokens : DEFAULT_GREENHOUSE_TOKENS;
+  const limit = Math.min(options.limit, MAX_GREENHOUSE_JOBS);
+  const scrapedAt = nowIso();
+  const jobs: ScrapedJob[] = [];
+
+  for (const token of boardTokens) {
+    const url = `${GREENHOUSE_API}/${encodeURIComponent(token)}/jobs?content=true`;
+    const data = await fetchPublicJson<GreenhouseResponse>(url, `Greenhouse (${token})`);
+    if (!data) continue;
+
+    for (const entry of data.jobs ?? []) {
+      const job = mapGreenhouseJob(entry, token, scrapedAt);
+      if (!job) continue;
+      if (!jobMatchesRequestedRole(options.role, job)) continue;
+
+      jobs.push(job);
+      if (jobs.length >= limit) break;
+    }
+
+    if (jobs.length >= limit) break;
+  }
+
+  if (jobs.length === 0) {
+    logger.warn(
+      'Greenhouse: no matching jobs found. Configure GREENHOUSE_BOARD_TOKENS with public board tokens if needed.'
+    );
+  } else {
+    logger.info(`Greenhouse: collected ${jobs.length} public job(s).`);
+  }
+  return jobs;
+}
+
+export function mapGreenhouseJob(
+  entry: GreenhouseJob,
+  boardToken: string,
+  scrapedAt: string
+): ScrapedJob | null {
+  const title = normalizeWhitespace(entry.title ?? '');
+  const company = normalizeWhitespace(entry.company_name ?? humanizeBoardToken(boardToken));
+  const url = normalizeWhitespace(entry.absolute_url ?? '');
+  const description = normalizeWhitespace(stripHtml(stripHtml(entry.content ?? ''))).slice(0, 4000);
+
+  if (!title || !company || !url || description.length < 60) return null;
+
+  const location =
+    normalizeWhitespace(entry.location?.name ?? '') ||
+    (entry.offices ?? [])
+      .map((office) => normalizeWhitespace(office.location ?? office.name ?? ''))
+      .filter(Boolean)
+      .join(', ');
+  const departments = (entry.departments ?? [])
+    .map((department) => normalizeWhitespace(department.name ?? ''))
+    .filter(Boolean)
+    .join(', ');
+
+  return {
+    id: `greenhouse-${boardToken}-${entry.id ?? slugForId(title, company)}`,
+    title,
+    company,
+    location: location || 'Not specified',
+    workMode: normalizeWorkMode(`${title} ${location} ${description}`),
+    url,
+    description: normalizeWhitespace(
+      `Source: Greenhouse public Job Board API. Department: ${
+        departments || 'not specified'
+      }. ${description}`
+    ),
+    source: 'greenhouse',
+    scrapedAt,
+  };
+}
+
+function jobMatchesRequestedRole(role: ScrapeOptions['role'], job: ScrapedJob): boolean {
+  if (!role || role === 'all' || role === 'internship' || role === 'unknown') return true;
+  return classifyRole(job.title, job.description) === role;
+}
+
+function humanizeBoardToken(token: string): string {
+  return token
+    .replace(/[-_]+/g, ' ')
+    .replace(/\b\w/g, (letter) => letter.toUpperCase())
+    .trim();
+}
+
+function slugForId(title: string, company: string): string {
+  return `${company}-${title}`.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+}

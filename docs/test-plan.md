@@ -21,8 +21,9 @@ duplicate removal, match scoring and report generation — in a fully offline se
 
 ## Out of Scope
 
-- Live scraping of third-party websites in CI (the remoteok/generic sources are best-effort
-  and intentionally not covered by automated tests to keep the suite deterministic).
+- Live third-party source calls in CI (remoteok, remotive, themuse, greenhouse, lever and
+  generic are best-effort and intentionally covered by mapper/unit tests plus manual smoke
+  runs to keep the automated suite deterministic).
 - Real AI provider responses (OpenAI/Anthropic calls are exercised manually; automated tests
   always run in fallback mode).
 - Visual/pixel-level validation of the Excel file (structure and data are validated instead).

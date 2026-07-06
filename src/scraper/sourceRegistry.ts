@@ -3,12 +3,18 @@ import type { ScraperFn } from './types';
 import { scrapeSampleJobs } from './sources/sampleHtmlScraper';
 import { scrapeRemoteOkJobs } from './sources/remoteOkScraper';
 import { scrapeRemotiveJobs } from './sources/remotiveScraper';
+import { scrapeTheMuseJobs } from './sources/theMuseScraper';
+import { scrapeGreenhouseJobs } from './sources/greenhouseScraper';
+import { scrapeLeverJobs } from './sources/leverScraper';
 import { scrapeGenericPublicJobs } from './sources/genericPublicJobsScraper';
 
 const registry: Record<JobSource, ScraperFn> = {
   sample: (options) => scrapeSampleJobs(options),
   remoteok: scrapeRemoteOkJobs,
   remotive: scrapeRemotiveJobs,
+  themuse: scrapeTheMuseJobs,
+  greenhouse: scrapeGreenhouseJobs,
+  lever: scrapeLeverJobs,
   generic: scrapeGenericPublicJobs,
 };
 

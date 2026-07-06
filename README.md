@@ -9,7 +9,7 @@ reporting.**
 
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)
 ![Playwright](https://img.shields.io/badge/Playwright-scraping%20%2B%20testing-2EAD33?logo=playwright&logoColor=white)
-![Tests](https://img.shields.io/badge/tests-63%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-68%20passing-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 
 ## Problem Solved
@@ -22,14 +22,14 @@ study before applying.
 
 ## Features
 
-- 🎭 **Playwright scraping** of a deterministic local job board (16 realistic fictional jobs) plus best-effort real sources (RemoteOK, Remotive)
+- Public job collection from a deterministic local board plus real API sources (RemoteOK, Remotive, The Muse, Greenhouse and Lever)
 - 📄 **Resume parsing** for TXT, PDF and DOCX files
 - 🔒 **PII sanitization** — emails, phones and documents are masked before analysis and never persisted
 - 🤖 **Flexible AI layer** — Gemini, OpenAI or Anthropic via adapter, with a local keyword fallback that requires **no API key**
 - ✅ **QA validation gate** — severity-ranked issues, data quality scores, duplicate removal
 - 🧮 **Hybrid match scoring (0–100)** with recommendations, explanations and per-job study plans
 - 📊 **Professional Excel report** (6 sheets, ExcelJS) + Markdown summary + 4 JSON artifacts
-- 🧪 **63 automated tests** (unit + E2E) with Playwright Test
+- 68 automated tests (unit + E2E) with Playwright Test
 - 🌐 **Optional no-build web UI** for uploading a resume and downloading the generated report
 
 ## Tech Stack
@@ -89,6 +89,8 @@ npm run dev -- --resume ./samples/sample-resume.txt --role qa --source sample --
 npm run dev -- --resume ./samples/sample-resume.txt --role frontend --source sample --limit 10
 npm run dev -- --resume ./samples/sample-resume.txt --role all --source sample --limit 20
 npm run dev -- --resume ./my-resume.pdf --role backend --source remoteok --limit 10
+npm run dev -- --resume ./samples/sample-resume.txt --role all --source themuse --limit 10
+npm run dev -- --resume ./samples/sample-resume.txt --role all --source greenhouse --limit 10
 ```
 
 ## Optional Web UI
@@ -106,7 +108,7 @@ the generated Excel/Markdown reports. The uploaded resume is deleted from disk a
 |--------|--------|---------|-------------|
 | `--resume` | file path (.txt/.md/.pdf/.docx) | **required** | Resume to analyze |
 | `--role` | `qa` `frontend` `backend` `fullstack` `mobile` `data` `devops` `support` `internship` `all` | `all` | Target tech area |
-| `--source` | `sample` `remoteok` `remotive` `generic` | `sample` | Job source (`sample` is offline and deterministic; `remoteok`/`remotive` are real public APIs) |
+| `--source` | `sample` `remoteok` `remotive` `themuse` `greenhouse` `lever` `generic` | `sample` | Job source (`sample` is offline and deterministic; the other named sources use public APIs or a configured public page) |
 | `--limit` | 1–100 | `16` | Max jobs to collect |
 | `--output` | directory path | `./output` | Output folder |
 | `--fallback` | flag | off | Force local analysis (skip AI even if a key exists) |
@@ -119,6 +121,9 @@ the generated Excel/Markdown reports. The uploaded resume is deleted from disk a
 | `sample` | Local HTML (Playwright, `file://`) | — | **Default.** Offline, deterministic, 16 fictional jobs. Best for demos and tests. |
 | `remotive` | Public JSON API | None | Real remote jobs. The free feed returns the ~30 most recent postings across all categories, so the app filters it **client-side** by `--role`. |
 | `remoteok` | Public JSON API | None | Real remote jobs (single request, capped at 15). |
+| `themuse` | Public JSON API | None | Real Computer and IT jobs from The Muse public endpoint, capped at 20. |
+| `greenhouse` | Public ATS API | None | Real jobs from Greenhouse Job Board API. Defaults to the public `stripe` board; override with `GREENHOUSE_BOARD_TOKENS`. |
+| `lever` | Public ATS API | None | Real jobs from Lever Postings API. Requires known public company slugs in `LEVER_COMPANY_SLUGS`. |
 | `generic` | Any public page (Playwright) | None | Best-effort scraper for the URL in `GENERIC_JOBS_URL`; public, no login/captcha. |
 
 ```bash
@@ -127,6 +132,15 @@ npm run dev -- --resume ./samples/sample-resume.txt --role qa --source remotive 
 
 # Whole recent feed, ranked against your resume
 npm run dev -- --resume ./samples/sample-resume.txt --role all --source remotive --limit 20
+
+# Real public API with no config
+npm run dev -- --resume ./samples/sample-resume.txt --role all --source themuse --limit 10
+
+# Public Greenhouse ATS board; defaults to Stripe
+npm run dev -- --resume ./samples/sample-resume.txt --role all --source greenhouse --limit 10
+
+# Public Lever ATS board; set LEVER_COMPANY_SLUGS first
+npm run dev -- --resume ./samples/sample-resume.txt --role all --source lever --limit 10
 ```
 
 > **Why client-side filtering for Remotive?** Their free public API ignores the
@@ -146,6 +160,8 @@ Copy `.env.example` to `.env` (optional — everything works without it):
 | `GEMINI_API_KEY` / `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` | Provider keys (missing key ⇒ automatic fallback) |
 | `GEMINI_MODEL` / `OPENAI_MODEL` / `ANTHROPIC_MODEL` | Optional model overrides |
 | `GENERIC_JOBS_URL` | Public job board URL for the best-effort `generic` source |
+| `GREENHOUSE_BOARD_TOKENS` | Optional comma-separated Greenhouse board tokens; defaults to `stripe` when empty |
+| `LEVER_COMPANY_SLUGS` | Optional comma-separated Lever company slugs for the `lever` source |
 
 ## Example Output
 
@@ -196,7 +212,7 @@ Details in [docs/qa-strategy.md](docs/qa-strategy.md).
 ## Testing Strategy
 
 ```bash
-npm test          # all 63 tests
+npm test          # all 68 tests
 npm run test:unit # pure-logic tests
 npm run test:e2e  # browser scraping + full pipeline + Excel validation
 ```
@@ -211,8 +227,8 @@ Docs: [test plan](docs/test-plan.md) · [test cases](docs/test-cases.md) ·
 ## Ethical Scraping Notes
 
 Only public data; no login bypass; no captcha solving; no aggressive requests (the demo
-source is a local file with **zero** network calls; real sources are single-request,
-low-limit and best-effort). Full policy: [docs/scraping-ethics.md](docs/scraping-ethics.md).
+source is a local file with **zero** network calls; real sources are low-volume, capped and
+best-effort). Full policy: [docs/scraping-ethics.md](docs/scraping-ethics.md).
 
 ## Privacy Notes
 
@@ -229,7 +245,7 @@ git-ignored. All sample data is fictional.
 - **Bug reporting mindset** — QA Issues sheet + professional bug report template.
 - **Evidence generation** — JSON artifacts, traces, screenshots and videos on failure.
 - **Report generation** — recruiter-ready Excel output.
-- **Automated tests** — 63 unit + E2E tests with Playwright Test.
+- **Automated tests** - 68 unit + E2E tests with Playwright Test.
 
 ## How this project relates to Software Development
 

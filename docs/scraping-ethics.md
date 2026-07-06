@@ -28,15 +28,21 @@ outsource or circumvent it. The run fails gracefully and moves on.
   items and times out after 15 seconds. Because the free API returns a fixed recent feed and
   ignores filter parameters, role filtering happens locally after the single request — never
   by hitting the API repeatedly.
+- The Muse source makes **one** GET request to its public API per run, scoped to the
+  Computer and IT category, and keeps at most 20 items.
+- The Greenhouse source calls the official public Job Board API for a small list of board
+  tokens, keeps at most 20 items, and defaults to a single public example board.
+- The Lever source calls the public Postings API only for company slugs explicitly configured
+  by the user, keeps at most 20 items, and does not try to discover or crawl slugs.
 - The generic source loads **one** page with a cap of 10 items.
 - There is no crawling, no pagination loops, no parallel request storms, no retry hammering.
 
 ## Respect Website Restrictions
 
 - Honest `User-Agent` identifying the tool as a portfolio project.
-- Sources are chosen for having explicitly public data (RemoteOK and Remotive both publish
-  public APIs and ask for attribution — the report always preserves the original job URL,
-  which links back).
+- Sources are chosen for having explicitly public data (RemoteOK, Remotive, The Muse,
+  Greenhouse and Lever expose public job data through documented or public JSON endpoints).
+  The report always preserves the original job URL, which links back to the source posting.
 - If a site's terms or robots directives disallow automated access, it is not a valid target
   for the generic source. The README states this requirement for `GENERIC_JOBS_URL`.
 
@@ -49,7 +55,7 @@ still exercising a real Playwright browser end-to-end.
 ## Low Default Limits
 
 `--limit` defaults to 16 and is capped at 100 by CLI validation; real sources apply their own
-lower caps (15 and 10). The tool is built for personal, low-volume career research — not bulk
+lower caps (15, 20 or 10 depending on source). The tool is built for personal, low-volume career research — not bulk
 harvesting.
 
 ## Best-Effort Real Sources

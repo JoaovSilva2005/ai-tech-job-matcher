@@ -7,7 +7,7 @@ The CLI entry point (`src/index.ts`, `runPipeline`) orchestrates 12 sequential s
 ```
 resume file ──► parse ──► sanitize (PII) ──► analyze resume (AI | fallback)
                                                         │
-job source ──► scrape (Playwright) ──► validate (QA) ──► dedupe ──► analyze jobs (AI | fallback)
+job source ──► collect (Playwright | public APIs) ──► validate (QA) ──► dedupe ──► analyze jobs (AI | fallback)
                                                         │
                                           filter by role ──► match score ──► rank
                                                         │
@@ -24,7 +24,7 @@ spawning subprocesses.
 | `src/cli` | Argument parsing/validation and CLI types |
 | `src/config` | Environment loading with Zod validation (`.env`) |
 | `src/resume` | Parse (TXT/PDF/DOCX), sanitize PII, analyze resume |
-| `src/scraper` | Source registry, Playwright scrapers, per-source selectors, job validation facade |
+| `src/scraper` | Source registry, Playwright/API collectors, per-source parsers, job validation facade |
 | `src/ai` | AI adapter interface, Gemini/OpenAI/Anthropic clients, local fallback analyzer, prompts, JSON repair |
 | `src/matcher` | Skill normalization, role classification, hybrid match scoring, recommendations, explanations |
 | `src/qa` | Validation rules, issue detection, duplicate detector, data quality scoring |

@@ -26,7 +26,7 @@
 
 - A real Chromium browser scrapes a local HTML job board (`file://` page) — the same
   navigation, locators and extraction flow used on live sites, but deterministic and offline.
-- Playwright's request API powers the best-effort RemoteOK source.
+- Public APIs power the real sources: RemoteOK, Remotive, The Muse, Greenhouse and Lever.
 - Playwright Test runs the whole test suite: unit tests for pure logic and E2E tests that
   execute the full pipeline and assert on the generated Excel workbook.
 - Selectors live in dedicated files (page-object style), so markup changes don't touch logic.
@@ -54,7 +54,7 @@
 - Every scraped job passes a validation gate with severity-ranked issues; bad data is
   excluded with evidence (QA Issues sheet), never silently.
 - Duplicate detection, data quality scoring, seniority-mismatch warnings.
-- Test plan, 18 documented test cases, bug report template, and 63 automated tests with
+- Test plan, 18 documented test cases, bug report template, and 68 automated tests with
   failure evidence (screenshot/trace/video) configured.
 
 ## How it also demonstrates TypeScript development

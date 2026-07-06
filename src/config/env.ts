@@ -12,6 +12,8 @@ const envSchema = z.object({
   ANTHROPIC_MODEL: z.string().optional().default('claude-sonnet-5'),
   GEMINI_MODEL: z.string().optional().default('gemini-2.5-flash-lite'),
   GENERIC_JOBS_URL: z.string().optional().default(''),
+  GREENHOUSE_BOARD_TOKENS: z.string().optional().default(''),
+  LEVER_COMPANY_SLUGS: z.string().optional().default(''),
 });
 
 export type AppEnv = z.infer<typeof envSchema>;
