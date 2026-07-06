@@ -60,6 +60,7 @@ export function indexHtml(): string {
   .skills .miss { color: var(--orange); }
   .muted { color: var(--muted); }
   a.jobUrl { color: var(--accent); text-decoration: none; }
+  .sampleUrl { color: var(--muted); font-size: 12px; }
   .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid var(--border);
     border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; vertical-align: middle; }
   @keyframes spin { to { transform: rotate(360deg); } }
@@ -138,6 +139,23 @@ form.addEventListener('submit', async (e) => {
 function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 function list(arr, cls) { if (!arr || !arr.length) return '<span class="muted">—</span>';
   return arr.slice(0, 6).map(s => '<span class="' + (cls||'') + '">' + esc(s) + '</span>').join(', '); }
+function isReservedDemoUrl(value) {
+  try {
+    const host = new URL(value).hostname.toLowerCase();
+    return host === 'example.com' || host.endsWith('.example.com') ||
+      host.endsWith('.example.org') || host.endsWith('.example.net') ||
+      host.endsWith('.test') || host.endsWith('.invalid');
+  } catch (_err) {
+    return true;
+  }
+}
+function jobLink(url) {
+  if (!url) return '';
+  if (isReservedDemoUrl(url)) {
+    return '<span class="sampleUrl" title="Sample source uses offline demo jobs without public apply pages">sample only</span>';
+  }
+  return '<a class="jobUrl" href="' + esc(url) + '" target="_blank" rel="noopener">open job -&gt;</a>';
+}
 
 function render(data) {
   const s = data.summary, r = data.resumeAnalysis, m = data.matches || [];
@@ -155,7 +173,7 @@ function render(data) {
       '<td class="score">' + esc(j.score) + '</td>' +
       '<td><span class="rec ' + rec + '">' + (RECS[rec]||rec) + '</span></td>' +
       '<td><div>' + esc(j.title) + '</div><div class="muted" style="font-size:12px">' + esc(j.company) + '</div>' +
-        (j.url ? '<a class="jobUrl" href="' + esc(j.url) + '" target="_blank" rel="noopener">open job ↗</a>' : '') + '</td>' +
+        jobLink(j.url) + '</td>' +
       '<td class="skills">' + list(j.matchedSkills) + '</td>' +
       '<td class="skills"><span class="miss">' + list(j.missingSkills, 'miss') + '</span></td>' +
       '</tr>' +
