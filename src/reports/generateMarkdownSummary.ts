@@ -13,8 +13,10 @@ export function generateMarkdownSummary(data: ReportData, outputDir: string): st
   const { summary, matches, resume, skillInsights } = data;
   const top5 = matches.slice(0, 5);
 
-  const qaIssueCount = matches.reduce((sum, m) => sum + m.validation.issues.length, 0);
-  const needsReview = matches.filter((m) => m.validation.status === 'needs_review');
+  const qaIssueCount = data.qaIssues.length;
+  const needsReviewTitles = unique(
+    data.qaIssues.filter((issue) => issue.status === 'needs_review').map((issue) => issue.jobTitle || 'untitled')
+  );
 
   const topGaps = countOccurrences(matches.flatMap((m) => m.criticalGaps.length ? m.criticalGaps : m.missingSkills.slice(0, 3)));
   const studySuggestions = countOccurrences(matches.flatMap((m) => m.studyPlan));
@@ -62,9 +64,9 @@ export function generateMarkdownSummary(data: ReportData, outputDir: string): st
     '## QA / Data Quality Notes',
     '',
     `- Total QA issues detected across jobs: **${qaIssueCount}**`,
-    `- Jobs flagged as \`needs_review\`: **${needsReview.length}**` +
-      (needsReview.length > 0
-        ? ` (${needsReview.map((m) => m.job.title || 'untitled').slice(0, 3).join('; ')})`
+    `- Jobs flagged as \`needs_review\`: **${needsReviewTitles.length}**` +
+      (needsReviewTitles.length > 0
+        ? ` (${needsReviewTitles.slice(0, 3).join('; ')})`
         : ''),
     `- Candidate profile analysis mode: ${resume.fallbackMode ? 'fallback' : 'AI'}`,
     '- Full issue list available in the **QA Issues** sheet of `job-match-report.xlsx`.',
@@ -86,4 +88,8 @@ function countOccurrences(items: string[]): Array<[string, number]> {
     counts.set(key, (counts.get(key) ?? 0) + 1);
   }
   return [...counts.entries()].sort((a, b) => b[1] - a[1]);
+}
+
+function unique(items: string[]): string[] {
+  return [...new Set(items)];
 }

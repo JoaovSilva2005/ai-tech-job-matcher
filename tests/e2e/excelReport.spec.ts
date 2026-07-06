@@ -3,6 +3,8 @@ import ExcelJS from 'exceljs';
 import { expect, test } from '@playwright/test';
 import { runPipeline } from '../../src/index';
 import type { CliOptions } from '../../src/cli/cliTypes';
+import { generateExcelReport } from '../../src/reports/generateExcelReport';
+import type { ReportData } from '../../src/reports/reportTypes';
 
 const RESUME_PATH = path.resolve(__dirname, '../../samples/sample-resume.txt');
 const OUTPUT_DIR = path.resolve(__dirname, '../../output/e2e/excel');
@@ -93,5 +95,69 @@ test.describe('Excel report generation', () => {
     expect(rows.get('Used Fallback Mode')).toBe('Yes');
     expect(rows.get('Job Source')).toBe('sample');
     expect(Number(rows.get('Jobs Collected'))).toBeGreaterThanOrEqual(16);
+  });
+
+  test('QA Issues sheet includes invalid jobs excluded from ranking', async () => {
+    const outputDir = path.join(OUTPUT_DIR, 'invalid-qa-issue');
+    const reportData: ReportData = {
+      matches: [],
+      resume: {
+        detectedSeniority: 'intern',
+        targetRoles: ['qa'],
+        technicalSkills: ['JavaScript'],
+        qaSkills: ['Manual Testing'],
+        developmentSkills: [],
+        dataSkills: [],
+        devopsSkills: [],
+        supportSkills: [],
+        tools: ['Git'],
+        languages: [{ language: 'English', level: 'intermediate' }],
+        strengths: ['Careful validation'],
+        improvementAreas: ['Automation'],
+        summary: 'Test profile',
+        fallbackMode: true,
+      },
+      summary: {
+        executedAt: new Date('2026-07-01T12:00:00.000Z').toISOString(),
+        resumeFile: RESUME_PATH,
+        role: 'qa',
+        source: 'sample',
+        aiProvider: 'local-fallback',
+        usedFallback: true,
+        jobsCollected: 1,
+        jobsValid: 0,
+        jobsNeedingReview: 0,
+        jobsInvalid: 1,
+        duplicatesRemoved: 0,
+        jobsAfterRoleFilter: 0,
+        durationMs: 100,
+      },
+      skillInsights: [],
+      qaIssues: [
+        {
+          jobId: 'invalid-1',
+          jobTitle: '',
+          company: 'Ghost Corp',
+          field: 'title',
+          severity: 'high',
+          message: 'Job title is empty',
+          dataQualityScore: 70,
+          status: 'invalid',
+          includedInRanking: false,
+        },
+      ],
+    };
+
+    const excelPath = await generateExcelReport(reportData, outputDir);
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.readFile(excelPath);
+
+    const sheet = workbook.getWorksheet('QA Issues')!;
+    expect(sheet.getRow(1).values).toContain('Included In Ranking');
+    expect(sheet.getCell('A2').value).toBe('(empty title)');
+    expect(sheet.getCell('B2').value).toBe('Ghost Corp');
+    expect(sheet.getCell('D2').value).toBe('high');
+    expect(sheet.getCell('G2').value).toBe('invalid');
+    expect(sheet.getCell('H2').value).toBe('No');
   });
 });

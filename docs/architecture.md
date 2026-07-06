@@ -29,6 +29,7 @@ spawning subprocesses.
 | `src/matcher` | Skill normalization, role classification, hybrid match scoring, recommendations, explanations |
 | `src/qa` | Validation rules, issue detection, duplicate detector, data quality scoring |
 | `src/reports` | Excel workbook (ExcelJS), Markdown summary, shared report types and styles |
+| `src/web` | Optional Express web UI for resume upload, pipeline execution and report download |
 | `src/utils` | Logger, file system, date, text and URL helpers |
 
 ## Data Flow

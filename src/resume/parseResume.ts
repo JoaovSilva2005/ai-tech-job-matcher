@@ -4,7 +4,7 @@ import { ParsedResume } from './resumeSchema';
 
 export class ResumeParseError extends Error {}
 
-const SUPPORTED_FORMATS = ['.txt', '.md', '.pdf', '.docx'];
+export const SUPPORTED_RESUME_EXTENSIONS = ['.txt', '.md', '.pdf', '.docx'] as const;
 
 export async function parseResume(filePath: string): Promise<ParsedResume> {
   if (!fileExists(filePath)) {
@@ -12,9 +12,9 @@ export async function parseResume(filePath: string): Promise<ParsedResume> {
   }
 
   const ext = getExtension(filePath);
-  if (!SUPPORTED_FORMATS.includes(ext)) {
+  if (!SUPPORTED_RESUME_EXTENSIONS.includes(ext as (typeof SUPPORTED_RESUME_EXTENSIONS)[number])) {
     throw new ResumeParseError(
-      `Unsupported resume format "${ext}". Supported formats: ${SUPPORTED_FORMATS.join(', ')}`
+      `Unsupported resume format "${ext}". Supported formats: ${SUPPORTED_RESUME_EXTENSIONS.join(', ')}`
     );
   }
 

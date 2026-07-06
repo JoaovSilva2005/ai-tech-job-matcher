@@ -15,7 +15,7 @@ import { calculateDataQualityScore } from './qa/dataQualityScore';
 import { calculateMatchScore, JobMatchResult } from './matcher/calculateMatchScore';
 import { generateExcelReport } from './reports/generateExcelReport';
 import { generateMarkdownSummary } from './reports/generateMarkdownSummary';
-import type { ExecutionSummary, ReportData, SkillInsight } from './reports/reportTypes';
+import type { ExecutionSummary, QaIssueReportRow, ReportData, SkillInsight } from './reports/reportTypes';
 import { ensureDir, writeJsonFile } from './utils/fileSystem';
 import { logger, setDebug } from './utils/logger';
 import { nowIso } from './utils/date';
@@ -134,6 +134,7 @@ export async function runPipeline(options: CliOptions): Promise<PipelineResult> 
     resume: resumeAnalysis,
     summary,
     skillInsights: buildSkillInsights(matches),
+    qaIssues: buildQaIssueRows(scrapedJobs, validations, new Set(matches.map((m) => m.job.id))),
   };
 
   // 10. Excel report
@@ -237,6 +238,27 @@ function buildSkillInsights(matches: JobMatchResult[]): SkillInsight[] {
       return { skill, mentions: entry.mentions, relatedRole };
     })
     .sort((a, b) => b.mentions - a.mentions);
+}
+
+function buildQaIssueRows(
+  jobs: ScrapedJob[],
+  validations: Map<string, JobValidationResult>,
+  rankedJobIds: Set<string>
+): QaIssueReportRow[] {
+  return jobs.flatMap((job) => {
+    const validation = validations.get(job.id);
+    if (!validation) return [];
+
+    return validation.issues.map((issue) => ({
+      ...issue,
+      jobId: job.id,
+      jobTitle: job.title,
+      company: job.company,
+      dataQualityScore: validation.dataQualityScore,
+      status: validation.status,
+      includedInRanking: rankedJobIds.has(job.id),
+    }));
+  });
 }
 
 async function main(): Promise<void> {

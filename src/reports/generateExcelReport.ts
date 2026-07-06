@@ -144,21 +144,21 @@ function buildQaIssuesSheet(workbook: ExcelJS.Workbook, data: ReportData): void 
     { header: 'Issue Message', key: 'message', width: 60 },
     { header: 'Data Quality Score', key: 'quality', width: 17 },
     { header: 'Status', key: 'status', width: 14 },
+    { header: 'Included In Ranking', key: 'included', width: 19 },
   ];
 
-  for (const match of data.matches) {
-    for (const issue of match.validation.issues) {
-      const row = sheet.addRow({
-        title: match.job.title || '(empty title)',
-        company: match.job.company || '(empty company)',
-        field: issue.field,
-        severity: issue.severity,
-        message: issue.message,
-        quality: match.validation.dataQualityScore,
-        status: match.validation.status,
-      });
-      fillCell(row.getCell('severity'), SEVERITY_FILLS[issue.severity]);
-    }
+  for (const issue of data.qaIssues) {
+    const row = sheet.addRow({
+      title: issue.jobTitle || '(empty title)',
+      company: issue.company || '(empty company)',
+      field: issue.field,
+      severity: issue.severity,
+      message: issue.message,
+      quality: issue.dataQualityScore,
+      status: issue.status,
+      included: yesNo(issue.includedInRanking),
+    });
+    fillCell(row.getCell('severity'), SEVERITY_FILLS[issue.severity]);
   }
 
   if (sheet.rowCount === 1) {
@@ -166,7 +166,7 @@ function buildQaIssuesSheet(workbook: ExcelJS.Workbook, data: ReportData): void 
   }
 
   styleHeaderRow(sheet);
-  applyAutoFilter(sheet, 'G');
+  applyAutoFilter(sheet, 'H');
 }
 
 function buildResumeAnalysisSheet(workbook: ExcelJS.Workbook, data: ReportData): void {

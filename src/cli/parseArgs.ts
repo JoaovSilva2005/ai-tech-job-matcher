@@ -1,5 +1,6 @@
 import { CliOptions, JobSource, VALID_ROLES, VALID_SOURCES } from './cliTypes';
 import type { TechRole } from '../scraper/types';
+import { SUPPORTED_RESUME_EXTENSIONS } from '../resume/parseResume';
 
 const USAGE = `
 AI Tech Job Matcher
@@ -8,7 +9,7 @@ Usage:
   npm run dev -- --resume <path> [--role <role>] [--source <source>] [--limit <n>] [--output <dir>] [--fallback] [--debug]
 
 Options:
-  --resume    Path to the resume file (.txt, .pdf or .docx)   [required]
+  --resume    Path to the resume file (${SUPPORTED_RESUME_EXTENSIONS.join(', ')})   [required]
   --role      Target role: ${VALID_ROLES.join(' | ')}          [default: all]
   --source    Job source: ${VALID_SOURCES.join(' | ')}         [default: sample]
   --limit     Max number of jobs to collect                    [default: 16]

@@ -54,7 +54,7 @@
 - Every scraped job passes a validation gate with severity-ranked issues; bad data is
   excluded with evidence (QA Issues sheet), never silently.
 - Duplicate detection, data quality scoring, seniority-mismatch warnings.
-- Test plan, 18 documented test cases, bug report template, and 53 automated tests with
+- Test plan, 18 documented test cases, bug report template, and 59 automated tests with
   failure evidence (screenshot/trace/video) configured.
 
 ## How it also demonstrates TypeScript development
@@ -65,7 +65,9 @@
 
 ## Future improvements
 
-- Web UI (React + Vite) with resume upload and interactive ranking.
+- Add screenshots or a short GIF of the CLI, web UI and Excel report.
+- Upgrade the simple web UI into a richer React/Vite interface if the project needs a larger
+  frontend showcase.
 - More real sources behind the same scraper interface, each with its own ethical caps.
 - Embedding-based semantic matching instead of keyword overlap in fallback mode.
 - Historical tracking: run weekly, diff the market, chart skill demand over time.

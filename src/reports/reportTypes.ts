@@ -1,5 +1,6 @@
 import type { JobMatchResult } from '../matcher/calculateMatchScore';
 import type { ResumeAnalysis } from '../resume/resumeSchema';
+import type { JobIssue, JobValidationResult } from '../scraper/types';
 import type { TechRole } from '../scraper/types';
 
 export interface SkillInsight {
@@ -29,4 +30,14 @@ export interface ReportData {
   resume: ResumeAnalysis;
   summary: ExecutionSummary;
   skillInsights: SkillInsight[];
+  qaIssues: QaIssueReportRow[];
+}
+
+export interface QaIssueReportRow extends JobIssue {
+  jobId: string;
+  jobTitle: string;
+  company: string;
+  dataQualityScore: number;
+  status: JobValidationResult['status'];
+  includedInRanking: boolean;
 }

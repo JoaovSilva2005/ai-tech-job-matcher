@@ -9,7 +9,7 @@ reporting.**
 
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)
 ![Playwright](https://img.shields.io/badge/Playwright-scraping%20%2B%20testing-2EAD33?logo=playwright&logoColor=white)
-![Tests](https://img.shields.io/badge/tests-53%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-59%20passing-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 
 ## Problem Solved
@@ -29,7 +29,8 @@ study before applying.
 - ✅ **QA validation gate** — severity-ranked issues, data quality scores, duplicate removal
 - 🧮 **Hybrid match scoring (0–100)** with recommendations, explanations and per-job study plans
 - 📊 **Professional Excel report** (6 sheets, ExcelJS) + Markdown summary + 4 JSON artifacts
-- 🧪 **53 automated tests** (unit + E2E) with Playwright Test
+- 🧪 **59 automated tests** (unit + E2E) with Playwright Test
+- 🌐 **Optional no-build web UI** for uploading a resume and downloading the generated report
 
 ## Tech Stack
 
@@ -90,11 +91,20 @@ npm run dev -- --resume ./samples/sample-resume.txt --role all --source sample -
 npm run dev -- --resume ./my-resume.pdf --role backend --source remoteok --limit 10
 ```
 
+## Optional Web UI
+
+```bash
+npm run web
+```
+
+Open `http://localhost:4180`, upload a `.txt`, `.md`, `.pdf` or `.docx` resume, and download
+the generated Excel/Markdown reports. The uploaded resume is deleted from disk after each run.
+
 ## CLI Options
 
 | Option | Values | Default | Description |
 |--------|--------|---------|-------------|
-| `--resume` | file path (.txt/.pdf/.docx) | **required** | Resume to analyze |
+| `--resume` | file path (.txt/.md/.pdf/.docx) | **required** | Resume to analyze |
 | `--role` | `qa` `frontend` `backend` `fullstack` `mobile` `data` `devops` `support` `internship` `all` | `all` | Target tech area |
 | `--source` | `sample` `remoteok` `remotive` `generic` | `sample` | Job source (`sample` is offline and deterministic; `remoteok`/`remotive` are real public APIs) |
 | `--limit` | 1–100 | `16` | Max jobs to collect |
@@ -186,7 +196,7 @@ Details in [docs/qa-strategy.md](docs/qa-strategy.md).
 ## Testing Strategy
 
 ```bash
-npm test          # all 53 tests
+npm test          # all 59 tests
 npm run test:unit # pure-logic tests
 npm run test:e2e  # browser scraping + full pipeline + Excel validation
 ```
@@ -219,7 +229,7 @@ git-ignored. All sample data is fictional.
 - **Bug reporting mindset** — QA Issues sheet + professional bug report template.
 - **Evidence generation** — JSON artifacts, traces, screenshots and videos on failure.
 - **Report generation** — recruiter-ready Excel output.
-- **Automated tests** — 53 unit + E2E tests with Playwright Test.
+- **Automated tests** — 59 unit + E2E tests with Playwright Test.
 
 ## How this project relates to Software Development
 
@@ -238,16 +248,10 @@ full stack, mobile, data, devops and support jobs (plus internships). QA Automat
 strongest showcase — Playwright drives both the scraping and the tests — but the same
 pipeline serves any junior tech career search.
 
-## Screenshots
-
-> _Placeholder: add a screenshot of the Ranking sheet and the CLI run here._
->
-> `![Ranking sheet](docs/img/ranking-sheet.png)`
-> `![CLI run](docs/img/cli-run.png)`
-
 ## Future Improvements
 
-- Web UI (React + Vite + Tailwind) with resume upload and interactive ranking
+- Add screenshots or a short GIF of the CLI, web UI and Excel report
+- Upgrade the simple web UI into a richer React/Vite interface if the project needs a larger frontend showcase
 - More real job sources behind the same interface
 - Semantic (embedding-based) matching in fallback mode
 - Weekly scheduled runs with skill-demand trend charts
