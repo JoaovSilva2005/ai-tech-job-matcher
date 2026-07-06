@@ -10,7 +10,7 @@ duplicate removal, match scoring and report generation — in a fully offline se
 
 - Resume parsing (TXT, PDF, DOCX) and error handling for invalid inputs.
 - Resume sanitization (emails, phones, personal documents).
-- Job scraping from the local sample source using a real Playwright browser.
+- Job parsing from a local fixture board using a real Playwright browser.
 - Role classification, seniority detection and English level detection (fallback analyzer).
 - QA validation rules for scraped jobs (required fields, URL, description length, work mode).
 - Duplicate detection by normalized title+company and by normalized URL.
@@ -21,8 +21,8 @@ duplicate removal, match scoring and report generation — in a fully offline se
 
 ## Out of Scope
 
-- Live third-party source calls in CI (remoteok, remotive, themuse, greenhouse, lever and
-  generic are best-effort and intentionally covered by mapper/unit tests plus manual smoke
+- Live third-party source calls in CI (remoteok, remotive, themuse, greenhouse and lever are
+  best-effort and intentionally covered by mapper/unit tests plus manual smoke
   runs to keep the automated suite deterministic).
 - Real AI provider responses (OpenAI/Anthropic calls are exercised manually; automated tests
   always run in fallback mode).
@@ -34,7 +34,7 @@ duplicate removal, match scoring and report generation — in a fully offline se
 | Level | Tooling | What it covers |
 |-------|---------|----------------|
 | Unit | Playwright Test (node) | normalizeSkills, classifyRole, calculateMatchScore, validateJob, duplicateDetector, fallbackAnalyzer |
-| Integration/E2E | Playwright Test + Chromium | sample scraper against real HTML, full pipeline runs, Excel/Markdown/JSON artifact validation |
+| Integration/E2E | Playwright Test + Chromium | fixture scraper against real HTML, full pipeline runs, Excel/Markdown/JSON artifact validation |
 
 ## Test Environment
 
@@ -45,8 +45,8 @@ duplicate removal, match scoring and report generation — in a fully offline se
 
 ## Risks
 
-- Third-party job boards may change markup or availability (mitigated: sample source is the
-  demo default; real sources fail gracefully returning empty lists).
+- Third-party job sources may change API shape or availability (mitigated: real sources fail
+  gracefully returning empty lists; deterministic tests use local fixtures).
 - Keyword-based fallback analysis may misclassify unusual job titles (mitigated: scoring
   heuristics tested against 16 realistic fixtures; AI mode available for higher accuracy).
 - PDF text extraction quality varies by file (mitigated: minimum text length check + clear

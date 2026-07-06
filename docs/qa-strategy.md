@@ -27,7 +27,7 @@ sheet of the Excel report — evidence, not silent filtering.
   content too short).
 - AI calls are wrapped: invalid JSON triggers one self-fix retry, then a fallback to the
   local analyzer. A missing API key never breaks the run.
-- Best-effort sources (remoteok, remotive, themuse, greenhouse, lever and generic) catch
+- Best-effort sources (remoteok, remotive, themuse, greenhouse and lever) catch
   network/configuration errors and return empty lists with a warning instead of crashing the
   pipeline.
 
@@ -42,7 +42,7 @@ sheet of the Excel report — evidence, not silent filtering.
 
 - **Unit level**: pure functions (skill normalization, role classification, scoring,
   validation, dedup, fallback analysis) tested deterministically with Playwright Test.
-- **E2E level**: a real Chromium browser scrapes the sample HTML board, then the entire
+- **E2E level**: a real Chromium browser scrapes the local fixture board, then the entire
   pipeline runs end-to-end and the generated Excel/Markdown/JSON artifacts are opened and
   asserted.
 - Config: screenshots only on failure, trace on first retry, video retained on failure —
@@ -69,5 +69,5 @@ glance.
 ## Duplicate Detection
 
 Jobs are deduplicated by normalized title+company and by normalized URL (tracking parameters
-stripped). The sample board intentionally ships one duplicate posting so the behavior is
+stripped). The local fixture board intentionally ships one duplicate posting so the behavior is
 demonstrable and covered by tests.

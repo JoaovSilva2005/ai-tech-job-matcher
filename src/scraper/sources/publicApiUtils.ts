@@ -28,7 +28,7 @@ export async function fetchPublicJson<T>(
   } catch (error) {
     logger.warn(
       `${sourceName} source unavailable (${(error as Error).message}); returning no jobs. ` +
-        'Use --source sample for a fully offline run.'
+        'Try another real source such as --source themuse or --source greenhouse.'
     );
     return null;
   } finally {

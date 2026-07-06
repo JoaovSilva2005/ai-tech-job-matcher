@@ -111,8 +111,8 @@ function normalizeRole(value: unknown): TechRole {
 }
 
 function normalizeSource(value: unknown): JobSource {
-  const source = String(value ?? 'sample').toLowerCase() as JobSource;
-  return VALID_SOURCES.includes(source) ? source : 'sample';
+  const source = String(value ?? 'themuse').toLowerCase() as JobSource;
+  return VALID_SOURCES.includes(source as (typeof VALID_SOURCES)[number]) ? source : 'themuse';
 }
 
 function normalizeLimit(value: unknown): number {

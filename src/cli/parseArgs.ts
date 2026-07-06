@@ -11,7 +11,7 @@ Usage:
 Options:
   --resume    Path to the resume file (${SUPPORTED_RESUME_EXTENSIONS.join(', ')})   [required]
   --role      Target role: ${VALID_ROLES.join(' | ')}          [default: all]
-  --source    Job source: ${VALID_SOURCES.join(' | ')}         [default: sample]
+  --source    Job source: ${VALID_SOURCES.join(' | ')}         [default: themuse]
   --limit     Max number of jobs to collect                    [default: 16]
   --output    Output directory                                 [default: ./output]
   --fallback  Force local keyword analysis (no AI API calls)
@@ -28,7 +28,7 @@ export function parseArgs(argv: string[]): CliOptions {
   const options: CliOptions = {
     resume: '',
     role: 'all',
-    source: 'sample',
+    source: 'themuse',
     limit: 16,
     output: './output',
     fallback: false,
@@ -51,7 +51,7 @@ export function parseArgs(argv: string[]): CliOptions {
       }
       case '--source': {
         const source = (argv[++i] ?? '').toLowerCase() as JobSource;
-        if (!VALID_SOURCES.includes(source)) {
+        if (!VALID_SOURCES.includes(source as (typeof VALID_SOURCES)[number])) {
           throw new CliError(
             `Invalid --source "${source}". Valid sources: ${VALID_SOURCES.join(', ')}`
           );

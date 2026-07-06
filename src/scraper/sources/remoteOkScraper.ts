@@ -25,8 +25,8 @@ interface RemoteOkEntry {
  * link back, which the generated report preserves through the original URL.
  *
  * Ethics: a single GET request with a low item cap, honest User-Agent and a
- * timeout. Any failure returns an empty list so the pipeline (and the demo)
- * never depends on network availability — use the "sample" source for that.
+ * timeout. Any failure returns an empty list so the pipeline handles network
+ * availability gracefully.
  */
 export async function scrapeRemoteOkJobs(options: ScrapeOptions): Promise<ScrapedJob[]> {
   const limit = Math.min(options.limit, MAX_REMOTE_JOBS);
@@ -66,7 +66,7 @@ export async function scrapeRemoteOkJobs(options: ScrapeOptions): Promise<Scrape
   } catch (error) {
     logger.warn(
       `RemoteOK source unavailable (${(error as Error).message}); returning no jobs. ` +
-        'Use --source sample for a fully offline run.'
+        'Try another real source such as --source themuse or --source greenhouse.'
     );
     return [];
   } finally {

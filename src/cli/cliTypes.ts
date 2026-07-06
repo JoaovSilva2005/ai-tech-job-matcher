@@ -6,8 +6,9 @@ export type JobSource =
   | 'remotive'
   | 'themuse'
   | 'greenhouse'
-  | 'lever'
-  | 'generic';
+  | 'lever';
+
+export type PublicJobSource = Exclude<JobSource, 'sample'>;
 
 export interface CliOptions {
   resume: string;
@@ -32,12 +33,10 @@ export const VALID_ROLES: TechRole[] = [
   'all',
 ];
 
-export const VALID_SOURCES: JobSource[] = [
-  'sample',
+export const VALID_SOURCES: PublicJobSource[] = [
   'remoteok',
   'remotive',
   'themuse',
   'greenhouse',
   'lever',
-  'generic',
 ];

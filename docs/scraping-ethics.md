@@ -21,7 +21,6 @@ outsource or circumvent it. The run fails gracefully and moves on.
 
 ## No Aggressive Requests
 
-- The default demo source (`sample`) makes **zero** network requests.
 - The RemoteOK source makes **one** GET request to its public API per run, with a hard cap
   of 15 items and a 15-second timeout.
 - The Remotive source makes **one** GET request to its public API per run, keeps at most 20
@@ -34,7 +33,6 @@ outsource or circumvent it. The run fails gracefully and moves on.
   tokens, keeps at most 20 items, and defaults to a single public example board.
 - The Lever source calls the public Postings API only for company slugs explicitly configured
   by the user, keeps at most 20 items, and does not try to discover or crawl slugs.
-- The generic source loads **one** page with a cap of 10 items.
 - There is no crawling, no pagination loops, no parallel request storms, no retry hammering.
 
 ## Respect Website Restrictions
@@ -43,14 +41,10 @@ outsource or circumvent it. The run fails gracefully and moves on.
 - Sources are chosen for having explicitly public data (RemoteOK, Remotive, The Muse,
   Greenhouse and Lever expose public job data through documented or public JSON endpoints).
   The report always preserves the original job URL, which links back to the source posting.
-- If a site's terms or robots directives disallow automated access, it is not a valid target
-  for the generic source. The README states this requirement for `GENERIC_JOBS_URL`.
 
-## Sample Data for Demo Stability
+## Test Fixture Data
 
-The primary demo runs against `samples/sample-jobs.html` — 16 fictional postings served from
-disk. This keeps demos deterministic, offline and free of any load on real websites, while
-still exercising a real Playwright browser end-to-end.
+Automated E2E tests use `samples/sample-jobs.html`, a fictional local fixture served from disk. It is not exposed as a CLI or web source; it exists only to keep tests deterministic, offline and free of load on real websites.
 
 ## Low Default Limits
 
@@ -60,6 +54,4 @@ harvesting.
 
 ## Best-Effort Real Sources
 
-Real sources are intentionally fragile-by-design: any error (network, markup change, blocking)
-results in an empty list and a log warning, never in retries or workarounds. Reliability comes
-from the sample source; realism comes from the architecture being identical for all sources.
+Real sources are intentionally fragile-by-design: any error (network, API change, blocking or missing configuration) results in an empty list and a log warning, never in retries or workarounds.

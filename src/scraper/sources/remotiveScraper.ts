@@ -111,7 +111,7 @@ export async function scrapeRemotiveJobs(options: ScrapeOptions): Promise<Scrape
   } catch (error) {
     logger.warn(
       `Remotive source unavailable (${(error as Error).message}); returning no jobs. ` +
-        'Use --source sample for a fully offline run.'
+        'Try another real source such as --source themuse or --source greenhouse.'
     );
     return [];
   } finally {

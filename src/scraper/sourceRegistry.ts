@@ -6,7 +6,6 @@ import { scrapeRemotiveJobs } from './sources/remotiveScraper';
 import { scrapeTheMuseJobs } from './sources/theMuseScraper';
 import { scrapeGreenhouseJobs } from './sources/greenhouseScraper';
 import { scrapeLeverJobs } from './sources/leverScraper';
-import { scrapeGenericPublicJobs } from './sources/genericPublicJobsScraper';
 
 const registry: Record<JobSource, ScraperFn> = {
   sample: (options) => scrapeSampleJobs(options),
@@ -15,7 +14,6 @@ const registry: Record<JobSource, ScraperFn> = {
   themuse: scrapeTheMuseJobs,
   greenhouse: scrapeGreenhouseJobs,
   lever: scrapeLeverJobs,
-  generic: scrapeGenericPublicJobs,
 };
 
 export function getScraper(source: JobSource): ScraperFn {

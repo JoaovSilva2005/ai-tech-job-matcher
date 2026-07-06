@@ -7,7 +7,7 @@ export function indexHtml(): string {
     (r) => `<option value="${r}"${r === 'all' ? ' selected' : ''}>${r}</option>`
   ).join('');
   const sourceOptions = VALID_SOURCES.map(
-    (s) => `<option value="${s}"${s === 'sample' ? ' selected' : ''}>${s}</option>`
+    (s) => `<option value="${s}"${s === 'themuse' ? ' selected' : ''}>${s}</option>`
   ).join('');
   const supportedResumeExtensions = SUPPORTED_RESUME_EXTENSIONS.join(',');
   const supportedResumeLabel = SUPPORTED_RESUME_EXTENSIONS.join(', ');
@@ -71,7 +71,6 @@ export function indexHtml(): string {
   .skills { color: var(--muted); font-size: 12px; }
   .skills .miss { color: var(--orange); }
   .muted { color: var(--muted); }
-  .sampleUrl { color: var(--muted); font-size: 12px; border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; }
   .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid var(--border);
     border-top-color: var(--accent); border-radius: 50%; animation: spin .8s linear infinite; vertical-align: middle; }
   @keyframes spin { to { transform: rotate(360deg); } }
@@ -108,7 +107,7 @@ export function indexHtml(): string {
       </div>
       <div class="actions">
         <button type="submit" id="submitBtn">Analyze jobs</button>
-        <span class="hint">Runs fully offline with the <code>sample</code> source — no API key required. Your resume is deleted from disk right after analysis.</span>
+        <span class="hint">Uses real public job sources. Your resume is deleted from disk right after analysis.</span>
       </div>
     </form>
   </div>
@@ -152,21 +151,8 @@ function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&
 function list(arr, cls) { if (!arr || !arr.length) return '<span class="muted">—</span>';
   return arr.slice(0, 6).map(s => '<span class="' + (cls||'') + '">' + esc(s) + '</span>').join(', '); }
 function valueOrDash(value) { return value ? esc(value) : '<span class="muted">-</span>'; }
-function isReservedDemoUrl(value) {
-  try {
-    const host = new URL(value).hostname.toLowerCase();
-    return host === 'example.com' || host.endsWith('.example.com') ||
-      host.endsWith('.example.org') || host.endsWith('.example.net') ||
-      host.endsWith('.test') || host.endsWith('.invalid');
-  } catch (_err) {
-    return true;
-  }
-}
 function applyLink(url) {
   if (!url) return '';
-  if (isReservedDemoUrl(url)) {
-    return '<span class="sampleUrl" title="Sample source uses offline demo jobs without public apply pages">Demo job only</span>';
-  }
   return '<a class="applyBtn" href="' + esc(url) + '" target="_blank" rel="noopener">Apply to job</a>';
 }
 function sourcePill(job) {
@@ -218,7 +204,7 @@ function render(data) {
       '</div>' +
       (m.length
         ? '<div class="jobsList">' + jobCards + '</div>'
-        : '<p class="muted">No jobs matched this role in the selected source. Try <code>role: all</code> or the <code>sample</code> source.</p>') +
+        : '<p class="muted">No jobs matched this role in the selected source. Try <code>role: all</code> or another real source.</p>') +
     '</section>';
 }
 </script>

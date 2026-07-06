@@ -8,11 +8,11 @@ automated test (or is verifiable via CLI as noted).
 | TC-01 | Valid TXT resume | Run pipeline with `--resume samples/sample-resume.txt` | Resume is parsed; skills, seniority and English level are detected |
 | TC-02 | Invalid resume path | Run pipeline with `--resume ./does-not-exist.txt` | Clear error "Resume file not found"; exit code 1; no crash |
 | TC-03 | Unsupported resume format | Run pipeline with a `.png` file as resume | Error listing supported formats (.txt, .md, .pdf, .docx) |
-| TC-04 | Scrape jobs from sample source | Run with `--source sample --limit 50` | ≥16 jobs extracted, all with title, company, URL, work mode, description ≥100 chars |
+| TC-04 | Scrape fixture jobs | Run the fixture scraper with limit 50 | ≥16 jobs extracted, all with title, company, URL, work mode, description ≥100 chars |
 | TC-05 | Filter QA jobs | Run with `--role qa` | Ranking contains only jobs classified as `qa` |
 | TC-06 | Filter frontend jobs | Run with `--role frontend` | Ranking contains only jobs classified as `frontend` |
 | TC-07 | Role `all` returns mixed jobs | Run with `--role all` | Ranking contains ≥4 different roles |
-| TC-08 | Remove duplicate jobs | Scrape sample board (contains intentional duplicate tb-017) | `duplicatesRemoved ≥ 1`; no repeated title+company pair in ranking |
+| TC-08 | Remove duplicate jobs | Scrape fixture board (contains intentional duplicate tb-017) | `duplicatesRemoved ≥ 1`; no repeated title+company pair in ranking |
 | TC-09 | Validate required job fields | Feed fixture jobs with empty title / invalid URL (`tests/fixtures/sample-jobs.json`) | High severity issues on `title`/`url`; job status `invalid`; excluded from ranking |
 | TC-10 | Generate fallback resume analysis | Analyze sample resume with no API key | `fallbackMode: true`; JavaScript/TypeScript/Git/SQL/Playwright detected; English `advanced` |
 | TC-11 | Generate fallback job analysis | Analyze QA Playwright fixture job with no API key | Role `qa`, seniority `junior`, Playwright in automationTools, `testingRequired: true` |

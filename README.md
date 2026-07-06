@@ -22,7 +22,7 @@ study before applying.
 
 ## Features
 
-- Public job collection from a deterministic local board plus real API sources (RemoteOK, Remotive, The Muse, Greenhouse and Lever)
+- Real public job collection from RemoteOK, Remotive, The Muse, Greenhouse and Lever
 - 📄 **Resume parsing** for TXT, PDF and DOCX files
 - 🔒 **PII sanitization** — emails, phones and documents are masked before analysis and never persisted
 - 🤖 **Flexible AI layer** — Gemini, OpenAI or Anthropic via adapter, with a local keyword fallback that requires **no API key**
@@ -78,16 +78,13 @@ No further setup needed — the tool works out of the box with no API key (fallb
 ## How to Run
 
 ```bash
-# QA jobs demo (offline, no API key needed)
+# QA jobs from a real public source
 npm run demo:qa
 
-# All roles demo
+# All roles from a real public source
 npm run demo:all
 
 # Custom runs
-npm run dev -- --resume ./samples/sample-resume.txt --role qa --source sample --limit 10
-npm run dev -- --resume ./samples/sample-resume.txt --role frontend --source sample --limit 10
-npm run dev -- --resume ./samples/sample-resume.txt --role all --source sample --limit 20
 npm run dev -- --resume ./my-resume.pdf --role backend --source remoteok --limit 10
 npm run dev -- --resume ./samples/sample-resume.txt --role all --source themuse --limit 10
 npm run dev -- --resume ./samples/sample-resume.txt --role all --source greenhouse --limit 10
@@ -108,7 +105,7 @@ the generated Excel/Markdown reports. The uploaded resume is deleted from disk a
 |--------|--------|---------|-------------|
 | `--resume` | file path (.txt/.md/.pdf/.docx) | **required** | Resume to analyze |
 | `--role` | `qa` `frontend` `backend` `fullstack` `mobile` `data` `devops` `support` `internship` `all` | `all` | Target tech area |
-| `--source` | `sample` `remoteok` `remotive` `themuse` `greenhouse` `lever` `generic` | `sample` | Job source (`sample` is offline and deterministic; the other named sources use public APIs or a configured public page) |
+| `--source` | `remoteok` `remotive` `themuse` `greenhouse` `lever` | `themuse` | Real public job source |
 | `--limit` | 1–100 | `16` | Max jobs to collect |
 | `--output` | directory path | `./output` | Output folder |
 | `--fallback` | flag | off | Force local analysis (skip AI even if a key exists) |
@@ -118,13 +115,11 @@ the generated Excel/Markdown reports. The uploaded resume is deleted from disk a
 
 | Source | Type | Auth | Notes |
 |--------|------|------|-------|
-| `sample` | Local HTML (Playwright, `file://`) | — | **Default.** Offline, deterministic, 16 fictional jobs. Best for demos and tests. |
 | `remotive` | Public JSON API | None | Real remote jobs. The free feed returns the ~30 most recent postings across all categories, so the app filters it **client-side** by `--role`. |
 | `remoteok` | Public JSON API | None | Real remote jobs (single request, capped at 15). |
 | `themuse` | Public JSON API | None | Real Computer and IT jobs from The Muse public endpoint, capped at 20. |
 | `greenhouse` | Public ATS API | None | Real jobs from Greenhouse Job Board API. Defaults to the public `stripe` board; override with `GREENHOUSE_BOARD_TOKENS`. |
 | `lever` | Public ATS API | None | Real jobs from Lever Postings API. Requires known public company slugs in `LEVER_COMPANY_SLUGS`. |
-| `generic` | Any public page (Playwright) | None | Best-effort scraper for the URL in `GENERIC_JOBS_URL`; public, no login/captcha. |
 
 ```bash
 # Real remote jobs from Remotive, filtered to QA by the app
@@ -159,7 +154,6 @@ Copy `.env.example` to `.env` (optional — everything works without it):
 | `AI_PROVIDER` | `fallback` (default), `gemini`, `openai` or `anthropic` |
 | `GEMINI_API_KEY` / `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` | Provider keys (missing key ⇒ automatic fallback) |
 | `GEMINI_MODEL` / `OPENAI_MODEL` / `ANTHROPIC_MODEL` | Optional model overrides |
-| `GENERIC_JOBS_URL` | Public job board URL for the best-effort `generic` source |
 | `GREENHOUSE_BOARD_TOKENS` | Optional comma-separated Greenhouse board tokens; defaults to `stripe` when empty |
 | `LEVER_COMPANY_SLUGS` | Optional comma-separated Lever company slugs for the `lever` source |
 
@@ -168,22 +162,15 @@ Copy `.env.example` to `.env` (optional — everything works without it):
 ```
 [1/12] Reading resume: ./samples/sample-resume.txt
 [3/12] Analyzing resume with "local-fallback" (AI_PROVIDER=fallback (default))...
-[4/12] Collecting jobs from "sample"...
+[4/12] Collecting jobs from "themuse"...
 [7/12] Analyzing 16 job(s) with "local-fallback"...
 [10/12] Generating Excel report...
 Done in 0.4s. Reports saved to ./output
 ```
 
-Top of a real generated ranking (sample resume, `--role qa`):
-
-| # | Score | Recommendation | Job | Company |
-|---|-------|----------------|-----|---------|
-| 1 | 90 | Strong Apply | QA Junior Engineer (Playwright) | BlueOrbit Software |
-| 2 | 72 | Apply | Manual QA Analyst | Verdant Systems |
-| 3 | 66 | Study Before Applying | QA Junior Analyst (Cypress) | Nimbus Digital |
-| 4 | 53 | Study Before Applying | QA Automation Engineer (Mid-Level) | Skyline Fintech |
-
-See [samples/sample-output-preview.md](samples/sample-output-preview.md) for more.
+The ranking rows depend on the real public source response at runtime. Each row includes the
+job title, company, location, source, score, recommendation, matched skills, missing skills
+and the original application URL.
 
 ## Excel Report Structure
 
@@ -218,17 +205,13 @@ npm run test:e2e  # browser scraping + full pipeline + Excel validation
 ```
 
 Unit tests cover skill normalization, role classification, scoring, validation, duplicate
-detection and the fallback analyzer. E2E tests scrape the sample board with a real Chromium
-browser, run the entire pipeline and open the generated Excel to assert sheets, sorting and
-privacy guarantees. Evidence on failure: screenshot, trace and video.
+detection, public source mappers and the fallback analyzer. E2E tests use a local fixture board for deterministic coverage, run the entire pipeline and open the generated Excel to assert sheets, sorting and privacy guarantees. Evidence on failure: screenshot, trace and video.
 Docs: [test plan](docs/test-plan.md) · [test cases](docs/test-cases.md) ·
 [bug report template](docs/bug-report-template.md).
 
 ## Ethical Scraping Notes
 
-Only public data; no login bypass; no captcha solving; no aggressive requests (the demo
-source is a local file with **zero** network calls; real sources are low-volume, capped and
-best-effort). Full policy: [docs/scraping-ethics.md](docs/scraping-ethics.md).
+Only public data; no login bypass; no captcha solving; no aggressive requests. Runtime job sources are real, low-volume, capped and best-effort. Full policy: [docs/scraping-ethics.md](docs/scraping-ethics.md).
 
 ## Privacy Notes
 
