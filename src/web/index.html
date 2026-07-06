@@ -414,11 +414,11 @@ details.study ol li { margin-bottom: 4px; break-inside: avoid; }
         <label for="sourceSelect">Job source</label>
         <select id="sourceSelect" name="source">
           <option value="all">All sources</option>
-          <option value="themuse" selected>The Muse</option>
+          <option value="gupy" selected>Gupy Brazil</option>
+          <option value="themuse">The Muse</option>
           <option value="remoteok">RemoteOK</option>
           <option value="remotive">Remotive</option>
           <option value="greenhouse">Greenhouse</option>
-          <option value="gupy">Gupy Brazil</option>
           <option value="lever">Lever</option>
         </select>
       </div>
@@ -469,15 +469,14 @@ details.study ol li { margin-bottom: 4px; break-inside: avoid; }
 
   </div>
 
-  <p class="demo-note" id="demoNote" hidden>demo mode — backend unreachable, showing sample data · append ?state=empty or ?state=error to preview those states</p>
 </div>
 
 <script>
 "use strict";
 /* ============================================================
    AI Tech Job Matcher — front-end
-   Calls POST /api/analyze; falls back to realistic mock data
-   when no backend is reachable (demo mode).
+   Calls POST /api/analyze and renders only server results from
+   the selected real source.
    ============================================================ */
 
 const $ = (id) => document.getElementById(id);
@@ -548,7 +547,6 @@ form.addEventListener("submit", async (e) => {
 document.addEventListener("click", (e) => {
   if (e.target.closest("[data-retry]")) {
     show(null);
-    $("demoNote").hidden = true;
     fileInput.focus();
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
@@ -586,9 +584,7 @@ async function runAnalysis() {
       data = await res.json();
     } catch (err) {
       if (err instanceof ApiError) throw err;
-      // Network failure → no backend. Demo mode with realistic sample data.
-      data = await mockAnalyze($("roleSelect").value);
-      $("demoNote").hidden = false;
+      throw new ApiError("Backend is not reachable. Start the app with npm run web and try again.");
     }
     renderResults(data);
   } catch (err) {
@@ -731,70 +727,6 @@ function card(m) {
   return el("li", { class: "card", "data-tier": m.recommendation || "low_priority" }, rail, body);
 }
 
-/* ============================================================
-   Demo mode — realistic sample data mirroring the real pipeline
-   output, so every state renders without a backend.
-   ============================================================ */
-function mockAnalyze(role) {
-  return new Promise((resolve, reject) => setTimeout(() => {
-    try { resolve(MOCK_RESPONSE(role)); } catch (e) { reject(e); }
-  }, 3200));
-}
-
-const MOCK_MATCHES = [
-  { score: 92, recommendation: "strong_apply", title: "Junior QA Engineer (Web Automation)", company: "Loggi", location: "Remote — LATAM", workMode: "remote", seniority: "junior", englishLevel: "intermediate", source: "themuse", url: "https://example.com/jobs/1",
-    matchedSkills: ["JavaScript", "TypeScript", "Playwright", "Git", "SQL"], missingSkills: ["Cypress"], criticalGaps: [],
-    explanation: "Strong match: the candidate covers 5 of 6 required skills, the role is junior-friendly and explicitly open to first-time QA engineers.",
-    studyPlan: ["Cypress basics", "Page Object Model patterns"] },
-  { score: 84, recommendation: "apply", title: "QA Analyst, Payments", company: "Nubank", location: "São Paulo, BR", workMode: "hybrid", seniority: "junior", englishLevel: "advanced", source: "themuse", url: "https://example.com/jobs/2",
-    matchedSkills: ["SQL", "Python", "Git", "API Testing"], missingSkills: ["Postman", "JMeter"], criticalGaps: [],
-    explanation: "Good match on core testing skills; the missing tools are quick to pick up and not listed as hard requirements.",
-    studyPlan: ["Postman collections", "Basic load testing with JMeter"] },
-  { score: 71, recommendation: "apply", title: "Frontend Developer (Entry Level)", company: "Stone", location: "Remote — BR", workMode: "remote", seniority: "junior", englishLevel: "intermediate", source: "themuse", url: "https://example.com/jobs/3",
-    matchedSkills: ["React", "JavaScript", "TypeScript", "Git"], missingSkills: ["Next.js", "Testing Library"], criticalGaps: [],
-    explanation: "Solid frontend overlap; the role prefers Next.js experience but accepts strong React fundamentals.",
-    studyPlan: ["Next.js app router", "React Testing Library"] },
-  { score: 55, recommendation: "study_before_applying", title: "IT/Helpdesk Support Specialist", company: "SimVentions, Inc", location: "Manassas, VA", workMode: "hybrid", seniority: "mid", englishLevel: "advanced", source: "themuse", url: "https://example.com/jobs/4",
-    matchedSkills: ["Help Desk"], missingSkills: ["Troubleshooting", "Customer Support", "Ticketing systems"], criticalGaps: [],
-    explanation: "Partial match because the candidate already has Help Desk experience; the position targets mid level and the main gaps are support-specific tooling.",
-    studyPlan: ["ITIL fundamentals", "Ticketing workflows (Jira Service Desk)", "Troubleshooting methodology"] },
-  { score: 48, recommendation: "low_priority", title: "IT Systems Administrator, Launch", company: "SpaceX", location: "Brownsville, TX", workMode: "onsite", seniority: "mid", englishLevel: "advanced", source: "themuse", url: "https://example.com/jobs/5",
-    matchedSkills: ["Python"], missingSkills: ["Linux", "Automated Testing"], criticalGaps: ["Linux administration"],
-    explanation: "Weak match: only Python overlaps, the position targets mid level and requires deep Linux administration.",
-    studyPlan: ["Linux fundamentals", "Bash scripting", "System monitoring basics"] },
-  { score: 22, recommendation: "not_recommended", title: "Senior Equity Research Analyst — IT Services", company: "Bank of America", location: "New York, NY", workMode: "onsite", seniority: "senior", englishLevel: "fluent", source: "themuse", url: "https://example.com/jobs/6",
-    matchedSkills: ["Excel"], missingSkills: ["Financial modeling", "Equity research", "CFA progress"], criticalGaps: ["Senior-level finance background"],
-    explanation: "Not a fit: this is a senior finance position — the only overlap is Excel and the core requirements sit outside a junior tech profile.",
-    studyPlan: [] },
-];
-
-function MOCK_RESPONSE(role) {
-  const forcedState = new URLSearchParams(location.search).get("state");
-  if (forcedState === "error") throw new ApiError("The job source did not respond (timeout after 30s).");
-  const matches = forcedState === "empty" ? [] : MOCK_MATCHES;
-  return {
-    summary: { jobsCollected: 20, jobsAfterRoleFilter: role === "all" ? 20 : 9, duplicatesRemoved: 3, usedFallback: true, aiProvider: "fallback" },
-    resumeAnalysis: {
-      detectedSeniority: "junior",
-      targetRoles: ["qa", "frontend", "fullstack"],
-      technicalSkills: ["JavaScript", "TypeScript", "Python", "SQL", "React", "Node.js", "Git"],
-      strengths: ["Solid technical base", "Strong English level"],
-      improvementAreas: ["Test automation practice", "API testing", "Docker basics"],
-    },
-    matches,
-    downloadUrl: "/api/download/excel",
-    markdownUrl: "/api/download/summary",
-  };
-}
-
-/* Preview helper: ?state=results|empty|error renders that state on load
-   with sample data — handy for reviewing the UI without a backend. */
-(function initPreviewState() {
-  const st = new URLSearchParams(location.search).get("state");
-  if (!st) return;
-  $("demoNote").hidden = false;
-  try { renderResults(MOCK_RESPONSE("all")); } catch (e) { renderError(e.message); }
-})();
 </script>
 </body>
 </html>

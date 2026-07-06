@@ -111,10 +111,10 @@ function normalizeRole(value: unknown): TechRole {
 }
 
 function normalizeSource(value: unknown): SelectableSource {
-  const source = String(value ?? 'themuse').toLowerCase() as SelectableSource;
+  const source = String(value ?? 'gupy').toLowerCase() as SelectableSource;
   return SELECTABLE_SOURCES.includes(source as (typeof SELECTABLE_SOURCES)[number])
     ? source
-    : 'themuse';
+    : 'gupy';
 }
 
 function normalizeLimit(value: unknown): number {

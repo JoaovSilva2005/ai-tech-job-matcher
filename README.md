@@ -9,7 +9,7 @@ reporting.**
 
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)
 ![Playwright](https://img.shields.io/badge/Playwright-scraping%20%2B%20testing-2EAD33?logo=playwright&logoColor=white)
-![Tests](https://img.shields.io/badge/tests-77%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-80%20passing-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 
 ## Problem Solved
@@ -29,7 +29,7 @@ study before applying.
 - ✅ **QA validation gate** — severity-ranked issues, data quality scores, duplicate removal
 - 🧮 **Hybrid match scoring (0–100)** with recommendations, explanations and per-job study plans
 - 📊 **Professional Excel report** (6 sheets, ExcelJS) + Markdown summary + 4 JSON artifacts
-- 77 automated tests (unit + E2E) with Playwright Test
+- 80 automated tests (unit + E2E) with Playwright Test
 - 🌐 **Optional no-build web UI** for uploading a resume and downloading the generated report
 
 ## Tech Stack
@@ -106,7 +106,7 @@ the generated Excel/Markdown reports. The uploaded resume is deleted from disk a
 |--------|--------|---------|-------------|
 | `--resume` | file path (.txt/.md/.pdf/.docx) | **required** | Resume to analyze |
 | `--role` | `qa` `frontend` `backend` `fullstack` `mobile` `data` `devops` `support` `internship` `all` | `all` | Target tech area |
-| `--source` | `remoteok` `remotive` `themuse` `greenhouse` `gupy` `lever` `all` | `themuse` | Real public job source (`all` queries every source at once) |
+| `--source` | `remoteok` `remotive` `themuse` `greenhouse` `gupy` `lever` `all` | `gupy` | Real public job source (`all` queries every source at once) |
 | `--limit` | 1–100 | `16` | Max jobs to collect |
 | `--output` | directory path | `./output` | Output folder |
 | `--fallback` | flag | off | Force local analysis (skip AI even if a key exists) |
@@ -172,7 +172,7 @@ Copy `.env.example` to `.env` (optional — everything works without it):
 ```
 [1/12] Reading resume: ./samples/sample-resume.txt
 [3/12] Analyzing resume with "local-fallback" (AI_PROVIDER=fallback (default))...
-[4/12] Collecting jobs from "themuse"...
+[4/12] Collecting jobs from "gupy"...
 [7/12] Analyzing 16 job(s) with "local-fallback"...
 [10/12] Generating Excel report...
 Done in 0.4s. Reports saved to ./output
@@ -209,7 +209,7 @@ Details in [docs/qa-strategy.md](docs/qa-strategy.md).
 ## Testing Strategy
 
 ```bash
-npm test          # all 77 tests
+npm test          # all 80 tests
 npm run test:unit # pure-logic tests
 npm run test:e2e  # browser scraping + full pipeline + Excel validation
 ```
@@ -238,7 +238,7 @@ git-ignored. All sample data is fictional.
 - **Bug reporting mindset** — QA Issues sheet + professional bug report template.
 - **Evidence generation** — JSON artifacts, traces, screenshots and videos on failure.
 - **Report generation** — recruiter-ready Excel output.
-- **Automated tests** - 77 unit + E2E tests with Playwright Test.
+- **Automated tests** - 80 unit + E2E tests with Playwright Test.
 
 ## How this project relates to Software Development
 

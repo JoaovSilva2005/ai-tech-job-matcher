@@ -36,8 +36,24 @@ export async function scrapeJobs(
   logger.info(`Collecting jobs from source "${source}" (limit: ${options.limit})...`);
   const scraper = getScraper(source);
   const jobs = await scraper(options);
+  assertSingleSourceResults(source, jobs);
   logger.info(`Collected ${jobs.length} job(s) from "${source}".`);
   return jobs.slice(0, options.limit);
+}
+
+export function assertSingleSourceResults(source: SelectableSource, jobs: ScrapedJob[]): void {
+  if (source === 'all') return;
+
+  const wrongSources = [
+    ...new Set(jobs.map((job) => job.source).filter((jobSource) => jobSource !== source)),
+  ];
+  if (wrongSources.length > 0) {
+    throw new Error(
+      `Source "${source}" returned job(s) from ${wrongSources.join(
+        ', '
+      )}. Refusing mixed-source results.`
+    );
+  }
 }
 
 /**

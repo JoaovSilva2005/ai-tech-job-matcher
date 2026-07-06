@@ -54,7 +54,7 @@
 - Every scraped job passes a validation gate with severity-ranked issues; bad data is
   excluded with evidence (QA Issues sheet), never silently.
 - Duplicate detection, data quality scoring, seniority-mismatch warnings.
-- Test plan, 18 documented test cases, bug report template, and 77 automated tests with
+- Test plan, 18 documented test cases, bug report template, and 80 automated tests with
   failure evidence (screenshot/trace/video) configured.
 
 ## How it also demonstrates TypeScript development

@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
-import { interleave } from '../../src/scraper/jobScraper';
+import { assertSingleSourceResults, interleave } from '../../src/scraper/jobScraper';
 import { SELECTABLE_SOURCES, VALID_SOURCES } from '../../src/cli/cliTypes';
+import type { ScrapedJob } from '../../src/scraper/types';
 
 test.describe('interleave (all-sources merge)', () => {
   test('round-robins across lists to preserve variety', () => {
@@ -40,5 +41,28 @@ test.describe('selectable sources', () => {
     }
     expect(SELECTABLE_SOURCES).toContain('all');
     expect(SELECTABLE_SOURCES).not.toContain('sample');
+  });
+});
+
+test.describe('single-source guard', () => {
+  const baseJob: ScrapedJob = {
+    id: '1',
+    title: 'QA Analyst',
+    company: 'Acme',
+    workMode: 'remote',
+    url: 'https://example.com/job',
+    description: 'QA role with test automation and API testing.',
+    source: 'gupy',
+    scrapedAt: '2026-07-06T00:00:00.000Z',
+  };
+
+  test('allows jobs from the selected source', () => {
+    expect(() => assertSingleSourceResults('gupy', [baseJob])).not.toThrow();
+  });
+
+  test('blocks mixed-source results for a specific source', () => {
+    expect(() =>
+      assertSingleSourceResults('gupy', [{ ...baseJob, source: 'themuse' }])
+    ).toThrow(/Refusing mixed-source results/);
   });
 });

@@ -11,7 +11,7 @@ Usage:
 Options:
   --resume    Path to the resume file (${SUPPORTED_RESUME_EXTENSIONS.join(', ')})   [required]
   --role      Target role: ${VALID_ROLES.join(' | ')}          [default: all]
-  --source    Job source: ${SELECTABLE_SOURCES.join(' | ')}    [default: themuse; "all" queries every source]
+  --source    Job source: ${SELECTABLE_SOURCES.join(' | ')}    [default: gupy; "all" queries every source]
   --limit     Max number of jobs to collect                    [default: 16]
   --output    Output directory                                 [default: ./output]
   --fallback  Force local keyword analysis (no AI API calls)
@@ -28,7 +28,7 @@ export function parseArgs(argv: string[]): CliOptions {
   const options: CliOptions = {
     resume: '',
     role: 'all',
-    source: 'themuse',
+    source: 'gupy',
     limit: 16,
     output: './output',
     fallback: false,

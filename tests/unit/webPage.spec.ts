@@ -16,13 +16,14 @@ test.describe('web page', () => {
     expect(html).toContain('/api/download/summary');
   });
 
-  test('offers only public sources (no sample) with The Muse as default', () => {
+  test('offers only public sources (no sample) with Gupy as default', () => {
     const html = indexHtml();
 
-    expect(html).toContain('<option value="themuse" selected>');
+    expect(html).toContain('<option value="gupy" selected>');
+    expect(html).toContain('<option value="themuse">');
     expect(html).toContain('<option value="all">');
     expect(html).not.toContain('<option value="sample"');
-    for (const source of ['remoteok', 'remotive', 'greenhouse', 'gupy', 'lever']) {
+    for (const source of ['remoteok', 'remotive', 'greenhouse', 'lever']) {
       expect(html).toContain(`<option value="${source}">`);
     }
   });
@@ -30,5 +31,13 @@ test.describe('web page', () => {
   test('posts to the analyze endpoint', () => {
     const html = indexHtml();
     expect(html).toContain('/api/analyze');
+  });
+
+  test('does not render mock The Muse results when the backend is unreachable', () => {
+    const html = indexHtml();
+
+    expect(html).not.toContain('MOCK_MATCHES');
+    expect(html).not.toContain('mockAnalyze');
+    expect(html).not.toContain('source: "themuse"');
   });
 });
