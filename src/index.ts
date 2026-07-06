@@ -161,7 +161,15 @@ export async function runPipeline(options: CliOptions): Promise<PipelineResult> 
   writeJsonFile(
     jobsAnalyzedPath,
     uniqueJobs.map((job) => ({
-      job: { id: job.id, title: job.title, company: job.company, url: job.url },
+      job: {
+        id: job.id,
+        title: job.title,
+        company: job.company,
+        location: job.location,
+        workMode: job.workMode,
+        source: job.source,
+        url: job.url,
+      },
       validation: validations.get(job.id),
       analysis: analyses.get(job.id),
     }))
@@ -176,6 +184,9 @@ export async function runPipeline(options: CliOptions): Promise<PipelineResult> 
       jobId: m.job.id,
       title: m.job.title,
       company: m.job.company,
+      location: m.job.location,
+      workMode: m.job.workMode,
+      source: m.job.source,
       url: m.job.url,
       matchedSkills: m.matchedSkills,
       missingSkills: m.missingSkills,

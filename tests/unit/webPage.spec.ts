@@ -6,7 +6,9 @@ test.describe('web page job links', () => {
     const html = indexHtml();
 
     expect(html).toContain('function isReservedDemoUrl');
-    expect(html).toContain('sample only');
-    expect(html).toContain('jobLink(j.url)');
+    expect(html).toContain('Demo job only');
+    expect(html).toContain('Apply to job');
+    expect(html).toContain('renderJobCard');
+    expect(html).toContain('jobsList');
   });
 });

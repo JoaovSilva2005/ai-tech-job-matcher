@@ -136,6 +136,14 @@ test.describe('full pipeline (sample source, no API key)', () => {
 
     const matches = JSON.parse(fs.readFileSync(result.outputFiles.jobMatches, 'utf-8'));
     expect(matches.length).toBe(result.matches.length);
+    expect(matches[0]).toEqual(
+      expect.objectContaining({
+        source: expect.any(String),
+        workMode: expect.any(String),
+        location: expect.any(String),
+        url: expect.stringMatching(/^https?:\/\//),
+      })
+    );
   });
 
   test('a job with an empty title generates a high severity QA issue', () => {
