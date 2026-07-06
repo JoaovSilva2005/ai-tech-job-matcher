@@ -16,6 +16,7 @@ import { safeJsonParse } from './safeJsonParser';
 import { fallbackAnalyzeJob, fallbackAnalyzeResume } from './fallbackAnalyzer';
 import { callOpenAi } from './openAiClient';
 import { callAnthropic } from './anthropicClient';
+import { callGemini } from './geminiClient';
 import { logger } from '../utils/logger';
 
 export interface AiClient {
@@ -138,6 +139,17 @@ export function getAiClient(forceFallback = false): AiClientSelection {
     }
     logger.warn('AI_PROVIDER=anthropic but ANTHROPIC_API_KEY is empty; using local fallback.');
     return { client: new FallbackAiClient(), reason: 'anthropic selected but no API key' };
+  }
+
+  if (env.AI_PROVIDER === 'gemini') {
+    if (env.GEMINI_API_KEY) {
+      return {
+        client: new RemoteAiClient('gemini', callGemini),
+        reason: 'AI_PROVIDER=gemini',
+      };
+    }
+    logger.warn('AI_PROVIDER=gemini but GEMINI_API_KEY is empty; using local fallback.');
+    return { client: new FallbackAiClient(), reason: 'gemini selected but no API key' };
   }
 
   return { client: new FallbackAiClient(), reason: 'AI_PROVIDER=fallback (default)' };

@@ -9,7 +9,7 @@ reporting.**
 
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)
 ![Playwright](https://img.shields.io/badge/Playwright-scraping%20%2B%20testing-2EAD33?logo=playwright&logoColor=white)
-![Tests](https://img.shields.io/badge/tests-59%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-63%20passing-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 
 ## Problem Solved
@@ -25,11 +25,11 @@ study before applying.
 - 🎭 **Playwright scraping** of a deterministic local job board (16 realistic fictional jobs) plus best-effort real sources (RemoteOK, Remotive)
 - 📄 **Resume parsing** for TXT, PDF and DOCX files
 - 🔒 **PII sanitization** — emails, phones and documents are masked before analysis and never persisted
-- 🤖 **Flexible AI layer** — OpenAI or Anthropic via adapter, with a local keyword fallback that requires **no API key**
+- 🤖 **Flexible AI layer** — Gemini, OpenAI or Anthropic via adapter, with a local keyword fallback that requires **no API key**
 - ✅ **QA validation gate** — severity-ranked issues, data quality scores, duplicate removal
 - 🧮 **Hybrid match scoring (0–100)** with recommendations, explanations and per-job study plans
 - 📊 **Professional Excel report** (6 sheets, ExcelJS) + Markdown summary + 4 JSON artifacts
-- 🧪 **59 automated tests** (unit + E2E) with Playwright Test
+- 🧪 **63 automated tests** (unit + E2E) with Playwright Test
 - 🌐 **Optional no-build web UI** for uploading a resume and downloading the generated report
 
 ## Tech Stack
@@ -45,7 +45,7 @@ src/
 ├── config/     environment loading (Zod-validated)
 ├── resume/     parse (TXT/PDF/DOCX) → sanitize PII → analyze
 ├── scraper/    source registry + Playwright scrapers + selectors + validation facade
-├── ai/         AiClient adapter (openai | anthropic | fallback), prompts, JSON repair
+├── ai/         AiClient adapter (gemini | openai | anthropic | fallback), prompts, JSON repair
 ├── matcher/    skill normalization, role classification, match scoring, recommendations
 ├── qa/         validation rules, duplicate detector, data quality score
 ├── reports/    Excel workbook (6 sheets), Markdown summary
@@ -142,9 +142,9 @@ Copy `.env.example` to `.env` (optional — everything works without it):
 
 | Variable | Description |
 |----------|-------------|
-| `AI_PROVIDER` | `fallback` (default), `openai` or `anthropic` |
-| `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` | Provider keys (missing key ⇒ automatic fallback) |
-| `OPENAI_MODEL` / `ANTHROPIC_MODEL` | Optional model overrides |
+| `AI_PROVIDER` | `fallback` (default), `gemini`, `openai` or `anthropic` |
+| `GEMINI_API_KEY` / `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` | Provider keys (missing key ⇒ automatic fallback) |
+| `GEMINI_MODEL` / `OPENAI_MODEL` / `ANTHROPIC_MODEL` | Optional model overrides |
 | `GENERIC_JOBS_URL` | Public job board URL for the best-effort `generic` source |
 
 ## Example Output
@@ -196,7 +196,7 @@ Details in [docs/qa-strategy.md](docs/qa-strategy.md).
 ## Testing Strategy
 
 ```bash
-npm test          # all 59 tests
+npm test          # all 63 tests
 npm run test:unit # pure-logic tests
 npm run test:e2e  # browser scraping + full pipeline + Excel validation
 ```
@@ -229,14 +229,14 @@ git-ignored. All sample data is fictional.
 - **Bug reporting mindset** — QA Issues sheet + professional bug report template.
 - **Evidence generation** — JSON artifacts, traces, screenshots and videos on failure.
 - **Report generation** — recruiter-ready Excel output.
-- **Automated tests** — 59 unit + E2E tests with Playwright Test.
+- **Automated tests** — 63 unit + E2E tests with Playwright Test.
 
 ## How this project relates to Software Development
 
 - **TypeScript architecture** — strict typing, typed boundaries between modules.
 - **Modular design** — adapter (AI providers), registry (scraper sources), facade (validation).
 - **CLI pipeline** — 12 observable steps with validated arguments.
-- **AI integration** — provider-agnostic clients, defensive JSON parsing, schema validation.
+- **AI integration** — provider-agnostic clients (Gemini/OpenAI/Anthropic), defensive JSON parsing, schema validation.
 - **File processing** — TXT/PDF/DOCX parsing, Excel and Markdown generation.
 - **Error handling** — graceful degradation at every external boundary.
 - **Clean code** — ESLint + Prettier, small focused modules, no hidden state.

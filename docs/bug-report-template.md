@@ -30,7 +30,7 @@ requiredSkills". Bad: "Excel broken".
 - OS + version:
 - Node.js version:
 - Project version / commit hash:
-- AI provider (`fallback` / `openai` / `anthropic`):
+- AI provider (`fallback` / `openai` / `anthropic` / `gemini`):
 - Command used (full CLI line):
 
 ## Steps to Reproduce

@@ -4,11 +4,13 @@ import { z } from 'zod';
 dotenv.config();
 
 const envSchema = z.object({
-  AI_PROVIDER: z.enum(['fallback', 'openai', 'anthropic']).default('fallback'),
+  AI_PROVIDER: z.enum(['fallback', 'openai', 'anthropic', 'gemini']).default('fallback'),
   OPENAI_API_KEY: z.string().optional().default(''),
   ANTHROPIC_API_KEY: z.string().optional().default(''),
+  GEMINI_API_KEY: z.string().optional().default(''),
   OPENAI_MODEL: z.string().optional().default('gpt-4o-mini'),
   ANTHROPIC_MODEL: z.string().optional().default('claude-sonnet-5'),
+  GEMINI_MODEL: z.string().optional().default('gemini-2.5-flash-lite'),
   GENERIC_JOBS_URL: z.string().optional().default(''),
 });
 

@@ -25,7 +25,7 @@ spawning subprocesses.
 | `src/config` | Environment loading with Zod validation (`.env`) |
 | `src/resume` | Parse (TXT/PDF/DOCX), sanitize PII, analyze resume |
 | `src/scraper` | Source registry, Playwright scrapers, per-source selectors, job validation facade |
-| `src/ai` | AI adapter interface, OpenAI/Anthropic clients, local fallback analyzer, prompts, JSON repair |
+| `src/ai` | AI adapter interface, Gemini/OpenAI/Anthropic clients, local fallback analyzer, prompts, JSON repair |
 | `src/matcher` | Skill normalization, role classification, hybrid match scoring, recommendations, explanations |
 | `src/qa` | Validation rules, issue detection, duplicate detector, data quality scoring |
 | `src/reports` | Excel workbook (ExcelJS), Markdown summary, shared report types and styles |
@@ -43,7 +43,7 @@ entering the typed domain.
 
 `AiClient` is a small interface (`analyzeResume`, `analyzeJob`). Three implementations:
 
-- `RemoteAiClient` wrapping **OpenAI** (Chat Completions) or **Anthropic** (Messages), both
+- `RemoteAiClient` wrapping **Gemini** (generateContent), **OpenAI** (Chat Completions) or **Anthropic** (Messages), all
   via plain `fetch` — no SDK dependencies.
 - `FallbackAiClient` delegating to the local keyword analyzer.
 

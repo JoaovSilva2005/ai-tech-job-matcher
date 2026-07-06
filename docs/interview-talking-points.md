@@ -33,8 +33,8 @@
 
 ## How the AI was integrated
 
-- A provider-agnostic `AiClient` interface with OpenAI and Anthropic implementations over
-  plain `fetch`, selected by environment variable.
+- A provider-agnostic `AiClient` interface with Gemini, OpenAI and Anthropic implementations
+  over plain `fetch`, selected by environment variable.
 - AI responses are treated as untrusted input: markdown-fence stripping, JSON repair, Zod
   schema validation with per-field defaults, one "fix your JSON" retry, then fallback.
 - A keyword-based local analyzer guarantees the tool works with zero API keys — which also
@@ -54,7 +54,7 @@
 - Every scraped job passes a validation gate with severity-ranked issues; bad data is
   excluded with evidence (QA Issues sheet), never silently.
 - Duplicate detection, data quality scoring, seniority-mismatch warnings.
-- Test plan, 18 documented test cases, bug report template, and 59 automated tests with
+- Test plan, 18 documented test cases, bug report template, and 63 automated tests with
   failure evidence (screenshot/trace/video) configured.
 
 ## How it also demonstrates TypeScript development

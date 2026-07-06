@@ -32,7 +32,7 @@ export function generateMarkdownSummary(data: ReportData, outputDir: string): st
     `- **Duplicates removed:** ${summary.duplicatesRemoved}`,
     `- **Jobs after role filter:** ${summary.jobsAfterRoleFilter}`,
     `- **Valid jobs:** ${summary.jobsValid} (needs review: ${summary.jobsNeedingReview}, invalid: ${summary.jobsInvalid})`,
-    `- **Analysis engine:** ${summary.usedFallback ? '🔁 Local fallback (keyword-based, no API key needed)' : `🤖 Real AI (${summary.aiProvider})`}`,
+    `- **Analysis engine:** ${formatAnalysisEngine(summary)}`,
     '',
     '## Top 5 Job Matches',
     '',
@@ -92,4 +92,14 @@ function countOccurrences(items: string[]): Array<[string, number]> {
 
 function unique(items: string[]): string[] {
   return [...new Set(items)];
+}
+
+function formatAnalysisEngine(summary: ReportData['summary']): string {
+  if (!summary.usedFallback) {
+    return `🤖 Real AI (${summary.aiProvider})`;
+  }
+  if (summary.aiProvider === 'local-fallback') {
+    return '🔁 Local fallback (keyword-based, no API key needed)';
+  }
+  return `⚠️ ${summary.aiProvider} selected; local fallback used for failed or limited AI calls`;
 }

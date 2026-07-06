@@ -5,9 +5,11 @@ import { runPipeline } from '../../src/index';
 import type { CliOptions } from '../../src/cli/cliTypes';
 import { validateJob } from '../../src/scraper/validateJob';
 import type { ScrapedJob } from '../../src/scraper/types';
+import { resetEnvCache } from '../../src/config/env';
 
 const RESUME_PATH = path.resolve(__dirname, '../../samples/sample-resume.txt');
 const OUTPUT_ROOT = path.resolve(__dirname, '../../output/e2e');
+const originalFetch = globalThis.fetch;
 
 function makeOptions(overrides: Partial<CliOptions>): CliOptions {
   return {
@@ -75,6 +77,44 @@ test.describe('full pipeline (sample source, no API key)', () => {
 
     const markdown = fs.readFileSync(result.outputFiles.markdown, 'utf-8');
     expect(markdown).toContain('Local fallback');
+  });
+
+  test('pipeline reports fallback mode when a remote AI provider fails', async () => {
+    const originalEnv = {
+      AI_PROVIDER: process.env.AI_PROVIDER,
+      GEMINI_API_KEY: process.env.GEMINI_API_KEY,
+      GEMINI_MODEL: process.env.GEMINI_MODEL,
+    };
+
+    process.env.AI_PROVIDER = 'gemini';
+    process.env.GEMINI_API_KEY = 'test-key';
+    process.env.GEMINI_MODEL = 'gemini-2.5-flash-lite';
+    globalThis.fetch = async () => new Response('{"error":"temporary test failure"}', { status: 500 });
+    resetEnvCache();
+
+    try {
+      const result = await runPipeline(
+        makeOptions({
+          role: 'qa',
+          limit: 1,
+          output: path.join(OUTPUT_ROOT, 'remote-fallback'),
+          fallback: false,
+        })
+      );
+
+      expect(result.summary.aiProvider).toBe('gemini');
+      expect(result.summary.usedFallback).toBe(true);
+      expect(result.matches.every((match) => match.analysis.fallbackMode)).toBe(true);
+
+      const markdown = fs.readFileSync(result.outputFiles.markdown, 'utf-8');
+      expect(markdown).toContain('gemini selected; local fallback used');
+    } finally {
+      process.env.AI_PROVIDER = originalEnv.AI_PROVIDER;
+      process.env.GEMINI_API_KEY = originalEnv.GEMINI_API_KEY;
+      process.env.GEMINI_MODEL = originalEnv.GEMINI_MODEL;
+      globalThis.fetch = originalFetch;
+      resetEnvCache();
+    }
   });
 
   test('markdown summary and JSON outputs contain the expected data', async () => {

@@ -119,7 +119,10 @@ export async function runPipeline(options: CliOptions): Promise<PipelineResult> 
     role: options.role,
     source: options.source,
     aiProvider: aiClient.providerName,
-    usedFallback: aiClient.isFallback,
+    usedFallback:
+      aiClient.isFallback ||
+      resumeAnalysis.fallbackMode ||
+      [...analyses.values()].some((analysis) => analysis.fallbackMode),
     jobsCollected: scrapedJobs.length,
     jobsValid: [...validations.values()].filter((v) => v.status === 'valid').length,
     jobsNeedingReview: [...validations.values()].filter((v) => v.status === 'needs_review').length,
