@@ -1,41 +1,41 @@
 # AI Tech Job Matcher
 
-Aplicacao em TypeScript para comparar um curriculo com vagas reais de tecnologia, ranquear as melhores oportunidades e gerar um relatorio Excel com evidencias de QA.
+A TypeScript application that compares a resume against real public tech jobs, ranks the best matches, and generates an Excel report with QA evidence.
 
-O projeto foi construido para demonstrar habilidades de QA Jr / Dev Jr: automacao com Playwright, testes automatizados, validacao de dados, scraping responsavel, tratamento de arquivos e organizacao de codigo.
+The project is focused on practical QA Jr / Dev Jr skills: Playwright automation, automated tests, data validation, responsible public job collection, file processing, and clean TypeScript organization.
 
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)
 ![Playwright](https://img.shields.io/badge/Playwright-tests%20%2B%20automation-2EAD33?logo=playwright&logoColor=white)
 ![Tests](https://img.shields.io/badge/tests-80%20passing-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 
-## O que o app faz
+## What It Does
 
-1. Le um curriculo em `.txt`, `.md`, `.pdf` ou `.docx`.
-2. Mascara dados pessoais antes da analise.
-3. Busca vagas reais em fontes publicas.
-4. Valida qualidade dos dados coletados.
-5. Compara curriculo e vaga por skills, senioridade, idioma e requisitos.
-6. Gera ranking de compatibilidade.
-7. Exporta relatorio Excel, resumo Markdown e JSONs de evidencia.
+1. Reads a resume from `.txt`, `.md`, `.pdf`, or `.docx`.
+2. Masks personal data before analysis.
+3. Collects real jobs from public sources.
+4. Validates collected job data.
+5. Compares resume and job requirements by skills, seniority, language, and role.
+6. Ranks job matches by compatibility score.
+7. Exports an Excel report, Markdown summary, and JSON evidence files.
 
-Funciona sem API key usando o modo local de analise. Se quiser, tambem aceita Gemini, OpenAI ou Anthropic por variaveis de ambiente.
+The app works without an API key by using a local fallback analyzer. Optional AI providers can be configured through environment variables.
 
-## Destaques para QA
+## QA Highlights
 
-- Playwright Test com testes unitarios e E2E.
-- Automacao de scraping em ambiente controlado com Playwright.
-- Validacao de campos obrigatorios, URL, descricao, senioridade, work mode e duplicidade.
-- Relatorio de problemas na aba `QA Issues`.
-- Pipeline com fallback quando uma fonte externa ou IA falha.
-- Evidencias geradas em Excel, Markdown e JSON.
-- 80 testes automatizados passando.
+- Playwright Test coverage for unit and E2E flows.
+- Playwright automation used for controlled scraping/test fixtures.
+- Data validation for required fields, URLs, descriptions, seniority, work mode, and duplicates.
+- Dedicated `QA Issues` sheet in the Excel report.
+- Graceful fallback when an external source or AI provider fails.
+- Excel, Markdown, and JSON outputs for traceability.
+- 80 automated tests passing.
 
-## Stack
+## Tech Stack
 
 - Node.js
-- TypeScript strict
-- Playwright e Playwright Test
+- TypeScript strict mode
+- Playwright and Playwright Test
 - ExcelJS
 - Express
 - Zod
@@ -44,34 +44,34 @@ Funciona sem API key usando o modo local de analise. Se quiser, tambem aceita Ge
 - pdf-parse
 - mammoth
 
-## Como rodar
+## Getting Started
 
 ```bash
 npm install
 npx playwright install chromium
 ```
 
-Rodar pela CLI usando a Gupy:
+Run the CLI with Gupy jobs:
 
 ```bash
 npm run dev -- -- --resume ./samples/sample-resume.txt --role qa --source gupy --limit 5 --fallback
 ```
 
-Rodar a interface web:
+Run the web UI:
 
 ```bash
 npm run web
 ```
 
-Acesse:
+Open:
 
 ```text
 http://localhost:4180
 ```
 
-Na interface, envie um curriculo, escolha a area e a fonte de vagas. Por padrao, a fonte selecionada e `Gupy Brazil`.
+The web UI lets the user upload a resume, choose a target role, select a public job source, and download the generated reports. `Gupy Brazil` is selected by default.
 
-## Comandos principais
+## Main Commands
 
 ```bash
 npm run build
@@ -81,34 +81,34 @@ npm run test:unit
 npm run test:e2e
 ```
 
-Atalho de demo:
+Demo shortcuts:
 
 ```bash
 npm run demo:qa
 npm run demo:all
 ```
 
-## Fontes de vagas
+## Job Sources
 
-| Fonte | Tipo | Precisa de chave? | Observacao |
+| Source | Type | Requires key? | Notes |
 |---|---|---:|---|
-| `gupy` | Paginas publicas brasileiras | Nao | Fonte padrao da Web UI e CLI |
-| `remoteok` | API publica | Nao | Vagas remotas |
-| `remotive` | API publica | Nao | Vagas remotas |
-| `themuse` | API publica | Nao | Vagas internacionais |
-| `greenhouse` | API publica de ATS | Nao | Usa boards publicos |
-| `lever` | API publica de ATS | Nao | Requer slugs publicos em `LEVER_COMPANY_SLUGS` |
-| `all` | Agregador | Nao | Consulta as fontes publicas configuradas |
+| `gupy` | Public Brazilian career pages | No | Default source for CLI and Web UI |
+| `remoteok` | Public API | No | Remote jobs |
+| `remotive` | Public API | No | Remote jobs |
+| `themuse` | Public API | No | International jobs |
+| `greenhouse` | Public ATS API | No | Public Greenhouse boards |
+| `lever` | Public ATS API | No | Requires public slugs in `LEVER_COMPANY_SLUGS` |
+| `all` | Aggregator | No | Queries configured public sources |
 
-Exemplo com uma vaga brasileira de QA:
+Example with Brazilian QA jobs:
 
 ```bash
 npm run dev -- -- --resume ./samples/sample-resume.txt --role qa --source gupy --limit 8 --fallback
 ```
 
-## Saidas geradas
+## Generated Outputs
 
-Os arquivos sao salvos em `output/`:
+Files are saved under `output/`:
 
 ```text
 output/job-match-report.xlsx
@@ -119,66 +119,52 @@ output/jobs-raw.json
 output/resume-analysis.json
 ```
 
-O Excel possui seis abas:
+The Excel workbook contains six sheets:
 
-- `Ranking`: vagas ordenadas por score.
-- `Details`: detalhes da analise de cada vaga.
-- `QA Issues`: problemas encontrados nos dados.
-- `Resume Analysis`: perfil tecnico extraido do curriculo.
-- `Market Insights`: skills mais pedidas nas vagas.
-- `Execution Summary`: resumo da execucao.
+- `Ranking`: jobs sorted by match score.
+- `Details`: detailed analysis for each job.
+- `QA Issues`: data quality issues found during validation.
+- `Resume Analysis`: structured candidate profile.
+- `Market Insights`: most requested skills across analyzed jobs.
+- `Execution Summary`: run metadata and totals.
 
-## Variaveis de ambiente
+## Environment Variables
 
-O app roda sem `.env`. Para configurar fontes ou IA, copie `.env.example` para `.env`.
+The app runs without `.env`. To configure AI providers or source-specific options, copy `.env.example` to `.env`.
 
-| Variavel | Uso |
+| Variable | Purpose |
 |---|---|
-| `AI_PROVIDER` | `fallback`, `gemini`, `openai` ou `anthropic` |
-| `GEMINI_API_KEY` | Chave opcional do Gemini |
-| `OPENAI_API_KEY` | Chave opcional da OpenAI |
-| `ANTHROPIC_API_KEY` | Chave opcional da Anthropic |
-| `GUPY_CAREER_URLS` | URLs publicas da Gupy separadas por virgula |
-| `GREENHOUSE_BOARD_TOKENS` | Boards publicos do Greenhouse |
-| `LEVER_COMPANY_SLUGS` | Slugs publicos do Lever |
+| `AI_PROVIDER` | `fallback`, `gemini`, `openai`, or `anthropic` |
+| `GEMINI_API_KEY` | Optional Gemini key |
+| `OPENAI_API_KEY` | Optional OpenAI key |
+| `ANTHROPIC_API_KEY` | Optional Anthropic key |
+| `GUPY_CAREER_URLS` | Public Gupy career page URLs separated by commas |
+| `GREENHOUSE_BOARD_TOKENS` | Public Greenhouse board tokens |
+| `LEVER_COMPANY_SLUGS` | Public Lever company slugs |
 
-## Estrutura do projeto
+## Project Structure
 
 ```text
 src/
-  ai/        adaptadores de IA e fallback local
-  cli/       parse e validacao dos argumentos
-  config/    variaveis de ambiente
-  matcher/   score, recomendacao e classificacao
-  qa/        regras de qualidade dos dados
-  reports/   Excel e Markdown
-  resume/    leitura e sanitizacao do curriculo
-  scraper/   fontes de vagas e validacao
-  web/       interface web e API Express
+  ai/        AI adapters and local fallback
+  cli/       argument parsing and validation
+  config/    environment configuration
+  matcher/   scoring, recommendation, and role classification
+  qa/        data quality rules
+  reports/   Excel and Markdown generation
+  resume/    resume parsing and sanitization
+  scraper/   job sources and validation
+  web/       Express API and web UI
 ```
 
-## Privacidade e seguranca
+## Privacy and Safety
 
-- Curriculos enviados pela Web UI sao apagados apos a analise.
-- Dados pessoais sao mascarados antes da analise.
-- `.env`, `output/` e `uploads/` ficam fora do Git.
-- O app usa apenas dados publicos, sem login, captcha bypass ou coleta agressiva.
+- Uploaded resumes are deleted after each web analysis.
+- Personal data is masked before analysis.
+- `.env`, `output/`, and `uploads/` are ignored by Git.
+- The app uses public job data only.
+- No login bypass, captcha bypass, or aggressive scraping.
 
-## Como apresentar em entrevista
-
-Pitch curto:
-
-> "Eu criei uma aplicacao em TypeScript que coleta vagas publicas, analisa um curriculo, valida a qualidade dos dados e gera um relatorio Excel ranqueando as melhores oportunidades. Usei Playwright para testes automatizados e automacao, implementei regras de QA para dados inconsistentes e mantive o projeto rodando sem API key por fallback local."
-
-Pontos para destacar:
-
-- Playwright aplicado em testes e automacao.
-- 80 testes automatizados passando.
-- Fontes reais de vagas, incluindo Gupy.
-- Excel com aba de QA Issues.
-- Tratamento de erro e fallback.
-- Codigo modular, tipado e documentado.
-
-## Licenca
+## License
 
 MIT
