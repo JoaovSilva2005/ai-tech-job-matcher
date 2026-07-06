@@ -60,6 +60,7 @@ export async function runPipeline(options: CliOptions): Promise<PipelineResult> 
   const scrapedJobs = await scrapeJobs(options.source, {
     limit: options.limit,
     debug: options.debug,
+    role: options.role,
   });
   if (scrapedJobs.length === 0) {
     logger.warn('No jobs collected. Reports will be generated empty.');

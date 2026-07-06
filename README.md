@@ -22,7 +22,7 @@ study before applying.
 
 ## Features
 
-- 🎭 **Playwright scraping** of a deterministic local job board (16 realistic fictional jobs) plus best-effort public sources
+- 🎭 **Playwright scraping** of a deterministic local job board (16 realistic fictional jobs) plus best-effort real sources (RemoteOK, Remotive)
 - 📄 **Resume parsing** for TXT, PDF and DOCX files
 - 🔒 **PII sanitization** — emails, phones and documents are masked before analysis and never persisted
 - 🤖 **Flexible AI layer** — OpenAI or Anthropic via adapter, with a local keyword fallback that requires **no API key**
@@ -96,11 +96,35 @@ npm run dev -- --resume ./my-resume.pdf --role backend --source remoteok --limit
 |--------|--------|---------|-------------|
 | `--resume` | file path (.txt/.pdf/.docx) | **required** | Resume to analyze |
 | `--role` | `qa` `frontend` `backend` `fullstack` `mobile` `data` `devops` `support` `internship` `all` | `all` | Target tech area |
-| `--source` | `sample` `remoteok` `generic` | `sample` | Job source (`sample` is offline and deterministic) |
+| `--source` | `sample` `remoteok` `remotive` `generic` | `sample` | Job source (`sample` is offline and deterministic; `remoteok`/`remotive` are real public APIs) |
 | `--limit` | 1–100 | `16` | Max jobs to collect |
 | `--output` | directory path | `./output` | Output folder |
 | `--fallback` | flag | off | Force local analysis (skip AI even if a key exists) |
 | `--debug` | flag | off | Verbose logging |
+
+## Job Sources
+
+| Source | Type | Auth | Notes |
+|--------|------|------|-------|
+| `sample` | Local HTML (Playwright, `file://`) | — | **Default.** Offline, deterministic, 16 fictional jobs. Best for demos and tests. |
+| `remotive` | Public JSON API | None | Real remote jobs. The free feed returns the ~30 most recent postings across all categories, so the app filters it **client-side** by `--role`. |
+| `remoteok` | Public JSON API | None | Real remote jobs (single request, capped at 15). |
+| `generic` | Any public page (Playwright) | None | Best-effort scraper for the URL in `GENERIC_JOBS_URL`; public, no login/captcha. |
+
+```bash
+# Real remote jobs from Remotive, filtered to QA by the app
+npm run dev -- --resume ./samples/sample-resume.txt --role qa --source remotive --limit 10
+
+# Whole recent feed, ranked against your resume
+npm run dev -- --resume ./samples/sample-resume.txt --role all --source remotive --limit 20
+```
+
+> **Why client-side filtering for Remotive?** Their free public API ignores the
+> `category`/`search`/`limit` query parameters and always returns a fixed recent feed.
+> Rather than pretend otherwise, the app fetches that feed and classifies every job with its
+> own `classifyRole` engine — which is exactly the "turn a messy feed into a useful ranking"
+> value the project is built to demonstrate. If the current feed has no jobs for your role,
+> the source reports it clearly instead of returning noise.
 
 ## Environment Variables
 

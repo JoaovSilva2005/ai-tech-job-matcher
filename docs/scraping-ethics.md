@@ -24,14 +24,19 @@ outsource or circumvent it. The run fails gracefully and moves on.
 - The default demo source (`sample`) makes **zero** network requests.
 - The RemoteOK source makes **one** GET request to its public API per run, with a hard cap
   of 15 items and a 15-second timeout.
+- The Remotive source makes **one** GET request to its public API per run, keeps at most 20
+  items and times out after 15 seconds. Because the free API returns a fixed recent feed and
+  ignores filter parameters, role filtering happens locally after the single request — never
+  by hitting the API repeatedly.
 - The generic source loads **one** page with a cap of 10 items.
 - There is no crawling, no pagination loops, no parallel request storms, no retry hammering.
 
 ## Respect Website Restrictions
 
 - Honest `User-Agent` identifying the tool as a portfolio project.
-- Sources are chosen for having explicitly public data (RemoteOK publishes a public API and
-  asks for attribution — the report always preserves the original job URL, which links back).
+- Sources are chosen for having explicitly public data (RemoteOK and Remotive both publish
+  public APIs and ask for attribution — the report always preserves the original job URL,
+  which links back).
 - If a site's terms or robots directives disallow automated access, it is not a valid target
   for the generic source. The README states this requirement for `GENERIC_JOBS_URL`.
 

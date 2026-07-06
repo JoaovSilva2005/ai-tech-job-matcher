@@ -46,6 +46,12 @@ export interface JobValidationResult {
 export interface ScrapeOptions {
   limit: number;
   debug?: boolean;
+  /**
+   * Requested target role. Sources that support server-side category
+   * filtering (e.g. Remotive) use it as a hint to fetch more relevant
+   * jobs; sources that don't simply ignore it.
+   */
+  role?: TechRole;
 }
 
 export type ScraperFn = (options: ScrapeOptions) => Promise<ScrapedJob[]>;

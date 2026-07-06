@@ -1,6 +1,6 @@
 import type { TechRole } from '../scraper/types';
 
-export type JobSource = 'sample' | 'remoteok' | 'generic';
+export type JobSource = 'sample' | 'remoteok' | 'remotive' | 'generic';
 
 export interface CliOptions {
   resume: string;
@@ -25,4 +25,4 @@ export const VALID_ROLES: TechRole[] = [
   'all',
 ];
 
-export const VALID_SOURCES: JobSource[] = ['sample', 'remoteok', 'generic'];
+export const VALID_SOURCES: JobSource[] = ['sample', 'remoteok', 'remotive', 'generic'];

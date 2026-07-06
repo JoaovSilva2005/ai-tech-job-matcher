@@ -4,6 +4,21 @@ All notable changes to this project are documented in this file.
 Format based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/); versioning follows
 [SemVer](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- New real job source `remotive` (public Remotive API, no key). The free API returns a fixed
+  recent feed and ignores filter params, so jobs are filtered client-side by `--role` using
+  the project's own `classifyRole` engine.
+- Shared `stripHtml` text utility (used by the RemoteOK and Remotive sources).
+- `ScrapeOptions.role` so sources can react to the requested role.
+- Unit tests for the Remotive role filter and HTML stripping (58 tests total).
+
+### Changed
+
+- RemoteOK source now reuses the shared `stripHtml` utility instead of a private copy.
+
 ## [1.0.0] - 2026-07-05
 
 ### Added

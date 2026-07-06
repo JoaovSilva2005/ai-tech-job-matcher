@@ -2,7 +2,7 @@ import { request } from 'playwright';
 import type { ScrapedJob, ScrapeOptions } from '../types';
 import { nowIso } from '../../utils/date';
 import { normalizeWorkMode } from './sampleHtmlScraper';
-import { normalizeWhitespace } from '../../utils/text';
+import { normalizeWhitespace, stripHtml } from '../../utils/text';
 import { logger } from '../../utils/logger';
 
 const REMOTEOK_API = 'https://remoteok.com/api';
@@ -72,15 +72,4 @@ export async function scrapeRemoteOkJobs(options: ScrapeOptions): Promise<Scrape
   } finally {
     await context.dispose();
   }
-}
-
-function stripHtml(html: string): string {
-  return html
-    .replace(/<br\s*\/?>/gi, '\n')
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&nbsp;/g, ' ')
-    .replace(/&#\d+;/g, ' ');
 }
