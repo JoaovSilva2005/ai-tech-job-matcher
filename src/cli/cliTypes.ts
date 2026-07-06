@@ -6,6 +6,7 @@ export type JobSource =
   | 'remotive'
   | 'themuse'
   | 'greenhouse'
+  | 'gupy'
   | 'lever';
 
 export type PublicJobSource = Exclude<JobSource, 'sample'>;
@@ -44,6 +45,7 @@ export const VALID_SOURCES: PublicJobSource[] = [
   'remotive',
   'themuse',
   'greenhouse',
+  'gupy',
   'lever',
 ];
 

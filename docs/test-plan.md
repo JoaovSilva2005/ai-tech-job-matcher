@@ -21,7 +21,7 @@ duplicate removal, match scoring and report generation — in a fully offline se
 
 ## Out of Scope
 
-- Live third-party source calls in CI (remoteok, remotive, themuse, greenhouse and lever are
+- Live third-party source calls in CI (remoteok, remotive, themuse, greenhouse, gupy and lever are
   best-effort and intentionally covered by mapper/unit tests plus manual smoke
   runs to keep the automated suite deterministic).
 - Real AI provider responses (OpenAI/Anthropic calls are exercised manually; automated tests

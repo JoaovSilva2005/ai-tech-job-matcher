@@ -12,6 +12,7 @@ const envSchema = z.object({
   ANTHROPIC_MODEL: z.string().optional().default('claude-sonnet-5'),
   GEMINI_MODEL: z.string().optional().default('gemini-2.5-flash-lite'),
   GREENHOUSE_BOARD_TOKENS: z.string().optional().default(''),
+  GUPY_CAREER_URLS: z.string().optional().default(''),
   LEVER_COMPANY_SLUGS: z.string().optional().default(''),
 });
 

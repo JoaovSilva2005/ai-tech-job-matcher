@@ -36,6 +36,36 @@ export async function fetchPublicJson<T>(
   }
 }
 
+export async function fetchPublicText(
+  url: string,
+  sourceName: string,
+  timeoutMs = PUBLIC_API_TIMEOUT_MS
+): Promise<string | null> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    const response = await fetch(url, {
+      headers: { 'User-Agent': PUBLIC_SOURCE_USER_AGENT },
+      signal: controller.signal,
+    });
+
+    if (!response.ok) {
+      logger.warn(`${sourceName} public page returned status ${response.status}; skipping it.`);
+      return null;
+    }
+
+    return await response.text();
+  } catch (error) {
+    logger.warn(
+      `${sourceName} public page unavailable (${(error as Error).message}); returning no jobs.`
+    );
+    return null;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
 export function parseCommaList(value: string): string[] {
   return value
     .split(',')

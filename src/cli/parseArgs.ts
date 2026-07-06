@@ -6,7 +6,7 @@ const USAGE = `
 AI Tech Job Matcher
 
 Usage:
-  npm run dev -- --resume <path> [--role <role>] [--source <source>] [--limit <n>] [--output <dir>] [--fallback] [--debug]
+  npm run dev -- -- --resume <path> [--role <role>] [--source <source>] [--limit <n>] [--output <dir>] [--fallback] [--debug]
 
 Options:
   --resume    Path to the resume file (${SUPPORTED_RESUME_EXTENSIONS.join(', ')})   [required]

@@ -9,7 +9,7 @@ reporting.**
 
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)
 ![Playwright](https://img.shields.io/badge/Playwright-scraping%20%2B%20testing-2EAD33?logo=playwright&logoColor=white)
-![Tests](https://img.shields.io/badge/tests-68%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-77%20passing-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 
 ## Problem Solved
@@ -22,14 +22,14 @@ study before applying.
 
 ## Features
 
-- Real public job collection from RemoteOK, Remotive, The Muse, Greenhouse and Lever
+- Real public job collection from RemoteOK, Remotive, The Muse, Greenhouse, Gupy and Lever
 - 📄 **Resume parsing** for TXT, PDF and DOCX files
 - 🔒 **PII sanitization** — emails, phones and documents are masked before analysis and never persisted
 - 🤖 **Flexible AI layer** — Gemini, OpenAI or Anthropic via adapter, with a local keyword fallback that requires **no API key**
 - ✅ **QA validation gate** — severity-ranked issues, data quality scores, duplicate removal
 - 🧮 **Hybrid match scoring (0–100)** with recommendations, explanations and per-job study plans
 - 📊 **Professional Excel report** (6 sheets, ExcelJS) + Markdown summary + 4 JSON artifacts
-- 68 automated tests (unit + E2E) with Playwright Test
+- 77 automated tests (unit + E2E) with Playwright Test
 - 🌐 **Optional no-build web UI** for uploading a resume and downloading the generated report
 
 ## Tech Stack
@@ -85,9 +85,10 @@ npm run demo:qa
 npm run demo:all
 
 # Custom runs
-npm run dev -- --resume ./my-resume.pdf --role backend --source remoteok --limit 10
-npm run dev -- --resume ./samples/sample-resume.txt --role all --source themuse --limit 10
-npm run dev -- --resume ./samples/sample-resume.txt --role all --source greenhouse --limit 10
+npm run dev -- -- --resume ./my-resume.pdf --role backend --source remoteok --limit 10
+npm run dev -- -- --resume ./samples/sample-resume.txt --role all --source themuse --limit 10
+npm run dev -- -- --resume ./samples/sample-resume.txt --role all --source greenhouse --limit 10
+npm run dev -- -- --resume ./samples/sample-resume.txt --role qa --source gupy --limit 8
 ```
 
 ## Optional Web UI
@@ -105,7 +106,7 @@ the generated Excel/Markdown reports. The uploaded resume is deleted from disk a
 |--------|--------|---------|-------------|
 | `--resume` | file path (.txt/.md/.pdf/.docx) | **required** | Resume to analyze |
 | `--role` | `qa` `frontend` `backend` `fullstack` `mobile` `data` `devops` `support` `internship` `all` | `all` | Target tech area |
-| `--source` | `remoteok` `remotive` `themuse` `greenhouse` `lever` `all` | `themuse` | Real public job source (`all` queries every source at once) |
+| `--source` | `remoteok` `remotive` `themuse` `greenhouse` `gupy` `lever` `all` | `themuse` | Real public job source (`all` queries every source at once) |
 | `--limit` | 1–100 | `16` | Max jobs to collect |
 | `--output` | directory path | `./output` | Output folder |
 | `--fallback` | flag | off | Force local analysis (skip AI even if a key exists) |
@@ -119,27 +120,31 @@ the generated Excel/Markdown reports. The uploaded resume is deleted from disk a
 | `remoteok` | Public JSON API | None | Real remote jobs (single request, capped at 15). |
 | `themuse` | Public JSON API | None | Real Computer and IT jobs from The Muse public endpoint, capped at 20. |
 | `greenhouse` | Public ATS API | None | Real jobs from Greenhouse Job Board API. Defaults to the public `stripe` board; override with `GREENHOUSE_BOARD_TOKENS`. |
+| `gupy` | Public career-page data | None | Real Brazilian jobs from public Gupy career pages. Defaults to Topaz Brasil, Quality Digital and SiDi; override with `GUPY_CAREER_URLS`. |
 | `lever` | Public ATS API | None | Real jobs from Lever Postings API. Requires known public company slugs in `LEVER_COMPANY_SLUGS`. |
 | `all` | Aggregate | None | Queries every public source in parallel, interleaves the results for variety and lets the pipeline de-duplicate postings that appear on more than one board. Each source still fails independently. |
 
 ```bash
 # Search every public source at once, ranked against your resume
-npm run dev -- --resume ./samples/sample-resume.txt --role all --source all --limit 20
+npm run dev -- -- --resume ./samples/sample-resume.txt --role all --source all --limit 20
 
 # Real remote jobs from Remotive, filtered to QA by the app
-npm run dev -- --resume ./samples/sample-resume.txt --role qa --source remotive --limit 10
+npm run dev -- -- --resume ./samples/sample-resume.txt --role qa --source remotive --limit 10
 
 # Whole recent feed, ranked against your resume
-npm run dev -- --resume ./samples/sample-resume.txt --role all --source remotive --limit 20
+npm run dev -- -- --resume ./samples/sample-resume.txt --role all --source remotive --limit 20
 
 # Real public API with no config
-npm run dev -- --resume ./samples/sample-resume.txt --role all --source themuse --limit 10
+npm run dev -- -- --resume ./samples/sample-resume.txt --role all --source themuse --limit 10
 
 # Public Greenhouse ATS board; defaults to Stripe
-npm run dev -- --resume ./samples/sample-resume.txt --role all --source greenhouse --limit 10
+npm run dev -- -- --resume ./samples/sample-resume.txt --role all --source greenhouse --limit 10
+
+# Brazilian public Gupy career pages, useful for QA-focused demos
+npm run dev -- -- --resume ./samples/sample-resume.txt --role qa --source gupy --limit 8
 
 # Public Lever ATS board; set LEVER_COMPANY_SLUGS first
-npm run dev -- --resume ./samples/sample-resume.txt --role all --source lever --limit 10
+npm run dev -- -- --resume ./samples/sample-resume.txt --role all --source lever --limit 10
 ```
 
 > **Why client-side filtering for Remotive?** Their free public API ignores the
@@ -159,6 +164,7 @@ Copy `.env.example` to `.env` (optional — everything works without it):
 | `GEMINI_API_KEY` / `OPENAI_API_KEY` / `ANTHROPIC_API_KEY` | Provider keys (missing key ⇒ automatic fallback) |
 | `GEMINI_MODEL` / `OPENAI_MODEL` / `ANTHROPIC_MODEL` | Optional model overrides |
 | `GREENHOUSE_BOARD_TOKENS` | Optional comma-separated Greenhouse board tokens; defaults to `stripe` when empty |
+| `GUPY_CAREER_URLS` | Optional comma-separated public Gupy career page URLs; defaults to Brazilian tech examples |
 | `LEVER_COMPANY_SLUGS` | Optional comma-separated Lever company slugs for the `lever` source |
 
 ## Example Output
@@ -203,7 +209,7 @@ Details in [docs/qa-strategy.md](docs/qa-strategy.md).
 ## Testing Strategy
 
 ```bash
-npm test          # all 68 tests
+npm test          # all 77 tests
 npm run test:unit # pure-logic tests
 npm run test:e2e  # browser scraping + full pipeline + Excel validation
 ```
@@ -232,7 +238,7 @@ git-ignored. All sample data is fictional.
 - **Bug reporting mindset** — QA Issues sheet + professional bug report template.
 - **Evidence generation** — JSON artifacts, traces, screenshots and videos on failure.
 - **Report generation** — recruiter-ready Excel output.
-- **Automated tests** - 68 unit + E2E tests with Playwright Test.
+- **Automated tests** - 77 unit + E2E tests with Playwright Test.
 
 ## How this project relates to Software Development
 
@@ -255,7 +261,7 @@ pipeline serves any junior tech career search.
 
 - Add screenshots or a short GIF of the CLI, web UI and Excel report
 - Upgrade the simple web UI into a richer React/Vite interface if the project needs a larger frontend showcase
-- More real job sources behind the same interface
+- More Brazilian public job sources behind the same interface
 - Semantic (embedding-based) matching in fallback mode
 - Weekly scheduled runs with skill-demand trend charts
 - GitHub Actions CI publishing the Playwright HTML report

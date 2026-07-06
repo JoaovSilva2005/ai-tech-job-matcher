@@ -5,6 +5,7 @@ import { scrapeRemoteOkJobs } from './sources/remoteOkScraper';
 import { scrapeRemotiveJobs } from './sources/remotiveScraper';
 import { scrapeTheMuseJobs } from './sources/theMuseScraper';
 import { scrapeGreenhouseJobs } from './sources/greenhouseScraper';
+import { scrapeGupyJobs } from './sources/gupyScraper';
 import { scrapeLeverJobs } from './sources/leverScraper';
 
 const registry: Record<JobSource, ScraperFn> = {
@@ -13,6 +14,7 @@ const registry: Record<JobSource, ScraperFn> = {
   remotive: scrapeRemotiveJobs,
   themuse: scrapeTheMuseJobs,
   greenhouse: scrapeGreenhouseJobs,
+  gupy: scrapeGupyJobs,
   lever: scrapeLeverJobs,
 };
 

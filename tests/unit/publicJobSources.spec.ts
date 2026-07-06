@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
 import { mapGreenhouseJob } from '../../src/scraper/sources/greenhouseScraper';
+import { mapGupyJobDetail, parseGupyNextData } from '../../src/scraper/sources/gupyScraper';
 import { mapLeverPosting } from '../../src/scraper/sources/leverScraper';
 import { mapTheMuseJob } from '../../src/scraper/sources/theMuseScraper';
 import { parseCommaList } from '../../src/scraper/sources/publicApiUtils';
@@ -91,6 +92,47 @@ test.describe('public job source mappers', () => {
       source: 'lever',
     });
     expect(job!.description).toContain('Node.js services');
+  });
+
+  test('maps Gupy public job pages from Next.js page data', () => {
+    const job = mapGupyJobDetail(
+      {
+        id: 11516071,
+        name: 'Jr QA Analyst',
+        careerPageName: 'Topaz Brasil',
+        departmentName: 'Product',
+        addressCity: 'Sao Paulo',
+        addressStateShortName: 'SP',
+        addressCountry: 'Brasil',
+        workplaceType: 'hybrid',
+        description: '<p>Garantir qualidade funcional e tecnica das solucoes digitais.</p>',
+        prerequisites:
+          '<ul><li>Testes funcionais, automacao de testes, APIs REST e consultas SQL.</li></ul>',
+      },
+      'https://topazbrasil.gupy.io/jobs/11516071?jobBoardSource=gupy_public_page',
+      SCRAPED_AT
+    );
+
+    expect(job).toMatchObject({
+      id: 'gupy-11516071',
+      title: 'Jr QA Analyst',
+      company: 'Topaz Brasil',
+      location: 'Sao Paulo, SP, Brasil',
+      workMode: 'hybrid',
+      source: 'gupy',
+    });
+    expect(job!.description).toContain('automacao de testes');
+  });
+
+  test('parses Gupy __NEXT_DATA__ safely', () => {
+    const html =
+      '<html><script id="__NEXT_DATA__" type="application/json">{"props":{"pageProps":{"jobs":[{"id":1,"title":"QA"}]}}}</script></html>';
+
+    expect(parseGupyNextData(html)?.props?.pageProps?.jobs?.[0]).toMatchObject({
+      id: 1,
+      title: 'QA',
+    });
+    expect(parseGupyNextData('<html></html>')).toBeNull();
   });
 
   test('parseCommaList trims blanks and ignores empty entries', () => {

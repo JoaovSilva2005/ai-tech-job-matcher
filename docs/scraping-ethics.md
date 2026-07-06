@@ -31,18 +31,23 @@ outsource or circumvent it. The run fails gracefully and moves on.
   Computer and IT category, and keeps at most 20 items.
 - The Greenhouse source calls the official public Job Board API for a small list of board
   tokens, keeps at most 20 items, and defaults to a single public example board.
+- The Gupy source reads public Brazilian career pages that anyone can open in a browser,
+  keeps at most 12 jobs, and fetches only the small number of job detail pages needed for
+  the requested limit. Career pages are configured explicitly; it does not discover or crawl
+  arbitrary company subdomains.
 - The Lever source calls the public Postings API only for company slugs explicitly configured
   by the user, keeps at most 20 items, and does not try to discover or crawl slugs.
-- The `all` aggregate source makes exactly **one** request to each public source (run in
-  parallel, not in a loop), applies the same per-source caps, and merges the results. It is a
-  single fan-out per run — not repeated polling — and any source that fails is simply skipped.
+- The `all` aggregate source makes one bounded fan-out across the configured public sources,
+  applies the same per-source caps, and merges the results. It is not repeated polling, and
+  any source that fails is simply skipped.
 - There is no crawling, no pagination loops, no parallel request storms, no retry hammering.
 
 ## Respect Website Restrictions
 
 - Honest `User-Agent` identifying the tool as a portfolio project.
 - Sources are chosen for having explicitly public data (RemoteOK, Remotive, The Muse,
-  Greenhouse and Lever expose public job data through documented or public JSON endpoints).
+  Greenhouse, Gupy and Lever expose public job data through documented endpoints or public
+  career pages).
   The report always preserves the original job URL, which links back to the source posting.
 
 ## Test Fixture Data
