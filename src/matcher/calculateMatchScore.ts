@@ -11,6 +11,8 @@ export interface JobMatchResult {
   analysis: JobAnalysis;
   validation: JobValidationResult;
   score: number;
+  locationPreference?: string;
+  locationPreferenceScore?: number;
   recommendation: Recommendation;
   matchedSkills: string[];
   missingSkills: string[];

@@ -12,7 +12,7 @@
     "test:e2e": "playwright test tests/e2e",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "demo:qa": "tsx src/index.ts --resume ./samples/sample-resume.txt --role qa --source remotive --limit 10 --fallback",
+    "demo:qa": "tsx src/index.ts --resume ./samples/sample-resume.txt --role qa --source gupy --work-mode remote --limit 10 --fallback",
     "demo:all": "tsx src/index.ts --resume ./samples/sample-resume.txt --role all --source themuse --limit 16 --fallback",
     "web": "tsx src/web/server.ts"
   },

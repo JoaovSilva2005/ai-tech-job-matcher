@@ -13,6 +13,8 @@ const options: CliOptions = {
   resume: RESUME_PATH,
   role: 'all',
   source: 'sample',
+  workMode: 'all',
+  userLocation: '',
   limit: 20,
   output: OUTPUT_DIR,
   fallback: true,
@@ -94,6 +96,7 @@ test.describe('Excel report generation', () => {
 
     expect(rows.get('Used Fallback Mode')).toBe('Yes');
     expect(rows.get('Job Source')).toBe('sample');
+    expect(rows.get('Work Mode Filter')).toBe('all');
     expect(Number(rows.get('Jobs Collected'))).toBeGreaterThanOrEqual(16);
   });
 
@@ -122,6 +125,8 @@ test.describe('Excel report generation', () => {
         resumeFile: RESUME_PATH,
         role: 'qa',
         source: 'sample',
+        workMode: 'all',
+        userLocation: undefined,
         aiProvider: 'local-fallback',
         usedFallback: true,
         jobsCollected: 1,
@@ -130,6 +135,7 @@ test.describe('Excel report generation', () => {
         jobsInvalid: 1,
         duplicatesRemoved: 0,
         jobsAfterRoleFilter: 0,
+        jobsAfterWorkModeFilter: 0,
         durationMs: 100,
       },
       skillInsights: [],

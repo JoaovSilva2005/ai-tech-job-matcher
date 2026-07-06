@@ -1,4 +1,4 @@
-import type { TechRole } from '../scraper/types';
+import type { TechRole, WorkMode } from '../scraper/types';
 
 export type JobSource =
   | 'sample'
@@ -17,10 +17,14 @@ export type AggregateSource = 'all';
 /** Any value the CLI/web layer accepts for --source. */
 export type SelectableSource = JobSource | AggregateSource;
 
+export type WorkModeFilter = WorkMode | 'all';
+
 export interface CliOptions {
   resume: string;
   role: TechRole;
   source: SelectableSource;
+  workMode: WorkModeFilter;
+  userLocation: string;
   limit: number;
   output: string;
   fallback: boolean;
@@ -51,3 +55,5 @@ export const VALID_SOURCES: PublicJobSource[] = [
 
 /** User-facing sources: every public source plus the "all" aggregate. */
 export const SELECTABLE_SOURCES: (PublicJobSource | AggregateSource)[] = [...VALID_SOURCES, 'all'];
+
+export const VALID_WORK_MODES: WorkModeFilter[] = ['all', 'remote', 'hybrid', 'onsite'];

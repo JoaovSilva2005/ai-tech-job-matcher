@@ -129,7 +129,7 @@ h1 { font-size: 26px; font-weight: 600; margin: 0; letter-spacing: -0.015em; }
 }
 form.analyze {
   display: grid;
-  grid-template-columns: minmax(220px, 1.6fr) 1fr 1fr 88px auto;
+  grid-template-columns: minmax(220px, 1.5fr) repeat(3, minmax(116px, 1fr)) 88px auto;
   gap: 14px;
   align-items: end;
 }
@@ -157,7 +157,7 @@ form.analyze {
 .dropzone .fname { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--mono); font-size: 12.5px; }
 .dropzone .doc-glyph { flex: none; width: 14px; height: 16px; border: 1.5px solid currentColor; border-radius: 2px; opacity: .7; }
 
-select, input[type="number"] {
+select, input[type="number"], input[type="text"] {
   height: 40px;
   background: var(--surface-2);
   color: var(--text);
@@ -168,7 +168,7 @@ select, input[type="number"] {
   font-size: 13.5px;
   width: 100%;
 }
-select:hover, input[type="number"]:hover { border-color: var(--text-3); }
+select:hover, input[type="number"]:hover, input[type="text"]:hover { border-color: var(--text-3); }
 
 .btn {
   height: 40px;
@@ -356,6 +356,7 @@ details.study ol li { margin-bottom: 4px; break-inside: avoid; }
 @media (max-width: 900px) {
   form.analyze { grid-template-columns: 1fr 1fr; }
   form.analyze .field-file { grid-column: 1 / -1; }
+  form.analyze .field-location { grid-column: 1 / -1; }
   form.analyze .field-submit { grid-column: 1 / -1; }
   .summary-actions { margin-left: 0; width: 100%; }
 }
@@ -421,6 +422,19 @@ details.study ol li { margin-bottom: 4px; break-inside: avoid; }
           <option value="greenhouse">Greenhouse</option>
           <option value="lever">Lever</option>
         </select>
+      </div>
+      <div class="field">
+        <label for="workModeSelect">Work mode</label>
+        <select id="workModeSelect" name="workMode">
+          <option value="all" selected>Any mode</option>
+          <option value="remote">Remote</option>
+          <option value="hybrid">Hybrid</option>
+          <option value="onsite">On-site</option>
+        </select>
+      </div>
+      <div class="field field-location">
+        <label for="locationInput">City or address</label>
+        <input type="text" id="locationInput" name="userLocation" maxlength="120" placeholder="Campinas, SP">
       </div>
       <div class="field">
         <label for="limitInput">Limit</label>
@@ -572,6 +586,8 @@ async function runAnalysis() {
     fd.append("resume", fileInput.files[0]);
     fd.append("role", $("roleSelect").value);
     fd.append("source", $("sourceSelect").value);
+    fd.append("workMode", $("workModeSelect").value);
+    fd.append("userLocation", $("locationInput").value || "");
     fd.append("limit", $("limitInput").value || "16");
 
     let data;
@@ -621,6 +637,7 @@ function renderResults(data) {
   strip.replaceChildren(
     stat(s.jobsCollected, "Jobs collected"),
     stat(s.jobsAfterRoleFilter, "After role filter"),
+    stat(s.jobsAfterWorkModeFilter, "After mode filter"),
     stat(s.duplicatesRemoved, "Duplicates removed"),
     stat(ra.detectedSeniority || "—", "Detected seniority"),
     stat(matches.filter((m) => m.recommendation === "strong_apply" || m.recommendation === "apply").length, "Top matches"),
@@ -676,6 +693,7 @@ function card(m) {
   const meta = el("div", { class: "meta-row" });
   const metaItems = [
     ["Location", m.location],
+    ["Location match", m.locationPreference],
     ["Mode", m.workMode && m.workMode !== "unknown" ? m.workMode : null],
     ["Seniority", m.seniority || m.seniorityLevel],
     ["English", m.englishLevel && m.englishLevel !== "unknown" ? m.englishLevel : null],

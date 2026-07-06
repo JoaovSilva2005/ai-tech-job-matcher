@@ -1,6 +1,6 @@
 import path from 'path';
 import { CliError, parseArgs, printUsage } from './cli/parseArgs';
-import type { CliOptions } from './cli/cliTypes';
+import type { CliOptions, WorkModeFilter } from './cli/cliTypes';
 import { parseResume } from './resume/parseResume';
 import { sanitizeResumeText } from './resume/sanitizeResume';
 import { analyzeResume } from './resume/analyzeResume';
@@ -13,6 +13,8 @@ import { removeDuplicateJobs } from './qa/duplicateDetector';
 import { detectSeniorityMismatch } from './qa/detectJobIssues';
 import { calculateDataQualityScore } from './qa/dataQualityScore';
 import { calculateMatchScore, JobMatchResult } from './matcher/calculateMatchScore';
+import { getRecommendation } from './matcher/recommendation';
+import { scoreLocationPreference } from './matcher/locationPreference';
 import { generateExcelReport } from './reports/generateExcelReport';
 import { generateMarkdownSummary } from './reports/generateMarkdownSummary';
 import type { ExecutionSummary, QaIssueReportRow, ReportData, SkillInsight } from './reports/reportTypes';
@@ -34,6 +36,7 @@ export interface PipelineResult {
 }
 
 const TOTAL_STEPS = 12;
+const POST_FILTER_COLLECTION_MULTIPLIER = 3;
 
 export async function runPipeline(options: CliOptions): Promise<PipelineResult> {
   const startedAt = Date.now();
@@ -57,8 +60,12 @@ export async function runPipeline(options: CliOptions): Promise<PipelineResult> 
 
   // 4. Collect jobs
   logger.step(4, TOTAL_STEPS, `Collecting jobs from "${options.source}"...`);
+  const collectionLimit = shouldCollectExtraJobs(options)
+    ? Math.min(100, options.limit * POST_FILTER_COLLECTION_MULTIPLIER)
+    : options.limit;
+
   const scrapedJobs = await scrapeJobs(options.source, {
-    limit: options.limit,
+    limit: collectionLimit,
     debug: options.debug,
     role: options.role,
   });
@@ -96,9 +103,16 @@ export async function runPipeline(options: CliOptions): Promise<PipelineResult> 
   const roleFilteredJobs = filterByRole(uniqueJobs, analyses, options.role);
   logger.info(`${roleFilteredJobs.length} job(s) match the requested role "${options.role}".`);
 
+  const workModeFilteredJobs = filterByWorkMode(roleFilteredJobs, options.workMode);
+  if (options.workMode !== 'all') {
+    logger.info(
+      `${workModeFilteredJobs.length} job(s) match the requested work mode "${options.workMode}".`
+    );
+  }
+
   // 8. Compare resume x jobs + 9. Ranking
   logger.step(8, TOTAL_STEPS, 'Calculating match scores...');
-  const matches: JobMatchResult[] = roleFilteredJobs.map((job) => {
+  const matches: JobMatchResult[] = workModeFilteredJobs.map((job) => {
     const analysis = analyses.get(job.id)!;
     const validation = validations.get(job.id)!;
     // QA cross-check: seniority above candidate level becomes a QA issue
@@ -107,17 +121,28 @@ export async function runPipeline(options: CliOptions): Promise<PipelineResult> 
       validation.issues.push(mismatch);
       validation.dataQualityScore = calculateDataQualityScore(validation.issues);
     }
-    return calculateMatchScore(resumeAnalysis, job, analysis, validation);
+    const match = calculateMatchScore(resumeAnalysis, job, analysis, validation);
+    const locationPreference = scoreLocationPreference(job, options.userLocation);
+    if (locationPreference.score > 0) {
+      match.score = Math.min(100, match.score + locationPreference.score);
+      match.recommendation = getRecommendation(match.score);
+      match.locationPreference = locationPreference.label;
+      match.locationPreferenceScore = locationPreference.score;
+    }
+    return match;
   });
 
   logger.step(9, TOTAL_STEPS, 'Ranking jobs by match score...');
-  matches.sort((a, b) => b.score - a.score);
+  rankMatches(matches, options.userLocation);
+  const rankedMatches = matches.slice(0, options.limit);
 
   const summary: ExecutionSummary = {
     executedAt: nowIso(),
     resumeFile: options.resume,
     role: options.role,
     source: options.source,
+    workMode: options.workMode,
+    userLocation: options.userLocation.trim() || undefined,
     aiProvider: aiClient.providerName,
     usedFallback:
       aiClient.isFallback ||
@@ -129,15 +154,16 @@ export async function runPipeline(options: CliOptions): Promise<PipelineResult> 
     jobsInvalid: [...validations.values()].filter((v) => v.status === 'invalid').length,
     duplicatesRemoved: duplicates.length,
     jobsAfterRoleFilter: roleFilteredJobs.length,
+    jobsAfterWorkModeFilter: workModeFilteredJobs.length,
     durationMs: Date.now() - startedAt,
   };
 
   const reportData: ReportData = {
-    matches,
+    matches: rankedMatches,
     resume: resumeAnalysis,
     summary,
-    skillInsights: buildSkillInsights(matches),
-    qaIssues: buildQaIssueRows(scrapedJobs, validations, new Set(matches.map((m) => m.job.id))),
+    skillInsights: buildSkillInsights(rankedMatches),
+    qaIssues: buildQaIssueRows(scrapedJobs, validations, new Set(rankedMatches.map((m) => m.job.id))),
   };
 
   // 10. Excel report
@@ -177,9 +203,11 @@ export async function runPipeline(options: CliOptions): Promise<PipelineResult> 
   writeJsonFile(resumeAnalysisPath, resumeAnalysis);
   writeJsonFile(
     jobMatchesPath,
-    matches.map((m) => ({
-      rank: matches.indexOf(m) + 1,
+    rankedMatches.map((m, index) => ({
+      rank: index + 1,
       score: m.score,
+      locationPreference: m.locationPreference,
+      locationPreferenceScore: m.locationPreferenceScore,
       recommendation: m.recommendation,
       jobId: m.job.id,
       title: m.job.title,
@@ -201,7 +229,7 @@ export async function runPipeline(options: CliOptions): Promise<PipelineResult> 
   logger.info(`  Summary:  ${markdownPath}`);
 
   return {
-    matches,
+    matches: rankedMatches,
     summary,
     outputFiles: {
       excel: excelPath,
@@ -212,6 +240,23 @@ export async function runPipeline(options: CliOptions): Promise<PipelineResult> 
       jobMatches: jobMatchesPath,
     },
   };
+}
+
+function shouldCollectExtraJobs(options: CliOptions): boolean {
+  return options.workMode !== 'all' || options.userLocation.trim().length > 0;
+}
+
+function rankMatches(matches: JobMatchResult[], userLocation: string): void {
+  if (userLocation.trim()) {
+    matches.sort(
+      (a, b) =>
+        (b.locationPreferenceScore ?? 0) - (a.locationPreferenceScore ?? 0) ||
+        b.score - a.score
+    );
+    return;
+  }
+
+  matches.sort((a, b) => b.score - a.score);
 }
 
 function filterByRole(
@@ -228,6 +273,11 @@ function filterByRole(
     }
     return analysis.role === role;
   });
+}
+
+function filterByWorkMode(jobs: ScrapedJob[], workMode: WorkModeFilter): ScrapedJob[] {
+  if (workMode === 'all') return jobs;
+  return jobs.filter((job) => job.workMode === workMode);
 }
 
 function buildSkillInsights(matches: JobMatchResult[]): SkillInsight[] {

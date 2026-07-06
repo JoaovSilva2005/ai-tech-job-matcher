@@ -16,6 +16,8 @@ function makeOptions(overrides: Partial<CliOptions>): CliOptions {
     resume: RESUME_PATH,
     role: 'all',
     source: 'sample',
+    workMode: 'all',
+    userLocation: '',
     limit: 20,
     output: path.join(OUTPUT_ROOT, overrides.role ?? 'all'),
     fallback: true, // pipeline must work without any API key
@@ -68,6 +70,38 @@ test.describe('full pipeline (sample source, no API key)', () => {
     expect(result.summary.duplicatesRemoved).toBeGreaterThanOrEqual(1);
     const titles = result.matches.map((m) => `${m.job.title}::${m.job.company}`.toLowerCase());
     expect(new Set(titles).size).toBe(titles.length);
+  });
+
+  test('work mode filter returns only remote jobs', async () => {
+    const result = await runPipeline(
+      makeOptions({
+        role: 'all',
+        workMode: 'remote',
+        output: path.join(OUTPUT_ROOT, 'remote-filter'),
+      })
+    );
+
+    expect(result.matches.length).toBeGreaterThanOrEqual(5);
+    expect(result.summary.workMode).toBe('remote');
+    expect(result.summary.jobsAfterWorkModeFilter).toBe(result.matches.length);
+    expect(result.matches.every((match) => match.job.workMode === 'remote')).toBe(true);
+  });
+
+  test('location preference boosts nearby hybrid jobs', async () => {
+    const result = await runPipeline(
+      makeOptions({
+        role: 'all',
+        workMode: 'hybrid',
+        userLocation: 'Campinas, SP',
+        output: path.join(OUTPUT_ROOT, 'campinas-filter'),
+      })
+    );
+
+    expect(result.matches.length).toBeGreaterThanOrEqual(1);
+    expect(result.summary.userLocation).toBe('Campinas, SP');
+    expect(result.matches.every((match) => match.job.workMode === 'hybrid')).toBe(true);
+    expect(result.matches[0].job.location?.toLowerCase()).toContain('campinas');
+    expect(result.matches[0].locationPreference).toContain('same city');
   });
 
   test('pipeline reports fallback mode when no AI key is configured', async () => {

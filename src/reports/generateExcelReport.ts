@@ -54,6 +54,7 @@ function buildRankingSheet(workbook: ExcelJS.Workbook, data: ReportData): void {
     { header: 'Company', key: 'company', width: 22 },
     { header: 'Work Mode', key: 'workMode', width: 11 },
     { header: 'Location', key: 'location', width: 20 },
+    { header: 'Location Preference', key: 'locationPreference', width: 24 },
     { header: 'Seniority', key: 'seniority', width: 11 },
     { header: 'English Level', key: 'english', width: 13 },
     { header: 'Testing Required', key: 'testing', width: 15 },
@@ -65,7 +66,7 @@ function buildRankingSheet(workbook: ExcelJS.Workbook, data: ReportData): void {
     { header: 'Job URL', key: 'url', width: 45 },
   ];
 
-  // matches are already sorted by score (descending) by the pipeline
+  // matches are already sorted by the pipeline (score, or location preference first when provided)
   data.matches.forEach((match, index) => {
     const row = sheet.addRow({
       rank: index + 1,
@@ -76,6 +77,7 @@ function buildRankingSheet(workbook: ExcelJS.Workbook, data: ReportData): void {
       company: match.job.company,
       workMode: match.job.workMode,
       location: match.job.location ?? '-',
+      locationPreference: match.locationPreference ?? '-',
       seniority: match.analysis.seniorityLevel,
       english: match.analysis.englishRequired ? match.analysis.englishLevel : 'not required',
       testing: yesNo(match.analysis.testingRequired),
@@ -92,7 +94,7 @@ function buildRankingSheet(workbook: ExcelJS.Workbook, data: ReportData): void {
   });
 
   styleHeaderRow(sheet);
-  applyAutoFilter(sheet, 'Q');
+  applyAutoFilter(sheet, 'R');
 }
 
 function buildDetailsSheet(workbook: ExcelJS.Workbook, data: ReportData): void {
@@ -237,11 +239,14 @@ function buildExecutionSummarySheet(workbook: ExcelJS.Workbook, data: ReportData
     ['Resume File', path.basename(s.resumeFile)],
     ['Selected Role', s.role],
     ['Job Source', s.source],
+    ['Work Mode Filter', s.workMode],
+    ['Location Preference', s.userLocation ?? 'not provided'],
     ['AI Provider', s.aiProvider],
     ['Used Fallback Mode', s.usedFallback ? 'Yes' : 'No'],
     ['Jobs Collected', s.jobsCollected],
     ['Duplicates Removed', s.duplicatesRemoved],
     ['Jobs After Role Filter', s.jobsAfterRoleFilter],
+    ['Jobs After Work Mode Filter', s.jobsAfterWorkModeFilter],
     ['Valid Jobs', s.jobsValid],
     ['Jobs Needing Review', s.jobsNeedingReview],
     ['Invalid Jobs', s.jobsInvalid],

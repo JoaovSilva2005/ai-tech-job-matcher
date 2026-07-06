@@ -1,4 +1,5 @@
-import { CliOptions, SelectableSource, SELECTABLE_SOURCES, VALID_ROLES } from './cliTypes';
+import { SELECTABLE_SOURCES, VALID_ROLES, VALID_WORK_MODES } from './cliTypes';
+import type { CliOptions, SelectableSource, WorkModeFilter } from './cliTypes';
 import type { TechRole } from '../scraper/types';
 import { SUPPORTED_RESUME_EXTENSIONS } from '../resume/parseResume';
 
@@ -6,12 +7,14 @@ const USAGE = `
 AI Tech Job Matcher
 
 Usage:
-  npm run dev -- -- --resume <path> [--role <role>] [--source <source>] [--limit <n>] [--output <dir>] [--fallback] [--debug]
+  npm run dev -- -- --resume <path> [--role <role>] [--source <source>] [--work-mode <mode>] [--location <city>] [--limit <n>] [--output <dir>] [--fallback] [--debug]
 
 Options:
   --resume    Path to the resume file (${SUPPORTED_RESUME_EXTENSIONS.join(', ')})   [required]
   --role      Target role: ${VALID_ROLES.join(' | ')}          [default: all]
   --source    Job source: ${SELECTABLE_SOURCES.join(' | ')}    [default: gupy; "all" queries every source]
+  --work-mode Work mode: ${VALID_WORK_MODES.join(' | ')}       [default: all]
+  --location  Candidate city/address used to prioritize nearby jobs
   --limit     Max number of jobs to collect                    [default: 16]
   --output    Output directory                                 [default: ./output]
   --fallback  Force local keyword analysis (no AI API calls)
@@ -29,6 +32,8 @@ export function parseArgs(argv: string[]): CliOptions {
     resume: '',
     role: 'all',
     source: 'gupy',
+    workMode: 'all',
+    userLocation: '',
     limit: 16,
     output: './output',
     fallback: false,
@@ -59,6 +64,20 @@ export function parseArgs(argv: string[]): CliOptions {
         options.source = source;
         break;
       }
+      case '--work-mode': {
+        const workMode = (argv[++i] ?? '').toLowerCase() as WorkModeFilter;
+        if (!VALID_WORK_MODES.includes(workMode)) {
+          throw new CliError(
+            `Invalid --work-mode "${workMode}". Valid work modes: ${VALID_WORK_MODES.join(', ')}`
+          );
+        }
+        options.workMode = workMode;
+        break;
+      }
+      case '--location':
+      case '--user-location':
+        options.userLocation = argv[++i] ?? '';
+        break;
       case '--limit': {
         const limit = Number(argv[++i]);
         if (!Number.isInteger(limit) || limit < 1 || limit > 100) {

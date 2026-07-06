@@ -6,7 +6,7 @@ The project is focused on practical QA Jr / Dev Jr skills: Playwright automation
 
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)
 ![Playwright](https://img.shields.io/badge/Playwright-tests%20%2B%20automation-2EAD33?logo=playwright&logoColor=white)
-![Tests](https://img.shields.io/badge/tests-80%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-89%20passing-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 
 ## What It Does
@@ -16,8 +16,9 @@ The project is focused on practical QA Jr / Dev Jr skills: Playwright automation
 3. Collects real jobs from public sources.
 4. Validates collected job data.
 5. Compares resume and job requirements by skills, seniority, language, and role.
-6. Ranks job matches by compatibility score.
-7. Exports an Excel report, Markdown summary, and JSON evidence files.
+6. Filters by work mode and prioritizes jobs near the candidate's city when provided.
+7. Ranks job matches by compatibility score, using location preference when provided.
+8. Exports an Excel report, Markdown summary, and JSON evidence files.
 
 The app works without an API key by using a local fallback analyzer. Optional AI providers can be configured through environment variables.
 
@@ -29,7 +30,7 @@ The app works without an API key by using a local fallback analyzer. Optional AI
 - Dedicated `QA Issues` sheet in the Excel report.
 - Graceful fallback when an external source or AI provider fails.
 - Excel, Markdown, and JSON outputs for traceability.
-- 80 automated tests passing.
+- 89 automated tests passing.
 
 ## Tech Stack
 
@@ -54,7 +55,7 @@ npx playwright install chromium
 Run the CLI with Gupy jobs:
 
 ```bash
-npm run dev -- -- --resume ./samples/sample-resume.txt --role qa --source gupy --limit 5 --fallback
+npm run dev -- -- --resume ./samples/sample-resume.txt --role qa --source gupy --work-mode remote --location "Campinas, SP" --limit 5 --fallback
 ```
 
 Run the web UI:
@@ -69,7 +70,7 @@ Open:
 http://localhost:4180
 ```
 
-The web UI lets the user upload a resume, choose a target role, select a public job source, and download the generated reports. `Gupy Brazil` is selected by default.
+The web UI lets the user upload a resume, choose a target role, select a public job source, filter by work mode, add a city/address preference, and download the generated reports. `Gupy Brazil` is selected by default.
 
 ## Main Commands
 
@@ -88,6 +89,13 @@ npm run demo:qa
 npm run demo:all
 ```
 
+Useful CLI filters:
+
+```bash
+--work-mode all|remote|hybrid|onsite
+--location "Campinas, SP"
+```
+
 ## Job Sources
 
 | Source | Type | Requires key? | Notes |
@@ -103,7 +111,7 @@ npm run demo:all
 Example with Brazilian QA jobs:
 
 ```bash
-npm run dev -- -- --resume ./samples/sample-resume.txt --role qa --source gupy --limit 8 --fallback
+npm run dev -- -- --resume ./samples/sample-resume.txt --role qa --source gupy --work-mode remote --location "Sao Paulo, SP" --limit 8 --fallback
 ```
 
 ## Generated Outputs
@@ -121,7 +129,7 @@ output/resume-analysis.json
 
 The Excel workbook contains six sheets:
 
-- `Ranking`: jobs sorted by match score.
+- `Ranking`: jobs sorted by match score, or by location preference first when a city/address is provided.
 - `Details`: detailed analysis for each job.
 - `QA Issues`: data quality issues found during validation.
 - `Resume Analysis`: structured candidate profile.

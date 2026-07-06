@@ -2,6 +2,7 @@ import type { JobMatchResult } from '../matcher/calculateMatchScore';
 import type { ResumeAnalysis } from '../resume/resumeSchema';
 import type { JobIssue, JobValidationResult } from '../scraper/types';
 import type { TechRole } from '../scraper/types';
+import type { WorkModeFilter } from '../cli/cliTypes';
 
 export interface SkillInsight {
   skill: string;
@@ -14,6 +15,8 @@ export interface ExecutionSummary {
   resumeFile: string;
   role: TechRole;
   source: string;
+  workMode: WorkModeFilter;
+  userLocation?: string;
   aiProvider: string;
   usedFallback: boolean;
   jobsCollected: number;
@@ -22,6 +25,7 @@ export interface ExecutionSummary {
   jobsInvalid: number;
   duplicatesRemoved: number;
   jobsAfterRoleFilter: number;
+  jobsAfterWorkModeFilter: number;
   durationMs: number;
 }
 

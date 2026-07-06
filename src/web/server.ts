@@ -3,8 +3,8 @@ import fs from 'fs';
 import express, { Request, Response } from 'express';
 import multer from 'multer';
 import { runPipeline } from '../index';
-import type { CliOptions, SelectableSource } from '../cli/cliTypes';
-import { VALID_ROLES, SELECTABLE_SOURCES } from '../cli/cliTypes';
+import type { CliOptions, SelectableSource, WorkModeFilter } from '../cli/cliTypes';
+import { VALID_ROLES, SELECTABLE_SOURCES, VALID_WORK_MODES } from '../cli/cliTypes';
 import type { JobMatchResult } from '../matcher/calculateMatchScore';
 import type { TechRole } from '../scraper/types';
 import { ensureDir } from '../utils/fileSystem';
@@ -45,7 +45,12 @@ app.get('/', (_req: Request, res: Response) => {
 });
 
 app.get('/api/health', (_req: Request, res: Response) => {
-  res.json({ status: 'ok', roles: VALID_ROLES, sources: SELECTABLE_SOURCES });
+  res.json({
+    status: 'ok',
+    roles: VALID_ROLES,
+    sources: SELECTABLE_SOURCES,
+    workModes: VALID_WORK_MODES,
+  });
 });
 
 app.post('/api/analyze', upload.single('resume'), async (req: Request, res: Response) => {
@@ -58,12 +63,16 @@ app.post('/api/analyze', upload.single('resume'), async (req: Request, res: Resp
 
   const role = normalizeRole(req.body.role);
   const source = normalizeSource(req.body.source);
+  const workMode = normalizeWorkMode(req.body.workMode);
+  const userLocation = normalizeUserLocation(req.body.userLocation);
   const limit = normalizeLimit(req.body.limit);
 
   const options: CliOptions = {
     resume: file.path,
     role,
     source,
+    workMode,
+    userLocation,
     limit,
     output: OUTPUT_DIR,
     fallback: false, // runPipeline auto-degrades to local fallback when no API key
@@ -117,6 +126,15 @@ function normalizeSource(value: unknown): SelectableSource {
     : 'gupy';
 }
 
+function normalizeWorkMode(value: unknown): WorkModeFilter {
+  const workMode = String(value ?? 'all').toLowerCase() as WorkModeFilter;
+  return VALID_WORK_MODES.includes(workMode) ? workMode : 'all';
+}
+
+function normalizeUserLocation(value: unknown): string {
+  return String(value ?? '').trim().slice(0, 120);
+}
+
 function normalizeLimit(value: unknown): number {
   const limit = Number(value);
   if (!Number.isInteger(limit) || limit < 1 || limit > 50) return 16;
@@ -141,6 +159,7 @@ function toClientMatch(m: JobMatchResult) {
     url: m.job.url,
     source: m.job.source,
     location: m.job.location ?? null,
+    locationPreference: m.locationPreference ?? null,
     workMode: m.job.workMode,
     seniority: m.analysis.seniorityLevel,
     englishLevel: m.analysis.englishLevel,
