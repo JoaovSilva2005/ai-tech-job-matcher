@@ -5,6 +5,7 @@ import multer from 'multer';
 import { runPipeline } from '../index';
 import type { CliOptions, JobSource } from '../cli/cliTypes';
 import { VALID_ROLES, VALID_SOURCES } from '../cli/cliTypes';
+import type { JobMatchResult } from '../matcher/calculateMatchScore';
 import type { TechRole } from '../scraper/types';
 import { ensureDir } from '../utils/fileSystem';
 import { setDebug } from '../utils/logger';
@@ -72,12 +73,11 @@ app.post('/api/analyze', upload.single('resume'), async (req: Request, res: Resp
   try {
     const result = await runPipeline(options);
     const resumeAnalysis = readJson(result.outputFiles.resumeAnalysis);
-    const matches = readJson(result.outputFiles.jobMatches);
 
     res.json({
       summary: result.summary,
       resumeAnalysis,
-      matches,
+      matches: result.matches.map(toClientMatch),
       downloadUrl: '/api/download/excel',
       markdownUrl: '/api/download/summary',
     });
@@ -123,6 +123,31 @@ function normalizeLimit(value: unknown): number {
 
 function readJson(filePath: string): unknown {
   return JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+}
+
+/**
+ * Flattens a JobMatchResult into the shape the web UI card expects, exposing
+ * the job metadata (location, work mode, source) and the analyzed seniority /
+ * English level that the richer card layout renders.
+ */
+function toClientMatch(m: JobMatchResult) {
+  return {
+    score: m.score,
+    recommendation: m.recommendation,
+    title: m.job.title,
+    company: m.job.company,
+    url: m.job.url,
+    source: m.job.source,
+    location: m.job.location ?? null,
+    workMode: m.job.workMode,
+    seniority: m.analysis.seniorityLevel,
+    englishLevel: m.analysis.englishLevel,
+    matchedSkills: m.matchedSkills,
+    missingSkills: m.missingSkills,
+    criticalGaps: m.criticalGaps,
+    explanation: m.explanation,
+    studyPlan: m.studyPlan,
+  };
 }
 
 app.listen(PORT, () => {

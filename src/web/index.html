@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Tech Job Matcher</title>
+<style>
+/* ============================================================
+   Theme tokens — every color lives here. Dark is the default;
+   light mode overrides via prefers-color-scheme.
+   ============================================================ */
+:root {
+  /* surfaces */
+  --bg: #101216;
+  --surface: #16191f;
+  --surface-2: #1c2027;
+  --border: #262b34;
+  --border-strong: #333a45;
+
+  /* text */
+  --text: #e8eaee;
+  --text-2: #9aa3b0;
+  --text-3: #6b7482;
+
+  /* actions */
+  --accent: #6c8ef5;          /* primary actions */
+  --accent-strong: #85a2f7;
+  --accent-ink: #0e1220;      /* text on accent */
+  --positive: #4fb98a;        /* apply / good */
+
+  /* recommendation scale (muted) — bg tints + readable ink */
+  --rec-strong: #4fb98a;
+  --rec-strong-bg: #17281f;
+  --rec-strong-ink: #8fd6b4;
+  --rec-apply: #6fae62;
+  --rec-apply-bg: #1d271a;
+  --rec-apply-ink: #a9d09b;
+  --rec-study: #c9a44a;
+  --rec-study-bg: #2a2415;
+  --rec-study-ink: #ddc084;
+  --rec-low: #c98352;
+  --rec-low-bg: #2a1f16;
+  --rec-low-ink: #dfa87e;
+  --rec-not: #c96a6a;
+  --rec-not-bg: #2a1818;
+  --rec-not-ink: #dd9a9a;
+
+  /* chips */
+  --chip-match-bg: #17281f;
+  --chip-match-ink: #8fd6b4;
+  --chip-match-border: #24402f;
+  --chip-miss-bg: #2a2415;
+  --chip-miss-ink: #ddc084;
+  --chip-miss-border: #453a1d;
+
+  --focus: #85a2f7;
+  --error: #c96a6a;
+  --error-bg: #2a1818;
+  --ring-track: #262b34;
+
+  --radius: 10px;
+  --radius-sm: 6px;
+  --font: -apple-system, "Segoe UI", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --mono: ui-monospace, "SF Mono", "Cascadia Code", Menlo, Consolas, monospace;
+}
+
+@media (prefers-color-scheme: light) {
+  :root {
+    --bg: #f4f5f7;
+    --surface: #ffffff;
+    --surface-2: #eef0f3;
+    --border: #dcdfe5;
+    --border-strong: #c4c9d2;
+    --text: #1b1f27;
+    --text-2: #555e6c;
+    --text-3: #828b99;
+    --accent: #3b5fd9;
+    --accent-strong: #2d4dbd;
+    --accent-ink: #ffffff;
+    --positive: #22795a;
+    --rec-strong: #22795a;  --rec-strong-bg: #e2f2ea;  --rec-strong-ink: #175c43;
+    --rec-apply: #4a7d3e;   --rec-apply-bg: #e8f1e3;   --rec-apply-ink: #38622e;
+    --rec-study: #92702a;   --rec-study-bg: #f6edd7;   --rec-study-ink: #6e5417;
+    --rec-low: #9c5a2b;     --rec-low-bg: #f7e9dd;     --rec-low-ink: #7c451d;
+    --rec-not: #a03d3d;     --rec-not-bg: #f8e4e4;     --rec-not-ink: #7f2c2c;
+    --chip-match-bg: #e2f2ea; --chip-match-ink: #175c43; --chip-match-border: #bfe0d0;
+    --chip-miss-bg: #f6edd7;  --chip-miss-ink: #6e5417;  --chip-miss-border: #e5d3a3;
+    --focus: #3b5fd9;
+    --error: #a03d3d;
+    --error-bg: #f8e4e4;
+    --ring-track: #e3e6ea;
+  }
+}
+
+* { box-sizing: border-box; }
+html { color-scheme: dark light; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+:focus-visible { outline: 2px solid var(--focus); outline-offset: 2px; border-radius: 4px; }
+
+.wrap { max-width: 1060px; margin: 0 auto; padding: 40px 24px 80px; }
+
+/* ---------- header ---------- */
+.masthead { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+h1 { font-size: 26px; font-weight: 600; margin: 0; letter-spacing: -0.015em; }
+.engine-badge {
+  font-family: var(--mono); font-size: 11.5px;
+  color: var(--text-2); background: var(--surface-2);
+  border: 1px solid var(--border); border-radius: 999px;
+  padding: 3px 10px; white-space: nowrap;
+}
+.engine-badge[data-ai="true"] { color: var(--rec-strong-ink); background: var(--rec-strong-bg); border-color: var(--chip-match-border); }
+.subtitle { color: var(--text-2); margin: 10px 0 0; max-width: 62ch; font-size: 15.5px; text-wrap: pretty; }
+
+/* ---------- form ---------- */
+.panel {
+  margin-top: 28px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+}
+form.analyze {
+  display: grid;
+  grid-template-columns: minmax(220px, 1.6fr) 1fr 1fr 88px auto;
+  gap: 14px;
+  align-items: end;
+}
+.field { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.field label { font-size: 12.5px; font-weight: 600; color: var(--text-2); }
+
+.dropzone {
+  position: relative;
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-sm);
+  background: var(--surface-2);
+  padding: 0 12px;
+  height: 40px;
+  display: flex; align-items: center; gap: 8px;
+  cursor: pointer;
+  color: var(--text-2);
+  font-size: 13.5px;
+  overflow: hidden;
+}
+.dropzone.dragover { border-color: var(--accent); color: var(--text); }
+.dropzone.has-file { border-style: solid; border-color: var(--border-strong); color: var(--text); }
+.dropzone input[type="file"] {
+  position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%;
+}
+.dropzone .fname { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--mono); font-size: 12.5px; }
+.dropzone .doc-glyph { flex: none; width: 14px; height: 16px; border: 1.5px solid currentColor; border-radius: 2px; opacity: .7; }
+
+select, input[type="number"] {
+  height: 40px;
+  background: var(--surface-2);
+  color: var(--text);
+  border: 1px solid var(--border-strong);
+  border-radius: var(--radius-sm);
+  padding: 0 10px;
+  font: inherit;
+  font-size: 13.5px;
+  width: 100%;
+}
+select:hover, input[type="number"]:hover { border-color: var(--text-3); }
+
+.btn {
+  height: 40px;
+  border-radius: var(--radius-sm);
+  border: 1px solid transparent;
+  font: inherit; font-size: 13.5px; font-weight: 600;
+  padding: 0 18px;
+  cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.btn-primary { background: var(--accent); color: var(--accent-ink); }
+.btn-primary:hover { background: var(--accent-strong); }
+.btn-secondary { background: transparent; color: var(--text); border-color: var(--border-strong); }
+.btn-secondary:hover { border-color: var(--text-3); }
+.btn:disabled { opacity: .45; cursor: not-allowed; }
+form.analyze[data-busy="true"] :is(select, input, .dropzone) { opacity: .5; pointer-events: none; }
+
+.privacy { margin: 14px 0 0; font-size: 12.5px; color: var(--text-3); }
+
+/* ---------- loading ---------- */
+.loading {
+  margin-top: 28px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: 28px 24px;
+  display: flex; align-items: center; gap: 16px;
+}
+.spinner {
+  width: 22px; height: 22px; flex: none;
+  border-radius: 50%;
+  border: 2.5px solid var(--ring-track);
+  border-top-color: var(--accent);
+  animation: spin .8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+.loading .steps { font-size: 14px; color: var(--text-2); }
+.loading .steps strong { color: var(--text); font-weight: 600; display: block; margin-bottom: 2px; }
+
+/* ---------- summary strip ---------- */
+.summary-strip {
+  margin-top: 32px;
+  display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
+}
+.stat-chip {
+  display: flex; flex-direction: column; gap: 1px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  padding: 8px 14px;
+}
+.stat-chip .v { font-family: var(--mono); font-size: 16px; font-weight: 600; line-height: 1.2; }
+.stat-chip .k { font-size: 11.5px; color: var(--text-3); }
+.summary-actions { margin-left: auto; display: flex; gap: 10px; flex-wrap: wrap; }
+
+/* ---------- results list ---------- */
+.results-head { margin: 28px 0 12px; display: flex; align-items: baseline; gap: 10px; }
+.results-head h2 { font-size: 17px; font-weight: 600; margin: 0; }
+.results-head .count { font-size: 13px; color: var(--text-3); font-family: var(--mono); }
+.cards { display: flex; flex-direction: column; gap: 14px; list-style: none; margin: 0; padding: 0; }
+
+/* ---------- job card ---------- */
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  display: grid;
+  grid-template-columns: 128px 1fr;
+  gap: 20px;
+}
+.card[data-tier="not_recommended"], .card[data-tier="low_priority"] { background: color-mix(in oklab, var(--surface) 72%, var(--bg)); }
+.card[data-tier="not_recommended"] .title { color: var(--text-2); }
+
+/* score rail */
+.score-rail { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.ring { width: 84px; height: 84px; position: relative; }
+.ring svg { width: 100%; height: 100%; transform: rotate(-90deg); display: block; }
+.ring .num {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  font-family: var(--mono);
+}
+.ring .num .s { font-size: 22px; font-weight: 600; line-height: 1; }
+.ring .num .of { font-size: 9.5px; color: var(--text-3); margin-top: 2px; }
+.rec-badge {
+  font-size: 11.5px; font-weight: 600;
+  padding: 4px 10px; border-radius: 999px;
+  text-align: center; line-height: 1.35;
+}
+
+/* card body */
+.card-body { min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+.card-top { display: flex; align-items: flex-start; gap: 12px; flex-wrap: wrap; }
+.card-top .who { min-width: 0; flex: 1 1 300px; }
+.title { font-size: 16.5px; font-weight: 600; margin: 0; line-height: 1.35; text-wrap: pretty; }
+.company-line { margin: 3px 0 0; font-size: 13.5px; color: var(--text-2); }
+.company-line .co { font-weight: 600; color: var(--text); }
+.card[data-tier="not_recommended"] .company-line .co { color: var(--text-2); }
+.card-links { display: flex; align-items: center; gap: 10px; flex: none; }
+.source-pill {
+  font-family: var(--mono); font-size: 11px;
+  color: var(--text-3);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 2.5px 9px;
+}
+.apply-link {
+  font-size: 13px; font-weight: 600;
+  color: var(--positive);
+  text-decoration: none;
+  border: 1px solid var(--chip-match-border);
+  background: var(--chip-match-bg);
+  border-radius: var(--radius-sm);
+  padding: 5px 12px;
+}
+.apply-link:hover { border-color: var(--positive); }
+
+.meta-row { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12.5px; color: var(--text-2); }
+.meta-row .m { display: inline-flex; gap: 5px; align-items: baseline; }
+.meta-row .m b { font-weight: 600; color: var(--text); }
+.meta-row .m .mk { color: var(--text-3); }
+
+.skills-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 24px; }
+.skill-group .sg-label { font-size: 11.5px; font-weight: 600; margin-bottom: 6px; }
+.skill-group.matched .sg-label { color: var(--chip-match-ink); }
+.skill-group.missing .sg-label { color: var(--chip-miss-ink); }
+.chip-row { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip {
+  font-size: 12px; font-weight: 500;
+  padding: 3px 9px; border-radius: 999px;
+  border: 1px solid;
+}
+.chip.match { background: var(--chip-match-bg); color: var(--chip-match-ink); border-color: var(--chip-match-border); }
+.chip.miss  { background: var(--chip-miss-bg);  color: var(--chip-miss-ink);  border-color: var(--chip-miss-border); }
+.chip.none  { background: transparent; color: var(--text-3); border-color: var(--border); font-style: italic; }
+
+.explanation { font-size: 13.5px; color: var(--text-2); margin: 0; border-top: 1px solid var(--border); padding-top: 12px; text-wrap: pretty; }
+
+details.study { border-top: 1px solid var(--border); padding-top: 10px; }
+details.study summary {
+  cursor: pointer; font-size: 12.5px; font-weight: 600; color: var(--text-2);
+  list-style: none; display: inline-flex; align-items: center; gap: 6px;
+}
+details.study summary::before { content: "▸"; font-size: 10px; transition: transform .15s; }
+details.study[open] summary::before { transform: rotate(90deg); }
+details.study summary::-webkit-details-marker { display: none; }
+details.study ol {
+  margin: 10px 0 0; padding-left: 22px;
+  font-size: 13px; color: var(--text-2);
+  columns: 2; column-gap: 32px;
+}
+details.study ol li { margin-bottom: 4px; break-inside: avoid; }
+
+/* ---------- empty / error ---------- */
+.notice {
+  margin-top: 32px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: 40px 24px;
+  text-align: center;
+}
+.notice h2 { font-size: 17px; font-weight: 600; margin: 0 0 6px; }
+.notice p { color: var(--text-2); margin: 0 auto 18px; max-width: 52ch; font-size: 14px; }
+.notice.error { border-color: color-mix(in oklab, var(--error) 40%, var(--border)); }
+.notice.error h2 { color: var(--rec-not-ink); }
+.notice .glyph {
+  width: 40px; height: 40px; margin: 0 auto 14px;
+  border-radius: 50%; border: 1.5px solid var(--border-strong);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--mono); font-size: 18px; color: var(--text-3);
+}
+.notice.error .glyph { border-color: var(--error); color: var(--rec-not-ink); }
+
+.demo-note {
+  margin-top: 24px; font-size: 12px; color: var(--text-3);
+  font-family: var(--mono); text-align: center;
+}
+[hidden] { display: none !important; }
+
+/* ---------- responsive ---------- */
+@media (max-width: 900px) {
+  form.analyze { grid-template-columns: 1fr 1fr; }
+  form.analyze .field-file { grid-column: 1 / -1; }
+  form.analyze .field-submit { grid-column: 1 / -1; }
+  .summary-actions { margin-left: 0; width: 100%; }
+}
+@media (max-width: 640px) {
+  .wrap { padding: 28px 16px 64px; }
+  form.analyze { grid-template-columns: 1fr; }
+  .card { grid-template-columns: 1fr; }
+  .score-rail { flex-direction: row; justify-content: flex-start; }
+  .skills-grid { grid-template-columns: 1fr; }
+  details.study ol { columns: 1; }
+  .stat-chip { flex: 1 1 40%; }
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- ============ header ============ -->
+  <header>
+    <div class="masthead">
+      <h1>AI Tech Job Matcher</h1>
+      <span class="engine-badge" id="engineBadge" data-ai="false">engine: local fallback</span>
+    </div>
+    <p class="subtitle">Upload your resume, pick a target role and a public job source — get real postings ranked 0–100 against your profile, with the exact skills to study before applying.</p>
+  </header>
+
+  <!-- ============ form ============ -->
+  <section class="panel" aria-labelledby="formTitle">
+    <h2 id="formTitle" class="sr-only" style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)">Analysis form</h2>
+    <form class="analyze" id="analyzeForm" novalidate>
+      <div class="field field-file">
+        <label for="resumeInput">Resume (.txt, .pdf, .docx)</label>
+        <div class="dropzone" id="dropzone">
+          <span class="doc-glyph" aria-hidden="true"></span>
+          <span class="fname" id="fileName">Drop a file or click to browse</span>
+          <input type="file" id="resumeInput" name="resume" accept=".txt,.md,.pdf,.docx"
+                 aria-describedby="privacyNote">
+        </div>
+      </div>
+      <div class="field">
+        <label for="roleSelect">Target role</label>
+        <select id="roleSelect" name="role">
+          <option value="all" selected>All roles</option>
+          <option value="qa">QA / Testing</option>
+          <option value="frontend">Frontend</option>
+          <option value="backend">Backend</option>
+          <option value="fullstack">Fullstack</option>
+          <option value="mobile">Mobile</option>
+          <option value="data">Data</option>
+          <option value="devops">DevOps</option>
+          <option value="support">Support</option>
+          <option value="internship">Internship</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="sourceSelect">Job source</label>
+        <select id="sourceSelect" name="source">
+          <option value="themuse" selected>The Muse</option>
+          <option value="remoteok">RemoteOK</option>
+          <option value="remotive">Remotive</option>
+          <option value="greenhouse">Greenhouse</option>
+          <option value="lever">Lever</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="limitInput">Limit</label>
+        <input type="number" id="limitInput" name="limit" min="1" max="50" value="16" inputmode="numeric">
+      </div>
+      <div class="field field-submit">
+        <button type="submit" class="btn btn-primary" id="analyzeBtn">Analyze jobs</button>
+      </div>
+    </form>
+    <p class="privacy" id="privacyNote">Your resume is deleted from disk right after analysis.</p>
+  </section>
+
+  <!-- ============ live region: loading / results / empty / error ============ -->
+  <div aria-live="polite" id="liveRegion">
+
+    <div class="loading" id="loadingState" hidden>
+      <div class="spinner" aria-hidden="true"></div>
+      <div class="steps">
+        <strong>Analyzing…</strong>
+        <span id="loadingStep">Scraping jobs, scoring matches against your resume…</span>
+      </div>
+    </div>
+
+    <section id="resultsState" hidden aria-labelledby="resultsTitle">
+      <div class="summary-strip" id="summaryStrip"></div>
+      <div class="results-head">
+        <h2 id="resultsTitle">Ranked matches</h2>
+        <span class="count" id="resultsCount"></span>
+      </div>
+      <ol class="cards" id="cardsList"></ol>
+    </section>
+
+    <div class="notice" id="emptyState" hidden>
+      <div class="glyph" aria-hidden="true">0</div>
+      <h2>No matching jobs this time</h2>
+      <p id="emptyMsg">Nothing from this source matched your chosen role. Try a different source, widen the role to “All roles”, or raise the limit.</p>
+      <button type="button" class="btn btn-secondary" data-retry>Adjust and retry</button>
+    </div>
+
+    <div class="notice error" id="errorState" hidden>
+      <div class="glyph" aria-hidden="true">!</div>
+      <h2>Analysis didn’t finish</h2>
+      <p id="errorMsg"></p>
+      <button type="button" class="btn btn-secondary" data-retry>Try again</button>
+    </div>
+
+  </div>
+
+  <p class="demo-note" id="demoNote" hidden>demo mode — backend unreachable, showing sample data · append ?state=empty or ?state=error to preview those states</p>
+</div>
+
+<script>
+"use strict";
+/* ============================================================
+   AI Tech Job Matcher — front-end
+   Calls POST /api/analyze; falls back to realistic mock data
+   when no backend is reachable (demo mode).
+   ============================================================ */
+
+const $ = (id) => document.getElementById(id);
+const form = $("analyzeForm");
+const states = { loading: $("loadingState"), results: $("resultsState"), empty: $("emptyState"), error: $("errorState") };
+
+const REC = {
+  strong_apply:          { label: "Strong Apply",           color: "var(--rec-strong)", bg: "var(--rec-strong-bg)", ink: "var(--rec-strong-ink)" },
+  apply:                 { label: "Apply",                  color: "var(--rec-apply)",  bg: "var(--rec-apply-bg)",  ink: "var(--rec-apply-ink)" },
+  study_before_applying: { label: "Study Before Applying",  color: "var(--rec-study)",  bg: "var(--rec-study-bg)",  ink: "var(--rec-study-ink)" },
+  low_priority:          { label: "Low Priority",           color: "var(--rec-low)",    bg: "var(--rec-low-bg)",    ink: "var(--rec-low-ink)" },
+  not_recommended:       { label: "Not Recommended",        color: "var(--rec-not)",    bg: "var(--rec-not-bg)",    ink: "var(--rec-not-ink)" },
+};
+
+/* ---------- tiny DOM builder (auto-escapes: only textContent is used) ---------- */
+function el(tag, attrs = {}, ...children) {
+  const node = document.createElement(tag);
+  for (const [k, v] of Object.entries(attrs)) {
+    if (v == null) continue;
+    if (k === "text") node.textContent = v;
+    else if (k === "html_never") continue;
+    else node.setAttribute(k, v);
+  }
+  for (const c of children) {
+    if (c == null) continue;
+    node.append(c instanceof Node ? c : document.createTextNode(String(c)));
+  }
+  return node;
+}
+
+/* ---------- state switching ---------- */
+function show(which) {
+  for (const [name, node] of Object.entries(states)) node.hidden = name !== which;
+  if (which === null) for (const node of Object.values(states)) node.hidden = true;
+}
+function setBusy(busy) {
+  form.dataset.busy = String(busy);
+  $("analyzeBtn").disabled = busy;
+  $("analyzeBtn").textContent = busy ? "Analyzing…" : "Analyze jobs";
+  form.querySelectorAll("select, input").forEach((i) => (i.disabled = busy));
+}
+
+/* ---------- file input ---------- */
+const dz = $("dropzone");
+const fileInput = $("resumeInput");
+fileInput.addEventListener("change", () => {
+  const f = fileInput.files[0];
+  $("fileName").textContent = f ? f.name : "Drop a file or click to browse";
+  dz.classList.toggle("has-file", !!f);
+});
+["dragenter", "dragover"].forEach((ev) => dz.addEventListener(ev, (e) => { e.preventDefault(); dz.classList.add("dragover"); }));
+["dragleave", "drop"].forEach((ev) => dz.addEventListener(ev, (e) => { e.preventDefault(); dz.classList.remove("dragover"); }));
+dz.addEventListener("drop", (e) => {
+  const f = e.dataTransfer?.files?.[0];
+  if (f) { fileInput.files = e.dataTransfer.files; fileInput.dispatchEvent(new Event("change")); }
+});
+
+/* ---------- submit ---------- */
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const file = fileInput.files[0];
+  if (!file) {
+    renderError("Please choose a resume file first (.txt, .pdf or .docx).");
+    return;
+  }
+  await runAnalysis();
+});
+document.addEventListener("click", (e) => {
+  if (e.target.closest("[data-retry]")) {
+    show(null);
+    $("demoNote").hidden = true;
+    fileInput.focus();
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+});
+
+const LOADING_STEPS = [
+  "Parsing your resume and masking personal data…",
+  "Scraping jobs from the selected source…",
+  "Validating postings and removing duplicates…",
+  "Scoring matches against your resume…",
+];
+let stepTimer = null;
+
+async function runAnalysis() {
+  setBusy(true);
+  show("loading");
+  let i = 0;
+  $("loadingStep").textContent = LOADING_STEPS[0];
+  stepTimer = setInterval(() => { i = Math.min(i + 1, LOADING_STEPS.length - 1); $("loadingStep").textContent = LOADING_STEPS[i]; }, 2200);
+
+  try {
+    const fd = new FormData();
+    fd.append("resume", fileInput.files[0]);
+    fd.append("role", $("roleSelect").value);
+    fd.append("source", $("sourceSelect").value);
+    fd.append("limit", $("limitInput").value || "16");
+
+    let data;
+    try {
+      const res = await fetch("/api/analyze", { method: "POST", body: fd });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new ApiError(body.error || ("Server returned " + res.status));
+      }
+      data = await res.json();
+    } catch (err) {
+      if (err instanceof ApiError) throw err;
+      // Network failure → no backend. Demo mode with realistic sample data.
+      data = await mockAnalyze($("roleSelect").value);
+      $("demoNote").hidden = false;
+    }
+    renderResults(data);
+  } catch (err) {
+    renderError(err.message || "Something went wrong while analyzing. Your resume was not kept.");
+  } finally {
+    clearInterval(stepTimer);
+    setBusy(false);
+  }
+}
+class ApiError extends Error {}
+
+/* ---------- rendering ---------- */
+function renderError(msg) {
+  show("error");
+  $("errorMsg").textContent = msg + " Nothing was saved — you can adjust the options and retry.";
+}
+
+function renderResults(data) {
+  const matches = Array.isArray(data.matches) ? [...data.matches] : [];
+  matches.sort((a, b) => (b.score ?? 0) - (a.score ?? 0));
+
+  // engine badge
+  const badge = $("engineBadge");
+  const usedFallback = data.summary?.usedFallback !== false;
+  badge.textContent = usedFallback ? "engine: local fallback" : "engine: AI · " + (data.summary?.aiProvider || "ai");
+  badge.dataset.ai = String(!usedFallback);
+
+  if (matches.length === 0) { show("empty"); return; }
+
+  // summary strip
+  const s = data.summary || {};
+  const ra = data.resumeAnalysis || {};
+  const strip = $("summaryStrip");
+  strip.replaceChildren(
+    stat(s.jobsCollected, "Jobs collected"),
+    stat(s.jobsAfterRoleFilter, "After role filter"),
+    stat(s.duplicatesRemoved, "Duplicates removed"),
+    stat(ra.detectedSeniority || "—", "Detected seniority"),
+    stat(matches.filter((m) => m.recommendation === "strong_apply" || m.recommendation === "apply").length, "Top matches"),
+    el("div", { class: "summary-actions" },
+      el("a", { class: "btn btn-primary", href: data.downloadUrl || "/api/download/excel", text: "Download Excel report" }),
+      el("a", { class: "btn btn-secondary", href: data.markdownUrl || "/api/download/summary", text: "Download Markdown summary" })
+    )
+  );
+
+  $("resultsCount").textContent = matches.length + " jobs, best match first";
+  $("cardsList").replaceChildren(...matches.map(card));
+  show("results");
+}
+
+function stat(value, label) {
+  return el("div", { class: "stat-chip" },
+    el("span", { class: "v", text: String(value ?? "—") }),
+    el("span", { class: "k", text: label })
+  );
+}
+
+function scoreRing(score, color) {
+  const r = 36, c = 2 * Math.PI * r;
+  const pct = Math.max(0, Math.min(100, Number(score) || 0));
+  const svgNS = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(svgNS, "svg");
+  svg.setAttribute("viewBox", "0 0 84 84");
+  svg.setAttribute("aria-hidden", "true");
+  const track = document.createElementNS(svgNS, "circle");
+  const arc = document.createElementNS(svgNS, "circle");
+  for (const [circle, stroke, dash] of [[track, "var(--ring-track)", null], [arc, color, `${(pct / 100) * c} ${c}`]]) {
+    circle.setAttribute("cx", "42"); circle.setAttribute("cy", "42"); circle.setAttribute("r", String(r));
+    circle.setAttribute("fill", "none"); circle.setAttribute("stroke", stroke);
+    circle.setAttribute("stroke-width", "6"); circle.setAttribute("stroke-linecap", "round");
+    if (dash) circle.setAttribute("stroke-dasharray", dash);
+    svg.append(circle);
+  }
+  const wrap = el("div", { class: "ring", role: "img", "aria-label": `Match score ${pct} out of 100` });
+  wrap.append(svg, el("div", { class: "num", "aria-hidden": "true" },
+    el("span", { class: "s", text: String(pct) }),
+    el("span", { class: "of", text: "/ 100" })
+  ));
+  return wrap;
+}
+
+function card(m) {
+  const rec = REC[m.recommendation] || REC.low_priority;
+
+  const badge = el("span", { class: "rec-badge", text: rec.label });
+  badge.style.background = rec.bg;
+  badge.style.color = rec.ink;
+
+  const meta = el("div", { class: "meta-row" });
+  const metaItems = [
+    ["Location", m.location],
+    ["Mode", m.workMode && m.workMode !== "unknown" ? m.workMode : null],
+    ["Seniority", m.seniority || m.seniorityLevel],
+    ["English", m.englishLevel && m.englishLevel !== "unknown" ? m.englishLevel : null],
+  ];
+  for (const [k, v] of metaItems) {
+    if (!v) continue;
+    meta.append(el("span", { class: "m" }, el("span", { class: "mk", text: k }), el("b", { text: String(v) })));
+  }
+
+  const chips = (list, cls, emptyText) => {
+    const row = el("div", { class: "chip-row" });
+    if (!list || list.length === 0) row.append(el("span", { class: "chip none", text: emptyText }));
+    else for (const skill of list) row.append(el("span", { class: "chip " + cls, text: String(skill) }));
+    return row;
+  };
+
+  const body = el("div", { class: "card-body" },
+    el("div", { class: "card-top" },
+      el("div", { class: "who" },
+        el("h3", { class: "title", text: String(m.title || "Untitled role") }),
+        el("p", { class: "company-line" }, el("span", { class: "co", text: String(m.company || "Unknown company") }))
+      ),
+      el("div", { class: "card-links" },
+        el("span", { class: "source-pill", text: String(m.source || "source") }),
+        el("a", { class: "apply-link", href: m.url || "#", target: "_blank", rel: "noopener noreferrer" }, "Apply ↗")
+      )
+    ),
+    meta.childElementCount ? meta : null,
+    el("div", { class: "skills-grid" },
+      el("div", { class: "skill-group matched" },
+        el("div", { class: "sg-label", text: "Matched skills" }),
+        chips(m.matchedSkills, "match", "No direct overlap")
+      ),
+      el("div", { class: "skill-group missing" },
+        el("div", { class: "sg-label", text: "Missing skills" }),
+        chips(m.missingSkills, "miss", "Nothing missing")
+      )
+    ),
+    m.explanation ? el("p", { class: "explanation", text: String(m.explanation) }) : null
+  );
+
+  if (Array.isArray(m.studyPlan) && m.studyPlan.length) {
+    const ol = el("ol");
+    for (const t of m.studyPlan) ol.append(el("li", { text: String(t) }));
+    body.append(el("details", { class: "study" }, el("summary", {}, "Study plan"), ol));
+  }
+
+  const rail = el("div", { class: "score-rail" }, scoreRing(m.score, rec.color), badge);
+  return el("li", { class: "card", "data-tier": m.recommendation || "low_priority" }, rail, body);
+}
+
+/* ============================================================
+   Demo mode — realistic sample data mirroring the real pipeline
+   output, so every state renders without a backend.
+   ============================================================ */
+function mockAnalyze(role) {
+  return new Promise((resolve, reject) => setTimeout(() => {
+    try { resolve(MOCK_RESPONSE(role)); } catch (e) { reject(e); }
+  }, 3200));
+}
+
+const MOCK_MATCHES = [
+  { score: 92, recommendation: "strong_apply", title: "Junior QA Engineer (Web Automation)", company: "Loggi", location: "Remote — LATAM", workMode: "remote", seniority: "junior", englishLevel: "intermediate", source: "themuse", url: "https://example.com/jobs/1",
+    matchedSkills: ["JavaScript", "TypeScript", "Playwright", "Git", "SQL"], missingSkills: ["Cypress"], criticalGaps: [],
+    explanation: "Strong match: the candidate covers 5 of 6 required skills, the role is junior-friendly and explicitly open to first-time QA engineers.",
+    studyPlan: ["Cypress basics", "Page Object Model patterns"] },
+  { score: 84, recommendation: "apply", title: "QA Analyst, Payments", company: "Nubank", location: "São Paulo, BR", workMode: "hybrid", seniority: "junior", englishLevel: "advanced", source: "themuse", url: "https://example.com/jobs/2",
+    matchedSkills: ["SQL", "Python", "Git", "API Testing"], missingSkills: ["Postman", "JMeter"], criticalGaps: [],
+    explanation: "Good match on core testing skills; the missing tools are quick to pick up and not listed as hard requirements.",
+    studyPlan: ["Postman collections", "Basic load testing with JMeter"] },
+  { score: 71, recommendation: "apply", title: "Frontend Developer (Entry Level)", company: "Stone", location: "Remote — BR", workMode: "remote", seniority: "junior", englishLevel: "intermediate", source: "themuse", url: "https://example.com/jobs/3",
+    matchedSkills: ["React", "JavaScript", "TypeScript", "Git"], missingSkills: ["Next.js", "Testing Library"], criticalGaps: [],
+    explanation: "Solid frontend overlap; the role prefers Next.js experience but accepts strong React fundamentals.",
+    studyPlan: ["Next.js app router", "React Testing Library"] },
+  { score: 55, recommendation: "study_before_applying", title: "IT/Helpdesk Support Specialist", company: "SimVentions, Inc", location: "Manassas, VA", workMode: "hybrid", seniority: "mid", englishLevel: "advanced", source: "themuse", url: "https://example.com/jobs/4",
+    matchedSkills: ["Help Desk"], missingSkills: ["Troubleshooting", "Customer Support", "Ticketing systems"], criticalGaps: [],
+    explanation: "Partial match because the candidate already has Help Desk experience; the position targets mid level and the main gaps are support-specific tooling.",
+    studyPlan: ["ITIL fundamentals", "Ticketing workflows (Jira Service Desk)", "Troubleshooting methodology"] },
+  { score: 48, recommendation: "low_priority", title: "IT Systems Administrator, Launch", company: "SpaceX", location: "Brownsville, TX", workMode: "onsite", seniority: "mid", englishLevel: "advanced", source: "themuse", url: "https://example.com/jobs/5",
+    matchedSkills: ["Python"], missingSkills: ["Linux", "Automated Testing"], criticalGaps: ["Linux administration"],
+    explanation: "Weak match: only Python overlaps, the position targets mid level and requires deep Linux administration.",
+    studyPlan: ["Linux fundamentals", "Bash scripting", "System monitoring basics"] },
+  { score: 22, recommendation: "not_recommended", title: "Senior Equity Research Analyst — IT Services", company: "Bank of America", location: "New York, NY", workMode: "onsite", seniority: "senior", englishLevel: "fluent", source: "themuse", url: "https://example.com/jobs/6",
+    matchedSkills: ["Excel"], missingSkills: ["Financial modeling", "Equity research", "CFA progress"], criticalGaps: ["Senior-level finance background"],
+    explanation: "Not a fit: this is a senior finance position — the only overlap is Excel and the core requirements sit outside a junior tech profile.",
+    studyPlan: [] },
+];
+
+function MOCK_RESPONSE(role) {
+  const forcedState = new URLSearchParams(location.search).get("state");
+  if (forcedState === "error") throw new ApiError("The job source did not respond (timeout after 30s).");
+  const matches = forcedState === "empty" ? [] : MOCK_MATCHES;
+  return {
+    summary: { jobsCollected: 20, jobsAfterRoleFilter: role === "all" ? 20 : 9, duplicatesRemoved: 3, usedFallback: true, aiProvider: "fallback" },
+    resumeAnalysis: {
+      detectedSeniority: "junior",
+      targetRoles: ["qa", "frontend", "fullstack"],
+      technicalSkills: ["JavaScript", "TypeScript", "Python", "SQL", "React", "Node.js", "Git"],
+      strengths: ["Solid technical base", "Strong English level"],
+      improvementAreas: ["Test automation practice", "API testing", "Docker basics"],
+    },
+    matches,
+    downloadUrl: "/api/download/excel",
+    markdownUrl: "/api/download/summary",
+  };
+}
+
+/* Preview helper: ?state=results|empty|error renders that state on load
+   with sample data — handy for reviewing the UI without a backend. */
+(function initPreviewState() {
+  const st = new URLSearchParams(location.search).get("state");
+  if (!st) return;
+  $("demoNote").hidden = false;
+  try { renderResults(MOCK_RESPONSE("all")); } catch (e) { renderError(e.message); }
+})();
+</script>
+</body>
+</html>
