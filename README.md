@@ -105,7 +105,7 @@ the generated Excel/Markdown reports. The uploaded resume is deleted from disk a
 |--------|--------|---------|-------------|
 | `--resume` | file path (.txt/.md/.pdf/.docx) | **required** | Resume to analyze |
 | `--role` | `qa` `frontend` `backend` `fullstack` `mobile` `data` `devops` `support` `internship` `all` | `all` | Target tech area |
-| `--source` | `remoteok` `remotive` `themuse` `greenhouse` `lever` | `themuse` | Real public job source |
+| `--source` | `remoteok` `remotive` `themuse` `greenhouse` `lever` `all` | `themuse` | Real public job source (`all` queries every source at once) |
 | `--limit` | 1–100 | `16` | Max jobs to collect |
 | `--output` | directory path | `./output` | Output folder |
 | `--fallback` | flag | off | Force local analysis (skip AI even if a key exists) |
@@ -120,8 +120,12 @@ the generated Excel/Markdown reports. The uploaded resume is deleted from disk a
 | `themuse` | Public JSON API | None | Real Computer and IT jobs from The Muse public endpoint, capped at 20. |
 | `greenhouse` | Public ATS API | None | Real jobs from Greenhouse Job Board API. Defaults to the public `stripe` board; override with `GREENHOUSE_BOARD_TOKENS`. |
 | `lever` | Public ATS API | None | Real jobs from Lever Postings API. Requires known public company slugs in `LEVER_COMPANY_SLUGS`. |
+| `all` | Aggregate | None | Queries every public source in parallel, interleaves the results for variety and lets the pipeline de-duplicate postings that appear on more than one board. Each source still fails independently. |
 
 ```bash
+# Search every public source at once, ranked against your resume
+npm run dev -- --resume ./samples/sample-resume.txt --role all --source all --limit 20
+
 # Real remote jobs from Remotive, filtered to QA by the app
 npm run dev -- --resume ./samples/sample-resume.txt --role qa --source remotive --limit 10
 

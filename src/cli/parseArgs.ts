@@ -1,4 +1,4 @@
-import { CliOptions, JobSource, VALID_ROLES, VALID_SOURCES } from './cliTypes';
+import { CliOptions, SelectableSource, SELECTABLE_SOURCES, VALID_ROLES } from './cliTypes';
 import type { TechRole } from '../scraper/types';
 import { SUPPORTED_RESUME_EXTENSIONS } from '../resume/parseResume';
 
@@ -11,7 +11,7 @@ Usage:
 Options:
   --resume    Path to the resume file (${SUPPORTED_RESUME_EXTENSIONS.join(', ')})   [required]
   --role      Target role: ${VALID_ROLES.join(' | ')}          [default: all]
-  --source    Job source: ${VALID_SOURCES.join(' | ')}         [default: themuse]
+  --source    Job source: ${SELECTABLE_SOURCES.join(' | ')}    [default: themuse; "all" queries every source]
   --limit     Max number of jobs to collect                    [default: 16]
   --output    Output directory                                 [default: ./output]
   --fallback  Force local keyword analysis (no AI API calls)
@@ -50,10 +50,10 @@ export function parseArgs(argv: string[]): CliOptions {
         break;
       }
       case '--source': {
-        const source = (argv[++i] ?? '').toLowerCase() as JobSource;
-        if (!VALID_SOURCES.includes(source as (typeof VALID_SOURCES)[number])) {
+        const source = (argv[++i] ?? '').toLowerCase() as SelectableSource;
+        if (!SELECTABLE_SOURCES.includes(source as (typeof SELECTABLE_SOURCES)[number])) {
           throw new CliError(
-            `Invalid --source "${source}". Valid sources: ${VALID_SOURCES.join(', ')}`
+            `Invalid --source "${source}". Valid sources: ${SELECTABLE_SOURCES.join(', ')}`
           );
         }
         options.source = source;

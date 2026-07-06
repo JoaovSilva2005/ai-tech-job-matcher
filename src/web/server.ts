@@ -3,8 +3,8 @@ import fs from 'fs';
 import express, { Request, Response } from 'express';
 import multer from 'multer';
 import { runPipeline } from '../index';
-import type { CliOptions, JobSource } from '../cli/cliTypes';
-import { VALID_ROLES, VALID_SOURCES } from '../cli/cliTypes';
+import type { CliOptions, SelectableSource } from '../cli/cliTypes';
+import { VALID_ROLES, SELECTABLE_SOURCES } from '../cli/cliTypes';
 import type { JobMatchResult } from '../matcher/calculateMatchScore';
 import type { TechRole } from '../scraper/types';
 import { ensureDir } from '../utils/fileSystem';
@@ -45,7 +45,7 @@ app.get('/', (_req: Request, res: Response) => {
 });
 
 app.get('/api/health', (_req: Request, res: Response) => {
-  res.json({ status: 'ok', roles: VALID_ROLES, sources: VALID_SOURCES });
+  res.json({ status: 'ok', roles: VALID_ROLES, sources: SELECTABLE_SOURCES });
 });
 
 app.post('/api/analyze', upload.single('resume'), async (req: Request, res: Response) => {
@@ -110,9 +110,11 @@ function normalizeRole(value: unknown): TechRole {
   return VALID_ROLES.includes(role) ? role : 'all';
 }
 
-function normalizeSource(value: unknown): JobSource {
-  const source = String(value ?? 'themuse').toLowerCase() as JobSource;
-  return VALID_SOURCES.includes(source as (typeof VALID_SOURCES)[number]) ? source : 'themuse';
+function normalizeSource(value: unknown): SelectableSource {
+  const source = String(value ?? 'themuse').toLowerCase() as SelectableSource;
+  return SELECTABLE_SOURCES.includes(source as (typeof SELECTABLE_SOURCES)[number])
+    ? source
+    : 'themuse';
 }
 
 function normalizeLimit(value: unknown): number {

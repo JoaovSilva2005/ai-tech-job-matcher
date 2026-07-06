@@ -33,6 +33,9 @@ outsource or circumvent it. The run fails gracefully and moves on.
   tokens, keeps at most 20 items, and defaults to a single public example board.
 - The Lever source calls the public Postings API only for company slugs explicitly configured
   by the user, keeps at most 20 items, and does not try to discover or crawl slugs.
+- The `all` aggregate source makes exactly **one** request to each public source (run in
+  parallel, not in a loop), applies the same per-source caps, and merges the results. It is a
+  single fan-out per run — not repeated polling — and any source that fails is simply skipped.
 - There is no crawling, no pagination loops, no parallel request storms, no retry hammering.
 
 ## Respect Website Restrictions
