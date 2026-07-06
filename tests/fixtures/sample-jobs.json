@@ -1,0 +1,57 @@
+[
+  {
+    "id": "fx-001",
+    "title": "QA Junior Engineer (Playwright)",
+    "company": "BlueOrbit Software",
+    "location": "Remote - Brazil",
+    "workMode": "remote",
+    "url": "https://jobs.example.com/blueorbit/qa-junior-playwright",
+    "description": "We are looking for a QA Junior Engineer to write end-to-end tests with Playwright and TypeScript, create test cases, execute regression testing and report bugs with clear evidence. Requirements: JavaScript or TypeScript, Git, test case writing, bug reports and intermediate English.",
+    "source": "fixture",
+    "scrapedAt": "2026-07-01T12:00:00.000Z"
+  },
+  {
+    "id": "fx-002",
+    "title": "QA Junior Engineer (Playwright)",
+    "company": "BlueOrbit Software",
+    "location": "Remote - Brazil",
+    "workMode": "remote",
+    "url": "https://jobs.example.com/blueorbit/qa-junior-playwright?ref=partner",
+    "description": "Duplicate posting of the same QA Junior Engineer position at BlueOrbit Software, republished by a partner job board with a slightly different URL but the same title and company, used to validate duplicate detection in the pipeline.",
+    "source": "fixture",
+    "scrapedAt": "2026-07-01T12:00:00.000Z"
+  },
+  {
+    "id": "fx-003",
+    "title": "",
+    "company": "Ghost Corp",
+    "location": "Unknown",
+    "workMode": "unknown",
+    "url": "https://jobs.example.com/ghost/untitled",
+    "description": "This fixture job has an empty title on purpose. The QA validation layer must flag it with a high severity issue on the title field and mark the job as invalid so it never reaches the final ranking report.",
+    "source": "fixture",
+    "scrapedAt": "2026-07-01T12:00:00.000Z"
+  },
+  {
+    "id": "fx-004",
+    "title": "Backend Junior Node.js Developer",
+    "company": "Rio Data Solutions",
+    "location": "Rio de Janeiro, Brazil",
+    "workMode": "hybrid",
+    "url": "not-a-valid-url",
+    "description": "This fixture job has an invalid URL on purpose. The QA validation layer must flag the url field with a high severity issue. The description itself is long enough to pass the minimum description length validation rule of the pipeline.",
+    "source": "fixture",
+    "scrapedAt": "2026-07-01T12:00:00.000Z"
+  },
+  {
+    "id": "fx-005",
+    "title": "Frontend Junior React Developer",
+    "company": "Aurora Labs",
+    "location": "Remote - Brazil",
+    "workMode": "remote",
+    "url": "https://jobs.example.com/aurora/frontend-junior-react",
+    "description": "Short description.",
+    "source": "fixture",
+    "scrapedAt": "2026-07-01T12:00:00.000Z"
+  }
+]

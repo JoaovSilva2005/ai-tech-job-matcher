@@ -1,0 +1,49 @@
+{
+  "name": "ai-tech-job-matcher",
+  "version": "1.0.0",
+  "description": "A TypeScript project that uses Playwright, AI and Excel reports to match tech resumes with public job opportunities.",
+  "main": "dist/index.js",
+  "scripts": {
+    "dev": "tsx src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js",
+    "test": "playwright test",
+    "test:unit": "playwright test tests/unit",
+    "test:e2e": "playwright test tests/e2e",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "demo:qa": "tsx src/index.ts --resume ./samples/sample-resume.txt --role qa --source sample --limit 10",
+    "demo:all": "tsx src/index.ts --resume ./samples/sample-resume.txt --role all --source sample --limit 16"
+  },
+  "keywords": [
+    "playwright",
+    "typescript",
+    "qa-automation",
+    "web-scraping",
+    "ai",
+    "resume-analysis",
+    "excel-report",
+    "job-matching"
+  ],
+  "author": "Joao Victor Silva",
+  "license": "MIT",
+  "dependencies": {
+    "dotenv": "^16.4.5",
+    "exceljs": "^4.4.0",
+    "mammoth": "^1.8.0",
+    "pdf-parse": "^1.1.1",
+    "playwright": "^1.49.0",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.17.0",
+    "@playwright/test": "^1.49.0",
+    "@types/node": "^22.10.2",
+    "@types/pdf-parse": "^1.1.4",
+    "eslint": "^9.17.0",
+    "prettier": "^3.4.2",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "typescript-eslint": "^8.18.1"
+  }
+}

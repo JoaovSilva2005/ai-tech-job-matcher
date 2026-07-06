@@ -1,0 +1,14 @@
+QA Junior Engineer (Playwright)
+BlueOrbit Software - Remote, Brazil
+
+We are looking for a QA Junior Engineer to join our web platform team. You will write and
+maintain end-to-end tests with Playwright and TypeScript, create test cases for new features,
+execute regression testing before releases and report bugs with clear evidence.
+
+Requirements: basic knowledge of JavaScript or TypeScript, Git, test case writing, bug report
+skills and intermediate English for documentation.
+
+Nice to have: Playwright or Cypress exposure, API testing with Postman, CI/CD basics with
+GitHub Actions.
+
+This is a junior-friendly position with mentorship from senior QA engineers.

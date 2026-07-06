@@ -1,0 +1,47 @@
+Alex Ferreira Santos
+Aspiring QA Automation Engineer | Junior Developer
+Email: alex.santos.demo@example.com | Phone: +55 11 91234-5678
+Location: Sao Paulo, Brazil (open to remote work)
+
+SUMMARY
+Systems Analysis and Development student passionate about software quality and web development.
+Hands-on experience building academic web projects and currently learning Playwright for test
+automation. Advanced English, used daily to communicate with international teammates in remote
+volunteer projects. Interested in QA Automation, frontend and backend opportunities.
+
+EDUCATION
+Systems Analysis and Development (Associate Degree) — Expected graduation 2026
+FATEC Sao Paulo
+
+TECHNICAL SKILLS
+- JavaScript and TypeScript for web applications
+- Git and GitHub for version control and collaboration
+- SQL fundamentals (PostgreSQL) and database modeling
+- HTML, CSS and responsive layouts
+- React for building user interfaces
+- Node.js and Express for simple REST APIs
+- Basic knowledge of APIs and API testing concepts (Postman)
+- Learning Playwright for end-to-end test automation
+- Manual testing basics: writing test cases and reporting bugs
+- Scrum ceremonies and Kanban boards in team projects
+
+PROJECTS
+- Campus Library Web App: full stack academic project with React frontend, Node.js REST API and
+  PostgreSQL database. Wrote test cases for the main user flows and reported bugs found during
+  regression testing before each release.
+- Task Tracker: personal project in TypeScript with automated unit tests and GitHub Actions for
+  continuous integration.
+- QA Study Repository: collection of Playwright practice scripts covering login flows, form
+  validation and API testing exercises.
+
+EXPERIENCE
+Volunteer Web Developer — Open Source Community Project (Remote) | 2024 - present
+- Built and maintained web features in React and Node.js in a fully remote, English-speaking team.
+- Participated in code reviews and wrote bug reports for issues found in staging.
+
+LANGUAGES
+- Portuguese: native
+- English: advanced (daily written and spoken communication in remote teams)
+
+INTERESTS
+QA Automation, software testing, frontend development, backend development, continuous learning.
