@@ -6,7 +6,7 @@ The project is focused on practical QA Jr / Dev Jr skills: Playwright automation
 
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)
 ![Playwright](https://img.shields.io/badge/Playwright-tests%20%2B%20automation-2EAD33?logo=playwright&logoColor=white)
-![Tests](https://img.shields.io/badge/tests-92%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-98%20passing-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 
 ## What It Does
@@ -26,13 +26,14 @@ The app works without an API key by using a local fallback analyzer. Optional AI
 ## QA Highlights
 
 - Playwright Test coverage for unit and E2E flows.
+- API tests for resume upload, upload validation and report downloads.
 - Playwright automation used for controlled scraping/test fixtures.
 - Data validation for required fields, URLs, descriptions, seniority, work mode, and duplicates.
 - Dedicated `QA Issues` sheet in the Excel report.
 - Graceful fallback when an external source or AI provider fails.
 - Excel, Markdown, and JSON outputs for traceability.
 - GitHub Actions CI for build, lint and tests.
-- 92 automated tests passing.
+- 98 automated tests passing.
 
 ## Tech Stack
 

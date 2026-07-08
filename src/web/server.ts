@@ -1,7 +1,8 @@
 import path from 'path';
 import fs from 'fs';
-import express, { Request, Response } from 'express';
+import express, { NextFunction, Request, Response } from 'express';
 import multer from 'multer';
+import type { Server } from 'http';
 import { runPipeline } from '../index';
 import type { CliOptions, ManualJobInput, SelectableSource, WorkModeFilter } from '../cli/cliTypes';
 import { VALID_ROLES, SELECTABLE_SOURCES, VALID_WORK_MODES } from '../cli/cliTypes';
@@ -16,105 +17,128 @@ const PORT = Number(process.env.PORT ?? 4180);
 const PROJECT_ROOT = path.resolve(__dirname, '../..');
 const UPLOAD_DIR = path.join(PROJECT_ROOT, 'uploads');
 const OUTPUT_DIR = path.join(PROJECT_ROOT, 'output', 'web');
+const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
 
-ensureDir(UPLOAD_DIR);
-ensureDir(OUTPUT_DIR);
 setDebug(false);
 
-const storage = multer.diskStorage({
-  destination: (_req, _file, cb) => cb(null, UPLOAD_DIR),
-  filename: (_req, file, cb) => {
-    const ext = path.extname(file.originalname).toLowerCase() || '.txt';
-    cb(null, `resume-${Date.now()}${ext}`);
-  },
-});
+interface WebAppOptions {
+  uploadDir?: string;
+  outputDir?: string;
+}
 
-const upload = multer({
-  storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // 5 MB
-  fileFilter: (_req, file, cb) => {
-    const ext = path.extname(file.originalname).toLowerCase();
-    cb(null, SUPPORTED_RESUME_EXTENSIONS.includes(ext as (typeof SUPPORTED_RESUME_EXTENSIONS)[number]));
-  },
-});
+export function createApp(options: WebAppOptions = {}): express.Application {
+  const uploadDir = options.uploadDir ?? UPLOAD_DIR;
+  const outputDir = options.outputDir ?? OUTPUT_DIR;
 
-const app = express();
+  ensureDir(uploadDir);
+  ensureDir(outputDir);
 
-app.get('/', (_req: Request, res: Response) => {
-  res.type('html').send(indexHtml());
-});
-
-app.get('/api/health', (_req: Request, res: Response) => {
-  res.json({
-    status: 'ok',
-    roles: VALID_ROLES,
-    sources: SELECTABLE_SOURCES,
-    workModes: VALID_WORK_MODES,
+  const storage = multer.diskStorage({
+    destination: (_req, _file, cb) => cb(null, uploadDir),
+    filename: (_req, file, cb) => {
+      const ext = path.extname(file.originalname).toLowerCase() || '.txt';
+      cb(null, `resume-${Date.now()}${ext}`);
+    },
   });
-});
 
-app.post('/api/analyze', upload.single('resume'), async (req: Request, res: Response) => {
-  const file = req.file;
-  if (!file) {
-    return res
-      .status(400)
-      .json({ error: `No resume uploaded. Accepted formats: ${SUPPORTED_RESUME_EXTENSIONS.join(', ')}` });
-  }
+  const upload = multer({
+    storage,
+    limits: { fileSize: MAX_UPLOAD_BYTES },
+    fileFilter: (_req, file, cb) => {
+      const ext = path.extname(file.originalname).toLowerCase();
+      cb(null, SUPPORTED_RESUME_EXTENSIONS.includes(ext as (typeof SUPPORTED_RESUME_EXTENSIONS)[number]));
+    },
+  });
 
-  const role = normalizeRole(req.body.role);
-  const source = normalizeSource(req.body.source);
-  const workMode = normalizeWorkMode(req.body.workMode);
-  const userLocation = normalizeUserLocation(req.body.userLocation);
-  const manualJob = normalizeManualJob(req.body, workMode, userLocation);
-  const limit = normalizeLimit(req.body.limit);
+  const app = express();
 
-  const options: CliOptions = {
-    resume: file.path,
-    role,
-    source,
-    workMode,
-    userLocation,
-    manualJob,
-    limit,
-    output: OUTPUT_DIR,
-    fallback: false, // runPipeline auto-degrades to local fallback when no API key
-    debug: false,
-  };
+  app.get('/', (_req: Request, res: Response) => {
+    res.type('html').send(indexHtml());
+  });
 
-  try {
-    const result = await runPipeline(options);
-    const resumeAnalysis = readJson(result.outputFiles.resumeAnalysis);
-
+  app.get('/api/health', (_req: Request, res: Response) => {
     res.json({
-      summary: result.summary,
-      resumeAnalysis,
-      matches: result.matches.map(toClientMatch),
-      downloadUrl: '/api/download/excel',
-      markdownUrl: '/api/download/summary',
+      status: 'ok',
+      roles: VALID_ROLES,
+      sources: SELECTABLE_SOURCES,
+      workModes: VALID_WORK_MODES,
     });
-  } catch (error) {
-    res.status(400).json({ error: (error as Error).message });
-  } finally {
-    // Privacy: never keep the uploaded resume on disk after analysis
-    fs.promises.unlink(file.path).catch(() => undefined);
-  }
-});
+  });
 
-app.get('/api/download/excel', (_req: Request, res: Response) => {
-  const filePath = path.join(OUTPUT_DIR, 'job-match-report.xlsx');
-  if (!fs.existsSync(filePath)) {
-    return res.status(404).json({ error: 'Run an analysis first.' });
-  }
-  res.download(filePath, 'job-match-report.xlsx');
-});
+  app.post('/api/analyze', upload.single('resume'), async (req: Request, res: Response) => {
+    const file = req.file;
+    if (!file) {
+      return res
+        .status(400)
+        .json({ error: `No resume uploaded. Accepted formats: ${SUPPORTED_RESUME_EXTENSIONS.join(', ')}` });
+    }
 
-app.get('/api/download/summary', (_req: Request, res: Response) => {
-  const filePath = path.join(OUTPUT_DIR, 'execution-summary.md');
-  if (!fs.existsSync(filePath)) {
-    return res.status(404).json({ error: 'Run an analysis first.' });
-  }
-  res.download(filePath, 'execution-summary.md');
-});
+    const role = normalizeRole(req.body.role);
+    const source = normalizeSource(req.body.source);
+    const workMode = normalizeWorkMode(req.body.workMode);
+    const userLocation = normalizeUserLocation(req.body.userLocation);
+    const manualJob = normalizeManualJob(req.body, workMode, userLocation);
+    const limit = normalizeLimit(req.body.limit);
+
+    const pipelineOptions: CliOptions = {
+      resume: file.path,
+      role,
+      source,
+      workMode,
+      userLocation,
+      manualJob,
+      limit,
+      output: outputDir,
+      fallback: false, // runPipeline auto-degrades to local fallback when no API key
+      debug: false,
+    };
+
+    try {
+      const result = await runPipeline(pipelineOptions);
+      const resumeAnalysis = readJson(result.outputFiles.resumeAnalysis);
+
+      res.json({
+        summary: result.summary,
+        resumeAnalysis,
+        matches: result.matches.map(toClientMatch),
+        downloadUrl: '/api/download/excel',
+        markdownUrl: '/api/download/summary',
+      });
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    } finally {
+      // Privacy: never keep the uploaded resume on disk after analysis
+      fs.promises.unlink(file.path).catch(() => undefined);
+    }
+  });
+
+  app.get('/api/download/excel', (_req: Request, res: Response) => {
+    const filePath = path.join(outputDir, 'job-match-report.xlsx');
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ error: 'Run an analysis first.' });
+    }
+    res.download(filePath, 'job-match-report.xlsx');
+  });
+
+  app.get('/api/download/summary', (_req: Request, res: Response) => {
+    const filePath = path.join(outputDir, 'execution-summary.md');
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ error: 'Run an analysis first.' });
+    }
+    res.download(filePath, 'execution-summary.md');
+  });
+
+  app.use(uploadErrorHandler);
+
+  return app;
+}
+
+export function startServer(port = PORT): Server {
+  const app = createApp();
+  return app.listen(port, () => {
+    console.log(`AI Tech Job Matcher web UI running at http://localhost:${port}`);
+  });
+}
 
 function normalizeRole(value: unknown): TechRole {
   const role = String(value ?? 'all').toLowerCase() as TechRole;
@@ -165,6 +189,20 @@ function readJson(filePath: string): unknown {
   return JSON.parse(fs.readFileSync(filePath, 'utf-8'));
 }
 
+function uploadErrorHandler(error: unknown, _req: Request, res: Response, next: NextFunction): void {
+  if (!error) {
+    next();
+    return;
+  }
+
+  if (error instanceof multer.MulterError && error.code === 'LIMIT_FILE_SIZE') {
+    res.status(400).json({ error: 'Resume file is too large. Maximum size is 5 MB.' });
+    return;
+  }
+
+  res.status(400).json({ error: (error as Error).message || 'Upload failed.' });
+}
+
 /**
  * Flattens a JobMatchResult into the shape the web UI card expects, exposing
  * the job metadata (location, work mode, source) and the analyzed seniority /
@@ -191,6 +229,6 @@ function toClientMatch(m: JobMatchResult) {
   };
 }
 
-app.listen(PORT, () => {
-  console.log(`AI Tech Job Matcher web UI running at http://localhost:${PORT}`);
-});
+if (require.main === module) {
+  startServer();
+}
