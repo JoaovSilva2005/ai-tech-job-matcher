@@ -18,6 +18,8 @@ duplicate removal, match scoring and report generation — in a fully offline se
 - Excel report structure (6 sheets), sorting, filtering and formatting.
 - Markdown summary and intermediate JSON outputs.
 - Fallback mode behavior when no AI API key is configured.
+- Web UI resume upload, specific-job analysis and report downloads.
+- Public source health check status mapping.
 
 ## Out of Scope
 
@@ -34,7 +36,7 @@ duplicate removal, match scoring and report generation — in a fully offline se
 | Level | Tooling | What it covers |
 |-------|---------|----------------|
 | Unit | Playwright Test (node) | normalizeSkills, classifyRole, calculateMatchScore, validateJob, duplicateDetector, fallbackAnalyzer |
-| Integration/E2E | Playwright Test + Chromium | fixture scraper against real HTML, full pipeline runs, Excel/Markdown/JSON artifact validation |
+| Integration/E2E | Playwright Test + Chromium | fixture scraper against real HTML, full pipeline runs, web UI journey, Excel/Markdown/JSON artifact validation |
 
 ## Test Environment
 
@@ -61,4 +63,5 @@ duplicate removal, match scoring and report generation — in a fully offline se
 
 - 100% of unit and E2E tests passing (`npm test`).
 - Both demo commands (`npm run demo:qa`, `npm run demo:all`) generate all six output artifacts.
+- Source diagnostics run with `npm run sources:check`.
 - No high-severity defects open against the ranking or report generation.

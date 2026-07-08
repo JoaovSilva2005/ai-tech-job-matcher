@@ -6,7 +6,7 @@ The project is focused on practical QA Jr / Dev Jr skills: Playwright automation
 
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)
 ![Playwright](https://img.shields.io/badge/Playwright-tests%20%2B%20automation-2EAD33?logo=playwright&logoColor=white)
-![Tests](https://img.shields.io/badge/tests-98%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-103%20passing-brightgreen)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 
 ## What It Does
@@ -26,6 +26,7 @@ The app works without an API key by using a local fallback analyzer. Optional AI
 ## QA Highlights
 
 - Playwright Test coverage for unit and E2E flows.
+- Real browser E2E test covering resume upload, analysis results and report downloads.
 - API tests for resume upload, upload validation and report downloads.
 - Playwright automation used for controlled scraping/test fixtures.
 - Data validation for required fields, URLs, descriptions, seniority, work mode, and duplicates.
@@ -33,7 +34,8 @@ The app works without an API key by using a local fallback analyzer. Optional AI
 - Graceful fallback when an external source or AI provider fails.
 - Excel, Markdown, and JSON outputs for traceability.
 - GitHub Actions CI for build, lint and tests.
-- 98 automated tests passing.
+- Public source health check command for quick scraper diagnostics.
+- 103 automated tests passing.
 
 ## Tech Stack
 
@@ -89,6 +91,7 @@ npm run lint
 npm test
 npm run test:unit
 npm run test:e2e
+npm run sources:check
 ```
 
 Demo shortcuts:
@@ -97,6 +100,8 @@ Demo shortcuts:
 npm run demo:qa
 npm run demo:all
 ```
+
+`demo:all` queries the public source aggregator (`--source all`) and interleaves results from the configured public job sources.
 
 Useful CLI filters:
 
@@ -120,6 +125,12 @@ Useful CLI filters:
 | `greenhouse` | Public ATS API | No | Public Greenhouse boards |
 | `lever` | Public ATS API | No | Requires public slugs in `LEVER_COMPANY_SLUGS` |
 | `all` | Aggregator | No | Queries configured public sources |
+
+Check public source availability:
+
+```bash
+npm run sources:check
+```
 
 Example with Brazilian QA jobs:
 

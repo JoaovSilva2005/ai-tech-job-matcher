@@ -45,6 +45,10 @@ sheet of the Excel report — evidence, not silent filtering.
 - **E2E level**: a real Chromium browser scrapes the local fixture board, then the entire
   pipeline runs end-to-end and the generated Excel/Markdown/JSON artifacts are opened and
   asserted.
+- **Web UI level**: a real browser uploads a resume, fills a specific job, waits for ranked
+  results and downloads both generated reports.
+- **Source diagnostics**: `npm run sources:check` checks each public source and reports whether
+  it returned jobs, returned empty, or failed.
 - Config: screenshots only on failure, trace on first retry, video retained on failure —
   the same evidence discipline expected in professional QA work.
 
