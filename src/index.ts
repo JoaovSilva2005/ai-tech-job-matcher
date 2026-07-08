@@ -1,6 +1,6 @@
 import path from 'path';
 import { CliError, parseArgs, printUsage } from './cli/parseArgs';
-import type { CliOptions, WorkModeFilter } from './cli/cliTypes';
+import type { CliOptions, ManualJobInput, WorkModeFilter } from './cli/cliTypes';
 import { parseResume } from './resume/parseResume';
 import { sanitizeResumeText } from './resume/sanitizeResume';
 import { analyzeResume } from './resume/analyzeResume';
@@ -59,16 +59,20 @@ export async function runPipeline(options: CliOptions): Promise<PipelineResult> 
   const resumeAnalysis = await analyzeResume(sanitizedResumeText, aiClient);
 
   // 4. Collect jobs
-  logger.step(4, TOTAL_STEPS, `Collecting jobs from "${options.source}"...`);
-  const collectionLimit = shouldCollectExtraJobs(options)
-    ? Math.min(100, options.limit * POST_FILTER_COLLECTION_MULTIPLIER)
-    : options.limit;
-
-  const scrapedJobs = await scrapeJobs(options.source, {
-    limit: collectionLimit,
-    debug: options.debug,
-    role: options.role,
-  });
+  logger.step(
+    4,
+    TOTAL_STEPS,
+    options.manualJob
+      ? 'Using specific job description provided by the user...'
+      : `Collecting jobs from "${options.source}"...`
+  );
+  const scrapedJobs = options.manualJob
+    ? [buildManualJob(options.manualJob)]
+    : await scrapeJobs(options.source, {
+        limit: collectionLimitFor(options),
+        debug: options.debug,
+        role: options.role,
+      });
   if (scrapedJobs.length === 0) {
     logger.warn('No jobs collected. Reports will be generated empty.');
   }
@@ -140,7 +144,7 @@ export async function runPipeline(options: CliOptions): Promise<PipelineResult> 
     executedAt: nowIso(),
     resumeFile: options.resume,
     role: options.role,
-    source: options.source,
+    source: options.manualJob ? 'manual' : options.source,
     workMode: options.workMode,
     userLocation: options.userLocation.trim() || undefined,
     aiProvider: aiClient.providerName,
@@ -242,8 +246,33 @@ export async function runPipeline(options: CliOptions): Promise<PipelineResult> 
   };
 }
 
+function buildManualJob(job: ManualJobInput): ScrapedJob {
+  return {
+    id: `manual-${slugForId(job.title, job.company)}`,
+    title: job.title,
+    company: job.company,
+    location: job.location || 'Not specified',
+    workMode: job.workMode,
+    url: job.url,
+    description: job.description,
+    source: 'manual',
+    scrapedAt: nowIso(),
+    rawText: job.description,
+  };
+}
+
+function collectionLimitFor(options: CliOptions): number {
+  return shouldCollectExtraJobs(options)
+    ? Math.min(100, options.limit * POST_FILTER_COLLECTION_MULTIPLIER)
+    : options.limit;
+}
+
 function shouldCollectExtraJobs(options: CliOptions): boolean {
   return options.workMode !== 'all' || options.userLocation.trim().length > 0;
+}
+
+function slugForId(title: string, company: string): string {
+  return `${company}-${title}`.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
 }
 
 function rankMatches(matches: JobMatchResult[], userLocation: string): void {

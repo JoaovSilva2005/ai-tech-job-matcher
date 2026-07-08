@@ -33,8 +33,13 @@ test.describe('web page', () => {
     expect(html).toContain('/api/analyze');
     expect(html).toContain('name="workMode"');
     expect(html).toContain('name="userLocation"');
+    expect(html).toContain('name="jobDescription"');
+    expect(html).toContain('name="jobTitle"');
+    expect(html).toContain('name="jobCompany"');
+    expect(html).toContain('name="jobUrl"');
     expect(html).toContain('fd.append("workMode"');
     expect(html).toContain('fd.append("userLocation"');
+    expect(html).toContain('fd.append("jobDescription"');
   });
 
   test('does not render mock The Muse results when the backend is unreachable', () => {

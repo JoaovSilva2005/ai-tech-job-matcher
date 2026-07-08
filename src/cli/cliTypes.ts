@@ -19,12 +19,22 @@ export type SelectableSource = JobSource | AggregateSource;
 
 export type WorkModeFilter = WorkMode | 'all';
 
+export interface ManualJobInput {
+  title: string;
+  company: string;
+  url: string;
+  location: string;
+  workMode: WorkMode;
+  description: string;
+}
+
 export interface CliOptions {
   resume: string;
   role: TechRole;
   source: SelectableSource;
   workMode: WorkModeFilter;
   userLocation: string;
+  manualJob?: ManualJobInput;
   limit: number;
   output: string;
   fallback: boolean;

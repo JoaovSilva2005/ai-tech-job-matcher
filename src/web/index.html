@@ -157,7 +157,7 @@ form.analyze {
 .dropzone .fname { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--mono); font-size: 12.5px; }
 .dropzone .doc-glyph { flex: none; width: 14px; height: 16px; border: 1.5px solid currentColor; border-radius: 2px; opacity: .7; }
 
-select, input[type="number"], input[type="text"] {
+select, input[type="number"], input[type="text"], textarea {
   height: 40px;
   background: var(--surface-2);
   color: var(--text);
@@ -168,7 +168,23 @@ select, input[type="number"], input[type="text"] {
   font-size: 13.5px;
   width: 100%;
 }
-select:hover, input[type="number"]:hover, input[type="text"]:hover { border-color: var(--text-3); }
+textarea {
+  min-height: 118px;
+  padding: 10px;
+  resize: vertical;
+  line-height: 1.45;
+}
+select:hover, input[type="number"]:hover, input[type="text"]:hover, textarea:hover { border-color: var(--text-3); }
+
+.specific-job {
+  grid-column: 1 / -1;
+  border-top: 1px solid var(--border);
+  padding-top: 14px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+.specific-job .field-description { grid-column: 1 / -1; }
 
 .btn {
   height: 40px;
@@ -358,6 +374,8 @@ details.study ol li { margin-bottom: 4px; break-inside: avoid; }
   form.analyze .field-file { grid-column: 1 / -1; }
   form.analyze .field-location { grid-column: 1 / -1; }
   form.analyze .field-submit { grid-column: 1 / -1; }
+  .specific-job { grid-template-columns: 1fr; }
+  .specific-job .field-description { grid-column: auto; }
   .summary-actions { margin-left: 0; width: 100%; }
 }
 @media (max-width: 640px) {
@@ -435,6 +453,24 @@ details.study ol li { margin-bottom: 4px; break-inside: avoid; }
       <div class="field field-location">
         <label for="locationInput">City or address</label>
         <input type="text" id="locationInput" name="userLocation" maxlength="120" placeholder="Campinas, SP">
+      </div>
+      <div class="specific-job" aria-label="Specific job analysis">
+        <div class="field">
+          <label for="jobTitleInput">Specific job title</label>
+          <input type="text" id="jobTitleInput" name="jobTitle" maxlength="140" placeholder="Analista de QA Jr">
+        </div>
+        <div class="field">
+          <label for="jobCompanyInput">Company</label>
+          <input type="text" id="jobCompanyInput" name="jobCompany" maxlength="120" placeholder="Company name">
+        </div>
+        <div class="field">
+          <label for="jobUrlInput">Application link</label>
+          <input type="text" id="jobUrlInput" name="jobUrl" maxlength="500" placeholder="https://...">
+        </div>
+        <div class="field field-description">
+          <label for="jobDescriptionInput">Specific job description (optional)</label>
+          <textarea id="jobDescriptionInput" name="jobDescription" maxlength="8000" placeholder="Paste a job description here to analyze only this opportunity."></textarea>
+        </div>
       </div>
       <div class="field">
         <label for="limitInput">Limit</label>
@@ -588,6 +624,10 @@ async function runAnalysis() {
     fd.append("source", $("sourceSelect").value);
     fd.append("workMode", $("workModeSelect").value);
     fd.append("userLocation", $("locationInput").value || "");
+    fd.append("jobTitle", $("jobTitleInput").value || "");
+    fd.append("jobCompany", $("jobCompanyInput").value || "");
+    fd.append("jobUrl", $("jobUrlInput").value || "");
+    fd.append("jobDescription", $("jobDescriptionInput").value || "");
     fd.append("limit", $("limitInput").value || "16");
 
     let data;

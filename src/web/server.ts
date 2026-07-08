@@ -3,7 +3,7 @@ import fs from 'fs';
 import express, { Request, Response } from 'express';
 import multer from 'multer';
 import { runPipeline } from '../index';
-import type { CliOptions, SelectableSource, WorkModeFilter } from '../cli/cliTypes';
+import type { CliOptions, ManualJobInput, SelectableSource, WorkModeFilter } from '../cli/cliTypes';
 import { VALID_ROLES, SELECTABLE_SOURCES, VALID_WORK_MODES } from '../cli/cliTypes';
 import type { JobMatchResult } from '../matcher/calculateMatchScore';
 import type { TechRole } from '../scraper/types';
@@ -65,6 +65,7 @@ app.post('/api/analyze', upload.single('resume'), async (req: Request, res: Resp
   const source = normalizeSource(req.body.source);
   const workMode = normalizeWorkMode(req.body.workMode);
   const userLocation = normalizeUserLocation(req.body.userLocation);
+  const manualJob = normalizeManualJob(req.body, workMode, userLocation);
   const limit = normalizeLimit(req.body.limit);
 
   const options: CliOptions = {
@@ -73,6 +74,7 @@ app.post('/api/analyze', upload.single('resume'), async (req: Request, res: Resp
     source,
     workMode,
     userLocation,
+    manualJob,
     limit,
     output: OUTPUT_DIR,
     fallback: false, // runPipeline auto-degrades to local fallback when no API key
@@ -139,6 +141,24 @@ function normalizeLimit(value: unknown): number {
   const limit = Number(value);
   if (!Number.isInteger(limit) || limit < 1 || limit > 50) return 16;
   return limit;
+}
+
+function normalizeManualJob(
+  body: Record<string, unknown>,
+  selectedWorkMode: WorkModeFilter,
+  userLocation: string
+): ManualJobInput | undefined {
+  const description = String(body.jobDescription ?? '').trim();
+  if (!description) return undefined;
+
+  return {
+    title: String(body.jobTitle ?? '').trim() || 'Specific Job',
+    company: String(body.jobCompany ?? '').trim() || 'Company not provided',
+    url: String(body.jobUrl ?? '').trim() || 'https://example.com/manual-job',
+    location: String(body.jobLocation ?? '').trim() || userLocation || 'Not specified',
+    workMode: selectedWorkMode === 'all' ? 'unknown' : selectedWorkMode,
+    description: description.slice(0, 8000),
+  };
 }
 
 function readJson(filePath: string): unknown {

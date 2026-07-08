@@ -104,6 +104,31 @@ test.describe('full pipeline (sample source, no API key)', () => {
     expect(result.matches[0].locationPreference).toContain('same city');
   });
 
+  test('specific job input analyzes only the provided opportunity', async () => {
+    const result = await runPipeline(
+      makeOptions({
+        role: 'qa',
+        output: path.join(OUTPUT_ROOT, 'specific-job'),
+        manualJob: {
+          title: 'Analista de QA Jr',
+          company: 'Venturus',
+          url: 'https://jobs.example.com/venturus/qa-jr',
+          location: 'Remote - Brazil',
+          workMode: 'remote',
+          description:
+            'We are hiring a junior QA analyst to prepare and execute manual tests, write bug reports, create automated tests with Playwright, validate web systems, work with Git, Scrum and Kanban, and communicate in advanced English with global stakeholders.',
+        },
+      })
+    );
+
+    expect(result.summary.source).toBe('manual');
+    expect(result.summary.jobsCollected).toBe(1);
+    expect(result.matches).toHaveLength(1);
+    expect(result.matches[0].job.title).toBe('Analista de QA Jr');
+    expect(result.matches[0].job.company).toBe('Venturus');
+    expect(result.matches[0].analysis.role).toBe('qa');
+  });
+
   test('pipeline reports fallback mode when no AI key is configured', async () => {
     const result = await runPipeline(makeOptions({ role: 'qa', output: path.join(OUTPUT_ROOT, 'fallback') }));
     expect(result.summary.usedFallback).toBe(true);
