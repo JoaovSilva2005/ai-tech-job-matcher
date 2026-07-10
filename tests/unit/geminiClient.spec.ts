@@ -8,12 +8,15 @@ const originalEnv = {
   AI_PROVIDER: process.env.AI_PROVIDER,
   GEMINI_API_KEY: process.env.GEMINI_API_KEY,
   GEMINI_MODEL: process.env.GEMINI_MODEL,
+  AI_MAX_RETRIES: process.env.AI_MAX_RETRIES,
 };
 
 test.afterEach(() => {
   process.env.AI_PROVIDER = originalEnv.AI_PROVIDER;
   process.env.GEMINI_API_KEY = originalEnv.GEMINI_API_KEY;
   process.env.GEMINI_MODEL = originalEnv.GEMINI_MODEL;
+  if (originalEnv.AI_MAX_RETRIES === undefined) delete process.env.AI_MAX_RETRIES;
+  else process.env.AI_MAX_RETRIES = originalEnv.AI_MAX_RETRIES;
   globalThis.fetch = originalFetch;
   resetEnvCache();
 });
@@ -71,5 +74,30 @@ test.describe('Gemini AI provider', () => {
       generationConfig: { responseMimeType: 'application/json' },
     });
     expect(result).toBe('{"detectedSeniority":"junior"}');
+  });
+
+  test('falls back when Gemini returns valid JSON with no usable analysis', async () => {
+    process.env.AI_PROVIDER = 'gemini';
+    process.env.GEMINI_API_KEY = 'test-key';
+    process.env.AI_MAX_RETRIES = '0';
+    resetEnvCache();
+
+    let calls = 0;
+    globalThis.fetch = async () => {
+      calls += 1;
+      return new Response(
+        JSON.stringify({ candidates: [{ content: { parts: [{ text: '{}' }] } }] }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      );
+    };
+
+    const { client } = getAiClient();
+    const analysis = await client.analyzeResume(
+      'Junior QA Analyst with Playwright, TypeScript, Git and API Testing experience.'
+    );
+
+    expect(calls).toBe(2);
+    expect(analysis.fallbackMode).toBe(true);
+    expect(analysis.qaSkills).toContain('Playwright');
   });
 });

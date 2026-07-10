@@ -137,10 +137,36 @@ function detectSkills(text: string, skills: string[]): string[] {
 
 export function detectSeniority(text: string): SeniorityLevel {
   const lower = text.toLowerCase();
-  const seniorSignals = ['senior', 'sênior', 'sr.', 'lead', 'principal', 'staff engineer', '5+ years', '6+ years', '7+ years'];
-  const midSignals = ['mid-level', 'mid level', 'pleno', 'intermediate level', '3+ years', '4+ years'];
+  const seniorSignals = [
+    'senior',
+    'sênior',
+    'sr.',
+    'lead',
+    'principal',
+    'staff engineer',
+    '5+ years',
+    '6+ years',
+    '7+ years',
+  ];
+  const midSignals = [
+    'mid-level',
+    'mid level',
+    'pleno',
+    'intermediate level',
+    '3+ years',
+    '4+ years',
+  ];
   const internSignals = ['intern', 'internship', 'estágio', 'estagio', 'trainee'];
-  const juniorSignals = ['junior', 'júnior', 'jr.', 'jr ', 'entry level', 'entry-level', 'student', 'no prior experience'];
+  const juniorSignals = [
+    'junior',
+    'júnior',
+    'jr.',
+    'jr ',
+    'entry level',
+    'entry-level',
+    'student',
+    'no prior experience',
+  ];
 
   if (seniorSignals.some((s) => lower.includes(s))) return 'senior';
   if (midSignals.some((s) => lower.includes(s))) return 'mid';
@@ -159,7 +185,8 @@ export function detectEnglishLevel(text: string): EnglishLevel {
   // The level must be attached to the "english" mention itself (before it,
   // as in "advanced English", or right after it, as in "English: advanced"),
   // so levels of OTHER languages ("Portuguese: native") are never picked up.
-  const level = '(fluent|fluente|native|advanced|avançado|avancado|intermediate|intermediário|intermediario|basic|básico|basico)';
+  const level =
+    '(fluent|fluente|native|advanced|avançado|avancado|intermediate|intermediário|intermediario|basic|básico|basico)';
   const english = '(?:english|inglês|ingles)';
   const patterns = [
     new RegExp(`${level}\\s+${english}`),
@@ -194,19 +221,6 @@ function detectTargetRoles(text: string): TechRole[] {
     if (keywords.some((k) => lower.includes(k))) roles.push(role);
   }
   return roles.length > 0 ? roles : ['unknown'];
-}
-
-function extractCandidateName(text: string): string | undefined {
-  // Heuristic: first non-empty line, if it looks like a short name (no digits)
-  const firstLine = text
-    .split('\n')
-    .map((l) => l.trim())
-    .find((l) => l.length > 0);
-  if (!firstLine) return undefined;
-  if (firstLine.length > 60 || /\d|@|http/.test(firstLine)) return undefined;
-  const words = firstLine.split(/\s+/);
-  if (words.length < 2 || words.length > 6) return undefined;
-  return firstLine;
 }
 
 export function fallbackAnalyzeResume(resumeText: string): ResumeAnalysis {
@@ -267,7 +281,6 @@ export function fallbackAnalyzeResume(resumeText: string): ResumeAnalysis {
     `Main interests: ${targetRoles.filter((r) => r !== 'unknown').join(', ') || 'general tech roles'}.`;
 
   return {
-    candidateName: extractCandidateName(resumeText),
     detectedSeniority,
     targetRoles,
     technicalSkills,
@@ -292,7 +305,12 @@ export function fallbackAnalyzeJob(job: ScrapedJob): JobAnalysis {
   const seniorityLevel =
     seniorityFromTitle !== 'unknown' ? seniorityFromTitle : detectSeniority(job.description);
 
-  const allSkills = detectSkills(fullText, [...GENERAL_SKILLS, ...QA_SKILLS, ...DATA_SKILLS, ...SUPPORT_SKILLS]);
+  const allSkills = detectSkills(fullText, [
+    ...GENERAL_SKILLS,
+    ...QA_SKILLS,
+    ...DATA_SKILLS,
+    ...SUPPORT_SKILLS,
+  ]);
   const tools = detectSkills(fullText, TOOLS);
   const automationTools = detectSkills(fullText, ['Playwright', 'Cypress', 'Selenium']);
   const apiTools = detectSkills(fullText, ['Postman', 'REST', 'GraphQL']);
@@ -329,19 +347,26 @@ export function fallbackAnalyzeJob(job: ScrapedJob): JobAnalysis {
     ...SUPPORT_SKILLS,
   ]);
   const niceToHaveSkills = niceText
-    ? detectSkills(niceText, [...GENERAL_SKILLS, ...QA_SKILLS, ...DATA_SKILLS, ...SUPPORT_SKILLS]).filter(
-        (s) => !requiredSkills.includes(s)
-      )
+    ? detectSkills(niceText, [
+        ...GENERAL_SKILLS,
+        ...QA_SKILLS,
+        ...DATA_SKILLS,
+        ...SUPPORT_SKILLS,
+      ]).filter((s) => !requiredSkills.includes(s))
     : [];
 
   const englishLevel = detectEnglishLevel(fullText);
   const englishRequired = englishLevel !== 'unknown';
   const testingRequired =
-    role === 'qa' || detectSkills(fullText, ['Manual Testing', 'Automated Testing', 'Test Case']).length > 0;
-  const apiTestingRequired = containsKeyword(fullText, 'api testing') || (apiTools.length > 0 && role === 'qa');
+    role === 'qa' ||
+    detectSkills(fullText, ['Manual Testing', 'Automated Testing', 'Test Case']).length > 0;
+  const apiTestingRequired =
+    containsKeyword(fullText, 'api testing') || (apiTools.length > 0 && role === 'qa');
   const automationRequired = automationTools.length > 0 || containsKeyword(fullText, 'automation');
   const juniorFriendly =
-    seniorityLevel === 'junior' || seniorityLevel === 'intern' || isInternshipJob(job.title, job.description);
+    seniorityLevel === 'junior' ||
+    seniorityLevel === 'intern' ||
+    isInternshipJob(job.title, job.description);
 
   const redFlags: string[] = [];
   if (seniorityLevel === 'senior') {

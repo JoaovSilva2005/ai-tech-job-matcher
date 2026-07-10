@@ -190,8 +190,10 @@ test.describe('full pipeline (sample source, no API key)', () => {
 
     const resumeAnalysis = JSON.parse(fs.readFileSync(result.outputFiles.resumeAnalysis, 'utf-8'));
     expect(resumeAnalysis.technicalSkills).toEqual(expect.arrayContaining(['JavaScript']));
-    // privacy: raw resume text must never be persisted
+    // privacy: direct identifiers and raw resume text must never be persisted
     expect(JSON.stringify(resumeAnalysis)).not.toContain('alex.santos.demo@example.com');
+    expect(JSON.stringify(resumeAnalysis)).not.toContain('Alex Ferreira Santos');
+    expect(JSON.stringify(resumeAnalysis)).not.toContain('Sao Paulo, Brazil');
 
     const matches = JSON.parse(fs.readFileSync(result.outputFiles.jobMatches, 'utf-8'));
     expect(matches.length).toBe(result.matches.length);

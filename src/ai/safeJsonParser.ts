@@ -42,10 +42,12 @@ function extractJsonObject(text: string): string | null {
 }
 
 function repairCommonIssues(text: string): string {
-  return text
-    // remove trailing commas before } or ]
-    .replace(/,\s*([}\]])/g, '$1')
-    // normalize smart quotes
-    .replace(/[“”]/g, '"')
-    .replace(/[‘’]/g, "'");
+  return (
+    text
+      // remove trailing commas before } or ]
+      .replace(/,\s*([}\]])/g, '$1')
+      // normalize smart quotes
+      .replace(/[“”]/g, '"')
+      .replace(/[‘’]/g, "'")
+  );
 }

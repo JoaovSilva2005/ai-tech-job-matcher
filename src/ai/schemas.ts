@@ -36,30 +36,47 @@ const roleSchema = z.enum([
   'devops',
   'support',
   'internship',
-  'all',
   'unknown',
 ]);
 
+const shortText = z.string().trim().min(1).max(200);
+const textList = z.array(shortText).max(100);
+
 /** Zod schema used to validate AI responses for job analysis. */
-export const jobAnalysisSchema = z.object({
-  normalizedTitle: z.string().catch(''),
-  role: roleSchema.catch('unknown'),
-  seniorityLevel: senioritySchema.catch('unknown'),
-  requiredSkills: z.array(z.string()).catch([]),
-  niceToHaveSkills: z.array(z.string()).catch([]),
-  tools: z.array(z.string()).catch([]),
-  programmingLanguages: z.array(z.string()).catch([]),
-  frameworks: z.array(z.string()).catch([]),
-  automationTools: z.array(z.string()).catch([]),
-  apiTools: z.array(z.string()).catch([]),
-  englishRequired: z.boolean().catch(false),
-  englishLevel: levelSchema.catch('unknown'),
-  testingRequired: z.boolean().catch(false),
-  apiTestingRequired: z.boolean().catch(false),
-  automationRequired: z.boolean().catch(false),
-  juniorFriendly: z.boolean().catch(false),
-  summary: z.string().catch(''),
-  redFlags: z.array(z.string()).catch([]),
-  recommendedStudyTopics: z.array(z.string()).catch([]),
-  fallbackMode: z.boolean().catch(false),
-});
+export const jobAnalysisSchema = z
+  .object({
+    normalizedTitle: z.string().trim().min(2).max(200),
+    role: roleSchema,
+    seniorityLevel: senioritySchema,
+    requiredSkills: textList,
+    niceToHaveSkills: textList,
+    tools: textList,
+    programmingLanguages: textList,
+    frameworks: textList,
+    automationTools: textList,
+    apiTools: textList,
+    englishRequired: z.boolean(),
+    englishLevel: levelSchema,
+    testingRequired: z.boolean(),
+    apiTestingRequired: z.boolean(),
+    automationRequired: z.boolean(),
+    juniorFriendly: z.boolean(),
+    summary: z.string().trim().min(20).max(2000),
+    redFlags: z.array(z.string().trim().min(3).max(500)).max(20),
+    recommendedStudyTopics: textList,
+    fallbackMode: z.boolean(),
+  })
+  .strict()
+  .superRefine((analysis, context) => {
+    const signals =
+      analysis.requiredSkills.length +
+      analysis.tools.length +
+      analysis.programmingLanguages.length +
+      analysis.frameworks.length;
+    if (analysis.role === 'unknown' && signals === 0) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: 'Job analysis has no usable role or requirement signal',
+      });
+    }
+  });

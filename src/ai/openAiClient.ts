@@ -1,7 +1,6 @@
 import { getEnv } from '../config/env';
 import { logger } from '../utils/logger';
-
-export class AiRequestError extends Error {}
+import { AiRequestError, fetchAiResponse } from './aiHttpClient';
 
 /**
  * Minimal OpenAI Chat Completions client using global fetch (Node 18+).
@@ -14,7 +13,7 @@ export async function callOpenAi(systemPrompt: string, userPrompt: string): Prom
     throw new AiRequestError('OPENAI_API_KEY is not configured');
   }
 
-  const response = await fetch('https://api.openai.com/v1/chat/completions', {
+  const response = await fetchAiResponse('OpenAI', 'https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -30,11 +29,6 @@ export async function callOpenAi(systemPrompt: string, userPrompt: string): Prom
       ],
     }),
   });
-
-  if (!response.ok) {
-    const body = await response.text();
-    throw new AiRequestError(`OpenAI API error ${response.status}: ${body.slice(0, 200)}`);
-  }
 
   const data = (await response.json()) as {
     choices?: Array<{ message?: { content?: string } }>;

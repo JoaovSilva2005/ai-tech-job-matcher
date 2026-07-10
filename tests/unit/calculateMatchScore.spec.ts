@@ -6,7 +6,6 @@ import type { JobAnalysis } from '../../src/ai/schemas';
 import type { ScrapedJob } from '../../src/scraper/types';
 
 const juniorQaResume: ResumeAnalysis = {
-  candidateName: 'Test Candidate',
   detectedSeniority: 'junior',
   targetRoles: ['qa', 'frontend'],
   technicalSkills: ['JavaScript', 'TypeScript', 'Git', 'SQL'],

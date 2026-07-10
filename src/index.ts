@@ -17,10 +17,17 @@ import { getRecommendation } from './matcher/recommendation';
 import { scoreLocationPreference } from './matcher/locationPreference';
 import { generateExcelReport } from './reports/generateExcelReport';
 import { generateMarkdownSummary } from './reports/generateMarkdownSummary';
-import type { ExecutionSummary, QaIssueReportRow, ReportData, SkillInsight } from './reports/reportTypes';
+import type {
+  ExecutionSummary,
+  QaIssueReportRow,
+  ReportData,
+  SkillInsight,
+} from './reports/reportTypes';
 import { ensureDir, writeJsonFile } from './utils/fileSystem';
 import { logger, setDebug } from './utils/logger';
 import { nowIso } from './utils/date';
+import { getEnv } from './config/env';
+import { mapWithConcurrency } from './utils/async';
 
 export interface PipelineResult {
   matches: JobMatchResult[];
@@ -85,7 +92,9 @@ export async function runPipeline(options: CliOptions): Promise<PipelineResult> 
   }
   const invalidJobs = scrapedJobs.filter((j) => !validations.get(j.id)?.isValid);
   if (invalidJobs.length > 0) {
-    logger.warn(`${invalidJobs.length} job(s) failed validation and will be excluded from ranking.`);
+    logger.warn(
+      `${invalidJobs.length} job(s) failed validation and will be excluded from ranking.`
+    );
   }
 
   // 6. Remove duplicates
@@ -97,10 +106,19 @@ export async function runPipeline(options: CliOptions): Promise<PipelineResult> 
   }
 
   // 7. Analyze jobs with AI or fallback
-  logger.step(7, TOTAL_STEPS, `Analyzing ${uniqueJobs.length} job(s) with "${aiClient.providerName}"...`);
+  logger.step(
+    7,
+    TOTAL_STEPS,
+    `Analyzing ${uniqueJobs.length} job(s) with "${aiClient.providerName}"...`
+  );
   const analyses = new Map<string, JobAnalysis>();
-  for (const job of uniqueJobs) {
-    analyses.set(job.id, await aiClient.analyzeJob(job));
+  const analysisConcurrency = aiClient.isFallback ? 4 : getEnv().AI_JOB_CONCURRENCY;
+  const analyzedJobs = await mapWithConcurrency(uniqueJobs, analysisConcurrency, async (job) => ({
+    jobId: job.id,
+    analysis: await aiClient.analyzeJob(job),
+  }));
+  for (const { jobId, analysis } of analyzedJobs) {
+    analyses.set(jobId, analysis);
   }
 
   // Filter by requested role AFTER analysis so the classification is consistent
@@ -120,7 +138,10 @@ export async function runPipeline(options: CliOptions): Promise<PipelineResult> 
     const analysis = analyses.get(job.id)!;
     const validation = validations.get(job.id)!;
     // QA cross-check: seniority above candidate level becomes a QA issue
-    const mismatch = detectSeniorityMismatch(analysis.seniorityLevel, resumeAnalysis.detectedSeniority);
+    const mismatch = detectSeniorityMismatch(
+      analysis.seniorityLevel,
+      resumeAnalysis.detectedSeniority
+    );
     if (mismatch) {
       validation.issues.push(mismatch);
       validation.dataQualityScore = calculateDataQualityScore(validation.issues);
@@ -167,7 +188,11 @@ export async function runPipeline(options: CliOptions): Promise<PipelineResult> 
     resume: resumeAnalysis,
     summary,
     skillInsights: buildSkillInsights(rankedMatches),
-    qaIssues: buildQaIssueRows(scrapedJobs, validations, new Set(rankedMatches.map((m) => m.job.id))),
+    qaIssues: buildQaIssueRows(
+      scrapedJobs,
+      validations,
+      new Set(rankedMatches.map((m) => m.job.id))
+    ),
   };
 
   // 10. Excel report
@@ -272,15 +297,17 @@ function shouldCollectExtraJobs(options: CliOptions): boolean {
 }
 
 function slugForId(title: string, company: string): string {
-  return `${company}-${title}`.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  return `${company}-${title}`
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
 }
 
 function rankMatches(matches: JobMatchResult[], userLocation: string): void {
   if (userLocation.trim()) {
     matches.sort(
       (a, b) =>
-        (b.locationPreferenceScore ?? 0) - (a.locationPreferenceScore ?? 0) ||
-        b.score - a.score
+        (b.locationPreferenceScore ?? 0) - (a.locationPreferenceScore ?? 0) || b.score - a.score
     );
     return;
   }

@@ -1,6 +1,6 @@
 import { getEnv } from '../config/env';
 import { logger } from '../utils/logger';
-import { AiRequestError } from './openAiClient';
+import { AiRequestError, fetchAiResponse } from './aiHttpClient';
 
 /**
  * Minimal Anthropic Messages API client using global fetch (Node 18+).
@@ -11,7 +11,7 @@ export async function callAnthropic(systemPrompt: string, userPrompt: string): P
     throw new AiRequestError('ANTHROPIC_API_KEY is not configured');
   }
 
-  const response = await fetch('https://api.anthropic.com/v1/messages', {
+  const response = await fetchAiResponse('Anthropic', 'https://api.anthropic.com/v1/messages', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -26,11 +26,6 @@ export async function callAnthropic(systemPrompt: string, userPrompt: string): P
       messages: [{ role: 'user', content: userPrompt }],
     }),
   });
-
-  if (!response.ok) {
-    const body = await response.text();
-    throw new AiRequestError(`Anthropic API error ${response.status}: ${body.slice(0, 200)}`);
-  }
 
   const data = (await response.json()) as {
     content?: Array<{ type: string; text?: string }>;

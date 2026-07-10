@@ -5,6 +5,7 @@ import { ParsedResume } from './resumeSchema';
 export class ResumeParseError extends Error {}
 
 export const SUPPORTED_RESUME_EXTENSIONS = ['.txt', '.md', '.pdf', '.docx'] as const;
+export const MAX_RESUME_CHARACTERS = 100_000;
 
 export async function parseResume(filePath: string): Promise<ParsedResume> {
   if (!fileExists(filePath)) {
@@ -23,7 +24,7 @@ export async function parseResume(filePath: string): Promise<ParsedResume> {
 
   if (ext === '.txt' || ext === '.md') {
     text = readTextFile(filePath);
-    format = 'txt';
+    format = ext === '.md' ? 'md' : 'txt';
   } else if (ext === '.pdf') {
     text = await parsePdf(filePath);
     format = 'pdf';
@@ -36,6 +37,11 @@ export async function parseResume(filePath: string): Promise<ParsedResume> {
   if (trimmed.length < 30) {
     throw new ResumeParseError(
       'Resume text is too short to analyze (less than 30 characters). Check the file content.'
+    );
+  }
+  if (trimmed.length > MAX_RESUME_CHARACTERS) {
+    throw new ResumeParseError(
+      `Resume text is too large to analyze (${trimmed.length} characters, maximum ${MAX_RESUME_CHARACTERS}).`
     );
   }
 

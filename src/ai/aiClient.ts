@@ -58,9 +58,7 @@ class RemoteAiClient implements AiClient {
       );
       return { ...analysis, fallbackMode: false };
     } catch (error) {
-      logger.warn(
-        `AI resume analysis failed (${(error as Error).message}); using local fallback.`
-      );
+      logger.warn(`AI resume analysis failed (${(error as Error).message}); using local fallback.`);
       return fallbackAnalyzeResume(text);
     }
   }

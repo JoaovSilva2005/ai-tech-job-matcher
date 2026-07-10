@@ -1,6 +1,6 @@
 import { getEnv } from '../config/env';
 import { logger } from '../utils/logger';
-import { AiRequestError } from './openAiClient';
+import { AiRequestError, fetchAiResponse } from './aiHttpClient';
 
 interface GeminiGenerateContentResponse {
   candidates?: Array<{
@@ -22,7 +22,8 @@ export async function callGemini(systemPrompt: string, userPrompt: string): Prom
 
   const model = encodeURIComponent(env.GEMINI_MODEL);
   const apiKey = encodeURIComponent(env.GEMINI_API_KEY);
-  const response = await fetch(
+  const response = await fetchAiResponse(
+    'Gemini',
     `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`,
     {
       method: 'POST',
@@ -45,11 +46,6 @@ export async function callGemini(systemPrompt: string, userPrompt: string): Prom
       }),
     }
   );
-
-  if (!response.ok) {
-    const body = await response.text();
-    throw new AiRequestError(`Gemini API error ${response.status}: ${body.slice(0, 200)}`);
-  }
 
   const data = (await response.json()) as GeminiGenerateContentResponse;
   const content = data.candidates?.[0]?.content?.parts?.find((part) => part.text)?.text;
