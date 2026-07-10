@@ -1,9 +1,9 @@
 import type { ScrapedJob, ScrapeOptions } from '../types';
-import { classifyRole, isLikelyTechJobTitle } from '../../matcher/classifyRole';
 import { nowIso } from '../../utils/date';
 import { normalizeWhitespace, stripHtml } from '../../utils/text';
 import { logger } from '../../utils/logger';
 import { normalizeWorkMode } from '../normalizeWorkMode';
+import { matchesRequestedRole } from '../sourceFilters';
 import { fetchPublicJson } from './publicApiUtils';
 
 const THE_MUSE_API = 'https://www.themuse.com/api/public/jobs';
@@ -35,7 +35,7 @@ export async function scrapeTheMuseJobs(options: ScrapeOptions): Promise<Scraped
   for (const entry of data.results ?? []) {
     const job = mapTheMuseJob(entry, scrapedAt);
     if (!job) continue;
-    if (!jobMatchesRequestedRole(options.role, job)) continue;
+    if (!matchesRequestedRole(options.role, job.title, job.description)) continue;
 
     jobs.push(job);
     if (jobs.length >= limit) break;
@@ -93,13 +93,6 @@ export function mapTheMuseJob(entry: TheMuseJob, scrapedAt: string): ScrapedJob 
 function normalizePublishedAt(value: string | undefined): string | undefined {
   if (!value || Number.isNaN(Date.parse(value))) return undefined;
   return new Date(value).toISOString();
-}
-
-function jobMatchesRequestedRole(role: ScrapeOptions['role'], job: ScrapedJob): boolean {
-  if (!role || role === 'unknown' || role === 'internship') return true;
-  if (role === 'all') return isLikelyTechJobTitle(job.title);
-  const classifiedRole = classifyRole(job.title, job.description);
-  return classifiedRole === role;
 }
 
 function slugForId(title: string, company: string): string {

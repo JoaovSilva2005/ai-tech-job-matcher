@@ -1,10 +1,10 @@
 import type { ScrapedJob, ScrapeOptions } from '../types';
 import { getEnv } from '../../config/env';
-import { classifyRole, isLikelyTechJobTitle } from '../../matcher/classifyRole';
 import { nowIso } from '../../utils/date';
 import { normalizeWhitespace, stripHtml } from '../../utils/text';
 import { logger } from '../../utils/logger';
 import { normalizeWorkMode } from '../normalizeWorkMode';
+import { matchesRequestedRole } from '../sourceFilters';
 import { fetchPublicJson, parseCommaList } from './publicApiUtils';
 
 const LEVER_API = 'https://api.lever.co/v0/postings';
@@ -66,7 +66,7 @@ export async function scrapeLeverJobs(options: ScrapeOptions): Promise<ScrapedJo
     for (const entry of data) {
       const job = mapLeverPosting(entry, slug, scrapedAt);
       if (!job) continue;
-      if (!jobMatchesRequestedRole(options.role, job)) continue;
+      if (!matchesRequestedRole(options.role, job.title, job.description)) continue;
 
       jobs.push(job);
       if (jobs.length >= limit) break;
@@ -135,13 +135,6 @@ function normalizePublishedAt(value: number | undefined): string | undefined {
   if (!value || !Number.isFinite(value)) return undefined;
   const date = new Date(value);
   return Number.isNaN(date.getTime()) ? undefined : date.toISOString();
-}
-
-function jobMatchesRequestedRole(role: ScrapeOptions['role'], job: ScrapedJob): boolean {
-  if (!role || role === 'unknown' || role === 'internship') return true;
-  if (role === 'all') return isLikelyTechJobTitle(job.title);
-  const classifiedRole = classifyRole(job.title, job.description);
-  return classifiedRole === role;
 }
 
 function humanizeCompanySlug(slug: string): string {

@@ -18,6 +18,14 @@ const envSchema = z.object({
   GREENHOUSE_BOARD_TOKENS: z.string().optional().default(''),
   GUPY_CAREER_URLS: z.string().optional().default(''),
   LEVER_COMPANY_SLUGS: z.string().optional().default(''),
+  ASHBY_BOARD_NAMES: z.string().optional().default('Ashby'),
+  RECRUITEE_COMPANY_SUBDOMAINS: z.string().optional().default(''),
+  JOOBLE_API_KEY: z.string().optional().default(''),
+  JOOBLE_LOCATION: z.string().optional().default('Brasil'),
+  SMARTRECRUITERS_COMPANY_IDS: z.string().optional().default('smartrecruiters'),
+  SMARTRECRUITERS_API_KEY: z.string().optional().default(''),
+  JOBICY_GEO: z.string().optional().default(''),
+  JSONLD_JOB_URLS: z.string().optional().default(''),
 });
 
 export type AppEnv = z.infer<typeof envSchema>;

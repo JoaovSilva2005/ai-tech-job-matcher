@@ -51,6 +51,8 @@ export interface JobValidationResult {
 export interface ScrapeOptions {
   limit: number;
   debug?: boolean;
+  /** Candidate location used only by sources that support location search. */
+  location?: string;
   /**
    * Requested target role. Sources that support server-side category
    * filtering (e.g. Remotive) use it as a hint to fetch more relevant

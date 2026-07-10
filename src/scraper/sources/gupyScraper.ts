@@ -5,6 +5,7 @@ import { normalizeWhitespace, stripHtml } from '../../utils/text';
 import type { ScrapedJob, ScrapeOptions, WorkMode } from '../types';
 import { logger } from '../../utils/logger';
 import { normalizeWorkMode } from '../normalizeWorkMode';
+import { matchesRequestedRole } from '../sourceFilters';
 import { fetchPublicText, parseCommaList } from './publicApiUtils';
 import { SourceUnavailableError } from '../sourceErrors';
 
@@ -126,7 +127,7 @@ export async function scrapeGupyJobs(options: ScrapeOptions): Promise<ScrapedJob
         ? mapGupyJobDetail(detail, candidate.url, scrapedAt, candidate)
         : mapGupyCandidate(candidate, scrapedAt);
 
-      if (mapped && jobMatchesRequestedRole(options.role, mapped.title, mapped.description)) {
+      if (mapped && matchesRequestedRole(options.role, mapped.title, mapped.description)) {
         jobs.push(mapped);
       }
     }
@@ -278,17 +279,6 @@ function buildDetailLocation(detail: GupyJobDetail): string {
     .map((part) => normalizeWhitespace(part ?? ''))
     .filter(Boolean)
     .join(', ');
-}
-
-function jobMatchesRequestedRole(
-  role: ScrapeOptions['role'],
-  title: string,
-  description: string
-): boolean {
-  if (!role || role === 'unknown' || role === 'internship') return true;
-  if (role === 'all') return isLikelyTechJobTitle(title);
-  const classifiedRole = classifyRole(title, description);
-  return classifiedRole === role;
 }
 
 function candidateMayMatchRequestedRole(

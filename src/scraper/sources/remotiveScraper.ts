@@ -1,7 +1,7 @@
 import type { ScrapedJob, ScrapeOptions, TechRole } from '../types';
 import { nowIso } from '../../utils/date';
 import { normalizeWhitespace, stripHtml } from '../../utils/text';
-import { classifyRole, isLikelyTechJobTitle } from '../../matcher/classifyRole';
+import { matchesRequestedRole } from '../sourceFilters';
 import { logger } from '../../utils/logger';
 import { fetchPublicJson } from './publicApiUtils';
 import { SourceUnavailableError } from '../sourceErrors';
@@ -39,10 +39,7 @@ export function jobMatchesRole(
   title: string,
   description: string
 ): boolean {
-  if (!role || role === 'unknown' || role === 'internship') return true;
-  if (role === 'all') return isLikelyTechJobTitle(title);
-  const classifiedRole = classifyRole(title, description);
-  return classifiedRole === role;
+  return matchesRequestedRole(role, title, description);
 }
 
 /**

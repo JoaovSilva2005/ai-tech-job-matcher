@@ -1,7 +1,20 @@
 import type { TechRole, WorkMode } from '../scraper/types';
 
 export type JobSource =
-  'sample' | 'remoteok' | 'remotive' | 'themuse' | 'greenhouse' | 'gupy' | 'lever';
+  | 'sample'
+  | 'remoteok'
+  | 'remotive'
+  | 'themuse'
+  | 'greenhouse'
+  | 'gupy'
+  | 'lever'
+  | 'ashby'
+  | 'recruitee'
+  | 'jooble'
+  | 'smartrecruiters'
+  | 'jobicy'
+  | 'arbeitnow'
+  | 'jsonld';
 
 export type PublicJobSource = Exclude<JobSource, 'sample'>;
 
@@ -55,6 +68,13 @@ export const VALID_SOURCES: PublicJobSource[] = [
   'greenhouse',
   'gupy',
   'lever',
+  'ashby',
+  'recruitee',
+  'jooble',
+  'smartrecruiters',
+  'jobicy',
+  'arbeitnow',
+  'jsonld',
 ];
 
 /** User-facing sources: every public source plus the "all" aggregate. */

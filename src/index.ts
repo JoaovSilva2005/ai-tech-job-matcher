@@ -80,6 +80,7 @@ export async function runPipeline(options: CliOptions): Promise<PipelineResult> 
         limit: collectionLimitFor(options),
         debug: options.debug,
         role: options.role,
+        location: options.userLocation,
       });
   if (scrapedJobs.length === 0) {
     logger.warn('No jobs collected. Reports will be generated empty.');

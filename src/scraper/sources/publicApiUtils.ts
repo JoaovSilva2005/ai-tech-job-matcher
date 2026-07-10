@@ -1,21 +1,35 @@
 import { SourceUnavailableError } from '../sourceErrors';
 
-const PUBLIC_SOURCE_USER_AGENT =
+export const PUBLIC_SOURCE_USER_AGENT =
   'ai-tech-job-matcher (portfolio project; single low-volume request; contact via GitHub)';
 
 const PUBLIC_API_TIMEOUT_MS = 15_000;
 
+export interface PublicRequestOptions {
+  timeoutMs?: number;
+  method?: 'GET' | 'POST';
+  headers?: Record<string, string>;
+  body?: string;
+}
+
 export async function fetchPublicJson<T>(
   url: string,
   sourceName: string,
-  timeoutMs = PUBLIC_API_TIMEOUT_MS
+  options: number | PublicRequestOptions = {}
 ): Promise<T> {
+  const requestOptions = normalizeRequestOptions(options);
+  const timeoutMs = requestOptions.timeoutMs ?? PUBLIC_API_TIMEOUT_MS;
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
     const response = await fetch(url, {
-      headers: { 'User-Agent': PUBLIC_SOURCE_USER_AGENT },
+      method: requestOptions.method ?? 'GET',
+      headers: {
+        'User-Agent': PUBLIC_SOURCE_USER_AGENT,
+        ...requestOptions.headers,
+      },
+      body: requestOptions.body,
       signal: controller.signal,
     });
 
@@ -42,14 +56,21 @@ export async function fetchPublicJson<T>(
 export async function fetchPublicText(
   url: string,
   sourceName: string,
-  timeoutMs = PUBLIC_API_TIMEOUT_MS
+  options: number | PublicRequestOptions = {}
 ): Promise<string> {
+  const requestOptions = normalizeRequestOptions(options);
+  const timeoutMs = requestOptions.timeoutMs ?? PUBLIC_API_TIMEOUT_MS;
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
 
   try {
     const response = await fetch(url, {
-      headers: { 'User-Agent': PUBLIC_SOURCE_USER_AGENT },
+      method: requestOptions.method ?? 'GET',
+      headers: {
+        'User-Agent': PUBLIC_SOURCE_USER_AGENT,
+        ...requestOptions.headers,
+      },
+      body: requestOptions.body,
       signal: controller.signal,
     });
 
@@ -81,4 +102,8 @@ export function parseCommaList(value: string): string[] {
     .split(',')
     .map((item) => item.trim())
     .filter(Boolean);
+}
+
+function normalizeRequestOptions(options: number | PublicRequestOptions): PublicRequestOptions {
+  return typeof options === 'number' ? { timeoutMs: options } : options;
 }

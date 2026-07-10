@@ -3,7 +3,7 @@ import { nowIso } from '../../utils/date';
 import { normalizeWorkMode } from '../normalizeWorkMode';
 import { normalizeWhitespace, stripHtml } from '../../utils/text';
 import { logger } from '../../utils/logger';
-import { classifyRole, isLikelyTechJobTitle } from '../../matcher/classifyRole';
+import { matchesRequestedRole } from '../sourceFilters';
 import { fetchPublicJson } from './publicApiUtils';
 import { SourceUnavailableError } from '../sourceErrors';
 
@@ -74,10 +74,7 @@ function jobMatchesRequestedRole(
   title: string,
   description: string
 ): boolean {
-  if (!role || role === 'unknown' || role === 'internship') return true;
-  if (role === 'all') return isLikelyTechJobTitle(title);
-  const classifiedRole = classifyRole(title, description);
-  return classifiedRole === role;
+  return matchesRequestedRole(role, title, description);
 }
 
 function normalizeRemoteOkUrl(url: string | undefined, id: string | number | undefined): string {
