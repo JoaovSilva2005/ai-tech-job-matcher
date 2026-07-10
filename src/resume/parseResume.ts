@@ -54,13 +54,16 @@ export async function parseResume(filePath: string): Promise<ParsedResume> {
 }
 
 async function parsePdf(filePath: string): Promise<string> {
-  const pdfParse = (await import('pdf-parse')).default;
+  const { PDFParse } = await import('pdf-parse');
   const buffer = fs.readFileSync(filePath);
+  const parser = new PDFParse({ data: new Uint8Array(buffer) });
   try {
-    const result = await pdfParse(buffer);
+    const result = await parser.getText();
     return result.text;
   } catch (error) {
     throw new ResumeParseError(`Failed to parse PDF resume: ${(error as Error).message}`);
+  } finally {
+    await parser.destroy().catch(() => undefined);
   }
 }
 

@@ -27,10 +27,13 @@ test.describe('web API upload/download flow', () => {
   let baseUrl: string;
   let tempRoot: string;
   let originalAiProvider: string | undefined;
+  let originalLeverCompanySlugs: string | undefined;
 
   test.beforeEach(async () => {
     originalAiProvider = process.env.AI_PROVIDER;
+    originalLeverCompanySlugs = process.env.LEVER_COMPANY_SLUGS;
     process.env.AI_PROVIDER = 'fallback';
+    process.env.LEVER_COMPANY_SLUGS = '';
     resetEnvCache();
 
     tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'ai-tech-job-matcher-api-'));
@@ -53,6 +56,7 @@ test.describe('web API upload/download flow', () => {
     });
     fs.rmSync(tempRoot, { recursive: true, force: true });
     process.env.AI_PROVIDER = originalAiProvider;
+    process.env.LEVER_COMPANY_SLUGS = originalLeverCompanySlugs;
     resetEnvCache();
   });
 
@@ -65,6 +69,10 @@ test.describe('web API upload/download flow', () => {
     expect(body.roles).toContain('qa');
     expect(body.sources).toContain('gupy');
     expect(body.workModes).toEqual(expect.arrayContaining(['all', 'remote', 'hybrid', 'onsite']));
+    expect(body.sourceConfiguration.lever).toMatchObject({
+      configured: false,
+      reason: expect.stringContaining('LEVER_COMPANY_SLUGS'),
+    });
   });
 
   test('download endpoints return JSON 404 before any analysis', async ({ request }) => {
@@ -120,6 +128,7 @@ test.describe('web API upload/download flow', () => {
   });
 
   test('specific job analysis returns matches and downloadable reports', async ({ request }) => {
+    const startedAt = Date.now();
     const response = await request.post(`${baseUrl}/api/analyze`, {
       multipart: {
         resume: {
@@ -140,6 +149,7 @@ test.describe('web API upload/download flow', () => {
     });
 
     expect(response.ok()).toBe(true);
+    expect(Date.now() - startedAt).toBeLessThan(10_000);
     const body = await response.json();
     expect(body.summary.source).toBe('manual');
     expect(body.summary.jobsCollected).toBe(1);
@@ -147,6 +157,10 @@ test.describe('web API upload/download flow', () => {
     expect(body.matches[0].title).toBe('Analista de QA Jr');
     expect(body.matches[0].location).toBe('Remote - Brazil');
     expect(body.matches[0].location).not.toContain('Campinas');
+    expect(body.matches[0].availability).toBe('unknown');
+    expect(body.matches[0].dataQualityScore).toBeGreaterThan(0);
+    expect(body.matches[0].validationStatus).toMatch(/valid|needs_review/);
+    expect(body.matches[0].qaIssues).toEqual(expect.any(Array));
     expect(body.runId).toMatch(/^[0-9a-f-]{36}$/);
     expect(body.downloadUrl).toBe(`/api/runs/${body.runId}/download/excel`);
     expect(body.markdownUrl).toBe(`/api/runs/${body.runId}/download/summary`);

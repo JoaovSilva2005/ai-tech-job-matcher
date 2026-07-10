@@ -65,7 +65,9 @@ test.describe('full pipeline (sample source, no API key)', () => {
   });
 
   test('duplicates are removed and reported in the execution summary', async () => {
-    const result = await runPipeline(makeOptions({ role: 'all', output: path.join(OUTPUT_ROOT, 'dedupe') }));
+    const result = await runPipeline(
+      makeOptions({ role: 'all', output: path.join(OUTPUT_ROOT, 'dedupe') })
+    );
     // sample-jobs.html contains an intentional duplicate posting (tb-017)
     expect(result.summary.duplicatesRemoved).toBeGreaterThanOrEqual(1);
     const titles = result.matches.map((m) => `${m.job.title}::${m.job.company}`.toLowerCase());
@@ -130,7 +132,9 @@ test.describe('full pipeline (sample source, no API key)', () => {
   });
 
   test('pipeline reports fallback mode when no AI key is configured', async () => {
-    const result = await runPipeline(makeOptions({ role: 'qa', output: path.join(OUTPUT_ROOT, 'fallback') }));
+    const result = await runPipeline(
+      makeOptions({ role: 'qa', output: path.join(OUTPUT_ROOT, 'fallback') })
+    );
     expect(result.summary.usedFallback).toBe(true);
     expect(result.summary.aiProvider).toBe('local-fallback');
 
@@ -148,7 +152,8 @@ test.describe('full pipeline (sample source, no API key)', () => {
     process.env.AI_PROVIDER = 'gemini';
     process.env.GEMINI_API_KEY = 'test-key';
     process.env.GEMINI_MODEL = 'gemini-2.5-flash-lite';
-    globalThis.fetch = async () => new Response('{"error":"temporary test failure"}', { status: 500 });
+    globalThis.fetch = async () =>
+      new Response('{"error":"temporary test failure"}', { status: 500 });
     resetEnvCache();
 
     try {
@@ -183,6 +188,7 @@ test.describe('full pipeline (sample source, no API key)', () => {
     const markdown = fs.readFileSync(result.outputFiles.markdown, 'utf-8');
     expect(markdown).toContain('# Execution Summary');
     expect(markdown).toContain('## Top 5 Job Matches');
+    expect(markdown).toMatch(/\[[^\]]+\]\(https?:\/\//);
 
     const jobsRaw = JSON.parse(fs.readFileSync(result.outputFiles.jobsRaw, 'utf-8'));
     expect(Array.isArray(jobsRaw)).toBe(true);

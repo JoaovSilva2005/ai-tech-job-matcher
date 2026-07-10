@@ -59,6 +59,15 @@ test.describe('Excel report generation', () => {
       expect(score).toBeGreaterThanOrEqual(0);
       expect(score).toBeLessThanOrEqual(100);
     }
+
+    const jobLink = ranking.getCell('R2').value as ExcelJS.CellHyperlinkValue;
+    expect(jobLink.text).toBe('Open job');
+    expect(jobLink.hyperlink).toMatch(/^https?:\/\//);
+    expect(ranking.getCell('S1').value).toBe('Source');
+    expect(ranking.getCell('T1').value).toBe('Availability');
+    expect(ranking.getCell('V1').value).toBe('Data Quality Score');
+    expect(ranking.getCell('W1').value).toBe('Validation Status');
+    expect(Number(ranking.getCell('V2').value)).toBeGreaterThan(0);
   });
 
   test('resume analysis sheet exposes skills but not personal contact data', async () => {

@@ -4,6 +4,7 @@ import path from 'path';
 import type { Server } from 'http';
 import { AddressInfo } from 'net';
 import { expect, test } from '@playwright/test';
+import AxeBuilder from '@axe-core/playwright';
 import { createApp } from '../../src/web/server';
 import { resetEnvCache } from '../../src/config/env';
 
@@ -26,10 +27,13 @@ test.describe('web UI real user flow', () => {
   let baseUrl: string;
   let tempRoot: string;
   let originalAiProvider: string | undefined;
+  let originalLeverCompanySlugs: string | undefined;
 
   test.beforeEach(async () => {
     originalAiProvider = process.env.AI_PROVIDER;
+    originalLeverCompanySlugs = process.env.LEVER_COMPANY_SLUGS;
     process.env.AI_PROVIDER = 'fallback';
+    process.env.LEVER_COMPANY_SLUGS = '';
     resetEnvCache();
 
     tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), 'ai-tech-job-matcher-ui-'));
@@ -52,6 +56,7 @@ test.describe('web UI real user flow', () => {
     });
     fs.rmSync(tempRoot, { recursive: true, force: true });
     process.env.AI_PROVIDER = originalAiProvider;
+    process.env.LEVER_COMPANY_SLUGS = originalLeverCompanySlugs;
     resetEnvCache();
   });
 
@@ -59,6 +64,7 @@ test.describe('web UI real user flow', () => {
     await page.goto(baseUrl);
 
     await expect(page.getByRole('heading', { name: 'AI Tech Job Matcher' })).toBeVisible();
+    await expect(page.locator('#sourceSelect option[value="lever"]')).toBeDisabled();
     await page.setInputFiles('#resumeInput', {
       name: 'resume.txt',
       mimeType: 'text/plain',
@@ -89,6 +95,8 @@ test.describe('web UI real user flow', () => {
     await expect(page.getByText('Venturus')).toBeVisible();
     await expect(page.getByText('Matched skills')).toBeVisible();
     await expect(page.locator('.chip.match', { hasText: 'Playwright' })).toBeVisible();
+    await expect(page.locator('.quality-pill')).toContainText('QA:');
+    await expect(page.getByText('Data quality', { exact: true })).toBeVisible();
     await expect(page.locator('.apply-link')).toHaveAttribute(
       'href',
       'https://venturus.gupy.io/jobs/123456'
@@ -102,6 +110,41 @@ test.describe('web UI real user flow', () => {
     await page.getByRole('link', { name: 'Download Markdown summary' }).click();
     expect((await markdownDownload).suggestedFilename()).toBe('execution-summary.md');
 
+    const accessibility = await new AxeBuilder({ page }).include('#resultsState').analyze();
+    expect(
+      accessibility.violations.filter((violation) =>
+        ['serious', 'critical'].includes(violation.impact ?? '')
+      )
+    ).toEqual([]);
+
     expect(fs.readdirSync(path.join(tempRoot, 'uploads'))).toEqual([]);
+  });
+
+  test('keeps the complete form inside a mobile viewport', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await page.goto(baseUrl);
+
+    await page.getByText('Analyze one job', { exact: true }).click();
+    await expect(page.locator('#specificJobFields')).toBeVisible();
+
+    const viewport = await page.evaluate(() => ({
+      innerWidth: window.innerWidth,
+      scrollWidth: document.documentElement.scrollWidth,
+    }));
+    expect(viewport.scrollWidth).toBeLessThanOrEqual(viewport.innerWidth);
+
+    for (const selector of ['#resumeInput', '#locationInput', '#jobUrlInput', '#analyzeBtn']) {
+      const box = await page.locator(selector).boundingBox();
+      expect(box).not.toBeNull();
+      expect(box!.x).toBeGreaterThanOrEqual(0);
+      expect(box!.x + box!.width).toBeLessThanOrEqual(390);
+    }
+
+    const accessibility = await new AxeBuilder({ page }).analyze();
+    expect(
+      accessibility.violations.filter((violation) =>
+        ['serious', 'critical'].includes(violation.impact ?? '')
+      )
+    ).toEqual([]);
   });
 });

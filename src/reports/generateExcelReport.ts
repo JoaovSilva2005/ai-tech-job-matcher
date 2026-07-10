@@ -30,6 +30,9 @@ export async function generateExcelReport(data: ReportData, outputDir: string): 
 
   const workbook = new ExcelJS.Workbook();
   workbook.creator = 'AI Tech Job Matcher';
+  workbook.title = 'Job Match Report';
+  workbook.subject = 'Ranked public job matches and QA evidence';
+  workbook.company = 'Joao Vitor da Silva';
   workbook.created = new Date();
 
   buildRankingSheet(workbook, data);
@@ -63,7 +66,12 @@ function buildRankingSheet(workbook: ExcelJS.Workbook, data: ReportData): void {
     { header: 'Matched Skills', key: 'matched', width: 40 },
     { header: 'Missing Skills', key: 'missing', width: 40 },
     { header: 'Critical Gaps', key: 'gaps', width: 30 },
-    { header: 'Job URL', key: 'url', width: 45 },
+    { header: 'Job URL', key: 'url', width: 18 },
+    { header: 'Source', key: 'source', width: 14 },
+    { header: 'Availability', key: 'availability', width: 13 },
+    { header: 'Published At', key: 'publishedAt', width: 20 },
+    { header: 'Data Quality Score', key: 'quality', width: 18 },
+    { header: 'Validation Status', key: 'validationStatus', width: 18 },
   ];
 
   // matches are already sorted by the pipeline (score, or location preference first when provided)
@@ -86,15 +94,32 @@ function buildRankingSheet(workbook: ExcelJS.Workbook, data: ReportData): void {
       matched: joinList(match.matchedSkills),
       missing: joinList(match.missingSkills),
       gaps: joinList(match.criticalGaps),
-      url: match.job.url,
+      url: {
+        text: 'Open job',
+        hyperlink: match.job.url,
+        tooltip: `Open ${match.job.title} at ${match.job.company}`,
+      },
+      source: match.job.source,
+      availability: match.job.availability ?? 'unknown',
+      publishedAt: formatOptionalDate(match.job.publishedAt),
+      quality: match.validation.dataQualityScore,
+      validationStatus: match.validation.status,
     });
     fillCell(row.getCell('recommendation'), RECOMMENDATION_FILLS[match.recommendation]);
     row.getCell('score').alignment = { horizontal: 'center' };
     row.getCell('rank').alignment = { horizontal: 'center' };
+    row.getCell('url').font = { color: { argb: 'FF0563C1' }, underline: true };
+    fillCell(row.getCell('quality'), match.validation.status === 'valid' ? 'FFC6EFCE' : 'FFFFF2CC');
   });
 
   styleHeaderRow(sheet);
-  applyAutoFilter(sheet, 'R');
+  applyAutoFilter(sheet, 'W');
+}
+
+function formatOptionalDate(value?: string): string {
+  if (!value) return '-';
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? value : formatDateHuman(date);
 }
 
 function buildDetailsSheet(workbook: ExcelJS.Workbook, data: ReportData): void {

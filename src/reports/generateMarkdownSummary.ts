@@ -15,10 +15,14 @@ export function generateMarkdownSummary(data: ReportData, outputDir: string): st
 
   const qaIssueCount = data.qaIssues.length;
   const needsReviewTitles = unique(
-    data.qaIssues.filter((issue) => issue.status === 'needs_review').map((issue) => issue.jobTitle || 'untitled')
+    data.qaIssues
+      .filter((issue) => issue.status === 'needs_review')
+      .map((issue) => issue.jobTitle || 'untitled')
   );
 
-  const topGaps = countOccurrences(matches.flatMap((m) => m.criticalGaps.length ? m.criticalGaps : m.missingSkills.slice(0, 3)));
+  const topGaps = countOccurrences(
+    matches.flatMap((m) => (m.criticalGaps.length ? m.criticalGaps : m.missingSkills.slice(0, 3)))
+  );
   const studySuggestions = countOccurrences(matches.flatMap((m) => m.studyPlan));
 
   const lines: string[] = [
@@ -41,16 +45,18 @@ export function generateMarkdownSummary(data: ReportData, outputDir: string): st
     '',
     '| # | Score | Recommendation | Job | Company | Role |',
     '|---|-------|----------------|-----|---------|------|',
-    ...top5.map(
-      (m, i) =>
-        `| ${i + 1} | ${m.score} | ${RECOMMENDATION_LABELS[m.recommendation]} | ${m.job.title} | ${m.job.company} | ${m.analysis.role} |`
-    ),
+    ...top5.map((m, i) => {
+      const jobLink = `[${escapeMarkdownTableCell(m.job.title)}](${escapeMarkdownUrl(m.job.url)})`;
+      return `| ${i + 1} | ${m.score} | ${escapeMarkdownTableCell(RECOMMENDATION_LABELS[m.recommendation])} | ${jobLink} | ${escapeMarkdownTableCell(m.job.company)} | ${escapeMarkdownTableCell(m.analysis.role)} |`;
+    }),
     '',
     '## Main Skills Found in the Market',
     '',
     ...skillInsights
       .slice(0, 10)
-      .map((s) => `- **${s.skill}** — ${s.mentions} mention(s), mostly in \`${s.relatedRole}\` roles`),
+      .map(
+        (s) => `- **${s.skill}** — ${s.mentions} mention(s), mostly in \`${s.relatedRole}\` roles`
+      ),
     '',
     '## Candidate Main Gaps',
     '',
@@ -68,9 +74,7 @@ export function generateMarkdownSummary(data: ReportData, outputDir: string): st
     '',
     `- Total QA issues detected across jobs: **${qaIssueCount}**`,
     `- Jobs flagged as \`needs_review\`: **${needsReviewTitles.length}**` +
-      (needsReviewTitles.length > 0
-        ? ` (${needsReviewTitles.slice(0, 3).join('; ')})`
-        : ''),
+      (needsReviewTitles.length > 0 ? ` (${needsReviewTitles.slice(0, 3).join('; ')})` : ''),
     `- Candidate profile analysis mode: ${resume.fallbackMode ? 'fallback' : 'AI'}`,
     '- Full issue list available in the **QA Issues** sheet of `job-match-report.xlsx`.',
     '',
@@ -99,10 +103,23 @@ function unique(items: string[]): string[] {
 
 function formatAnalysisEngine(summary: ReportData['summary']): string {
   if (!summary.usedFallback) {
-    return `🤖 Real AI (${summary.aiProvider})`;
+    return `Real AI (${summary.aiProvider})`;
   }
   if (summary.aiProvider === 'local-fallback') {
-    return '🔁 Local fallback (keyword-based, no API key needed)';
+    return 'Local fallback (keyword-based, no API key needed)';
   }
-  return `⚠️ ${summary.aiProvider} selected; local fallback used for failed or limited AI calls`;
+  return `${summary.aiProvider} selected; local fallback used for failed or limited AI calls`;
+}
+
+function escapeMarkdownTableCell(value: string): string {
+  return value
+    .replace(/\\/g, '\\\\')
+    .replace(/\|/g, '\\|')
+    .replace(/\]/g, '\\]')
+    .replace(/[\r\n]+/g, ' ')
+    .trim();
+}
+
+function escapeMarkdownUrl(value: string): string {
+  return value.replace(/\(/g, '%28').replace(/\)/g, '%29').replace(/\s/g, '%20');
 }

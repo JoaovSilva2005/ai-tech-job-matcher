@@ -20,7 +20,7 @@
         /* text */
         --text: #e8eaee;
         --text-2: #9aa3b0;
-        --text-3: #6b7482;
+        --text-3: #8b95a3;
 
         /* actions */
         --accent: #6c8ef5; /* primary actions */
@@ -58,7 +58,7 @@
         --error-bg: #2a1818;
         --ring-track: #262b34;
 
-        --radius: 10px;
+        --radius: 8px;
         --radius-sm: 6px;
         --font: -apple-system, 'Segoe UI', 'Helvetica Neue', Helvetica, Arial, sans-serif;
         --mono: ui-monospace, 'SF Mono', 'Cascadia Code', Menlo, Consolas, monospace;
@@ -73,7 +73,7 @@
           --border-strong: #c4c9d2;
           --text: #1b1f27;
           --text-2: #555e6c;
-          --text-3: #828b99;
+          --text-3: #626b78;
           --accent: #3b5fd9;
           --accent-strong: #2d4dbd;
           --accent-ink: #ffffff;
@@ -589,6 +589,7 @@
         display: flex;
         align-items: center;
         gap: 10px;
+        flex-wrap: wrap;
         flex: none;
       }
       .source-pill {
@@ -598,6 +599,25 @@
         border: 1px solid var(--border);
         border-radius: 999px;
         padding: 2.5px 9px;
+      }
+      .quality-pill {
+        font-family: var(--mono);
+        font-size: 11px;
+        font-weight: 600;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        padding: 2.5px 9px;
+        white-space: nowrap;
+      }
+      .quality-pill[data-status='valid'] {
+        color: var(--chip-match-ink);
+        background: var(--chip-match-bg);
+        border-color: var(--chip-match-border);
+      }
+      .quality-pill[data-status='needs_review'] {
+        color: var(--chip-miss-ink);
+        background: var(--chip-miss-bg);
+        border-color: var(--chip-miss-border);
       }
       .apply-link {
         font-size: 13px;
@@ -687,11 +707,13 @@
         text-wrap: pretty;
       }
 
-      details.study {
+      details.study,
+      details.quality {
         border-top: 1px solid var(--border);
         padding-top: 10px;
       }
-      details.study summary {
+      details.study summary,
+      details.quality summary {
         cursor: pointer;
         font-size: 12.5px;
         font-weight: 600;
@@ -701,15 +723,18 @@
         align-items: center;
         gap: 6px;
       }
-      details.study summary::before {
+      details.study summary::before,
+      details.quality summary::before {
         content: '▸';
         font-size: 10px;
         transition: transform 0.15s;
       }
-      details.study[open] summary::before {
+      details.study[open] summary::before,
+      details.quality[open] summary::before {
         transform: rotate(90deg);
       }
-      details.study summary::-webkit-details-marker {
+      details.study summary::-webkit-details-marker,
+      details.quality summary::-webkit-details-marker {
         display: none;
       }
       details.study ol {
@@ -723,6 +748,15 @@
       details.study ol li {
         margin-bottom: 4px;
         break-inside: avoid;
+      }
+      details.quality ul {
+        margin: 10px 0 0;
+        padding-left: 22px;
+        font-size: 13px;
+        color: var(--text-2);
+      }
+      details.quality li + li {
+        margin-top: 4px;
       }
 
       /* ---------- empty / error ---------- */
@@ -814,6 +848,9 @@
           margin-left: 0;
           width: 100%;
         }
+        .summary-actions .btn {
+          flex: 1 1 220px;
+        }
       }
       @media (max-width: 640px) {
         .wrap {
@@ -838,6 +875,12 @@
         .score-rail {
           flex-direction: row;
           justify-content: flex-start;
+        }
+        .skills-grid {
+          grid-template-columns: 1fr;
+        }
+        details.study ol {
+          columns: 1;
         }
         .skills-grid {
           grid-template-columns: 1fr;
@@ -1006,6 +1049,7 @@
               <textarea
                 id="jobDescriptionInput"
                 name="jobDescription"
+                minlength="100"
                 maxlength="8000"
                 placeholder="Paste a job description here to analyze only this opportunity."
               ></textarea>
@@ -1165,6 +1209,24 @@
         for (const control of specificRequiredFields) control.required = specific;
         $('analyzeBtn').textContent = specific ? 'Analyze this job' : 'Analyze jobs';
       }
+      async function syncSourceConfiguration() {
+        try {
+          const response = await fetch('/api/health');
+          if (!response.ok) return;
+          const health = await response.json();
+          const sourceConfiguration = health.sourceConfiguration || {};
+          for (const option of $('sourceSelect').options) {
+            const configuration = sourceConfiguration[option.value];
+            if (!configuration || configuration.configured !== false) continue;
+            option.disabled = true;
+            option.textContent += ' (not configured)';
+            option.title = configuration.reason || 'Source is not configured';
+          }
+          if ($('sourceSelect').selectedOptions[0]?.disabled) $('sourceSelect').value = 'all';
+        } catch {
+          // The analysis endpoint still validates source configuration server-side.
+        }
+      }
       function setBusy(busy) {
         form.dataset.busy = String(busy);
         $('analyzeBtn').disabled = busy;
@@ -1174,6 +1236,7 @@
       }
       for (const input of modeInputs) input.addEventListener('change', syncAnalysisMode);
       syncAnalysisMode();
+      void syncSourceConfiguration();
 
       /* ---------- file input ---------- */
       const dz = $('dropzone');
@@ -1208,7 +1271,7 @@
         e.preventDefault();
         const file = fileInput.files[0];
         if (!file) {
-          renderError('Please choose a resume file first (.txt, .pdf or .docx).');
+          renderError('Please choose a resume file first (.txt, .md, .pdf or .docx).');
           return;
         }
         await runAnalysis();
@@ -1317,6 +1380,8 @@
           stat(s.jobsAfterRoleFilter, 'After role filter'),
           stat(s.jobsAfterWorkModeFilter, 'After mode filter'),
           stat(s.duplicatesRemoved, 'Duplicates removed'),
+          stat(s.jobsValid, 'Valid data'),
+          stat(s.jobsNeedingReview, 'Needs review'),
           stat(ra.detectedSeniority || '—', 'Detected seniority'),
           stat(
             matches.filter(
@@ -1340,7 +1405,9 @@
           )
         );
 
-        $('resultsCount').textContent = matches.length + ' jobs, best match first';
+        $('resultsCount').textContent =
+          matches.length +
+          (s.userLocation ? ' jobs, location preference first' : ' jobs, best match first');
         $('cardsList').replaceChildren(...matches.map(card));
         show('results');
       }
@@ -1397,6 +1464,7 @@
 
       function card(m) {
         const rec = REC[m.recommendation] || REC.low_priority;
+        const validationStatus = m.validationStatus || 'needs_review';
 
         const badge = el('span', { class: 'rec-badge', text: rec.label });
         badge.style.background = rec.bg;
@@ -1407,6 +1475,12 @@
           ['Location', m.location],
           ['Location match', m.locationPreference],
           ['Mode', m.workMode && m.workMode !== 'unknown' ? m.workMode : null],
+          ['Availability', m.availability || 'unknown'],
+          ['Published', formatDate(m.publishedAt)],
+          [
+            'Data quality',
+            Number.isFinite(m.dataQualityScore) ? m.dataQualityScore + '/100' : null,
+          ],
           ['Seniority', m.seniority || m.seniorityLevel],
           ['English', m.englishLevel && m.englishLevel !== 'unknown' ? m.englishLevel : null],
         ];
@@ -1452,6 +1526,11 @@
               'div',
               { class: 'card-links' },
               el('span', { class: 'source-pill', text: String(m.source || 'source') }),
+              el('span', {
+                class: 'quality-pill',
+                'data-status': validationStatus,
+                text: validationStatus === 'valid' ? 'QA: valid' : 'QA: review',
+              }),
               el(
                 'a',
                 {
@@ -1459,6 +1538,7 @@
                   href: m.url || '#',
                   target: '_blank',
                   rel: 'noopener noreferrer',
+                  'aria-label': `Apply to ${m.title || 'this job'} at ${m.company || 'this company'} (opens in a new tab)`,
                 },
                 'Apply ↗'
               )
@@ -1490,6 +1570,25 @@
           body.append(el('details', { class: 'study' }, el('summary', {}, 'Study plan'), ol));
         }
 
+        if (Array.isArray(m.qaIssues) && m.qaIssues.length) {
+          const list = el('ul');
+          for (const issue of m.qaIssues) {
+            list.append(
+              el('li', {
+                text: `${String(issue.severity || 'low').toUpperCase()} · ${issue.field || 'job'}: ${issue.message || 'Review this field'}`,
+              })
+            );
+          }
+          body.append(
+            el(
+              'details',
+              { class: 'quality' },
+              el('summary', {}, `Data quality notes (${m.qaIssues.length})`),
+              list
+            )
+          );
+        }
+
         const rail = el('div', { class: 'score-rail' }, scoreRing(m.score, rec.color), badge);
         return el(
           'li',
@@ -1497,6 +1596,17 @@
           rail,
           body
         );
+      }
+
+      function formatDate(value) {
+        if (!value) return null;
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return null;
+        return new Intl.DateTimeFormat('en', {
+          year: 'numeric',
+          month: 'short',
+          day: '2-digit',
+        }).format(date);
       }
     </script>
   </body>

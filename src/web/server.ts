@@ -6,7 +6,7 @@ import multer from 'multer';
 import type { Server } from 'http';
 import { runPipeline } from '../index';
 import type { CliOptions, ManualJobInput, SelectableSource, WorkModeFilter } from '../cli/cliTypes';
-import { VALID_ROLES, SELECTABLE_SOURCES, VALID_WORK_MODES } from '../cli/cliTypes';
+import { VALID_ROLES, VALID_SOURCES, SELECTABLE_SOURCES, VALID_WORK_MODES } from '../cli/cliTypes';
 import type { JobMatchResult } from '../matcher/calculateMatchScore';
 import type { TechRole, WorkMode } from '../scraper/types';
 import { ensureDir } from '../utils/fileSystem';
@@ -14,6 +14,7 @@ import { logger, setDebug } from '../utils/logger';
 import { ResumeParseError, SUPPORTED_RESUME_EXTENSIONS } from '../resume/parseResume';
 import { isLikelyRealJobUrl } from '../utils/url';
 import { SourceUnavailableError } from '../scraper/sourceErrors';
+import { getSourceConfiguration } from '../scraper/sourceRegistry';
 import { indexHtml } from './page';
 
 const PORT = Number(process.env.PORT ?? 4180);
@@ -98,6 +99,9 @@ export function createApp(options: WebAppOptions = {}): express.Application {
       roles: VALID_ROLES,
       sources: SELECTABLE_SOURCES,
       workModes: VALID_WORK_MODES,
+      sourceConfiguration: Object.fromEntries(
+        VALID_SOURCES.map((source) => [source, getSourceConfiguration(source)])
+      ),
     });
   });
 
@@ -360,8 +364,17 @@ function toClientMatch(m: JobMatchResult) {
     location: m.job.location ?? null,
     locationPreference: m.locationPreference ?? null,
     workMode: m.job.workMode,
+    availability: m.job.availability ?? 'unknown',
+    publishedAt: m.job.publishedAt ?? null,
     seniority: m.analysis.seniorityLevel,
     englishLevel: m.analysis.englishLevel,
+    dataQualityScore: m.validation.dataQualityScore,
+    validationStatus: m.validation.status,
+    qaIssues: m.validation.issues.map(({ field, severity, message }) => ({
+      field,
+      severity,
+      message,
+    })),
     matchedSkills: m.matchedSkills,
     missingSkills: m.missingSkills,
     criticalGaps: m.criticalGaps,
