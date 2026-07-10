@@ -1,8 +1,15 @@
-import type { SelectableSource } from '../cli/cliTypes';
+import type { PublicJobSource, SelectableSource } from '../cli/cliTypes';
 import { VALID_SOURCES } from '../cli/cliTypes';
 import type { ScrapedJob, ScrapeOptions } from './types';
-import { getScraper } from './sourceRegistry';
+import { getScraper, getSourceConfiguration } from './sourceRegistry';
+import type { SourceConfiguration } from './sourceRegistry';
 import { logger } from '../utils/logger';
+import { SourceUnavailableError } from './sourceErrors';
+
+interface AggregateSourceDependencies {
+  scrape?: (source: PublicJobSource, options: ScrapeOptions) => Promise<ScrapedJob[]>;
+  configuration?: (source: PublicJobSource) => SourceConfiguration;
+}
 
 /**
  * Round-robin merge of several result lists: takes the 1st of each, then the
@@ -63,28 +70,46 @@ export function assertSingleSourceResults(source: SelectableSource, jobs: Scrape
  * the pipeline's downstream de-duplication removes the same posting appearing
  * on more than one board.
  */
-async function scrapeAllPublicSources(options: ScrapeOptions): Promise<ScrapedJob[]> {
+export async function scrapeAllPublicSources(
+  options: ScrapeOptions,
+  dependencies: AggregateSourceDependencies = {}
+): Promise<ScrapedJob[]> {
   logger.info(
     `Collecting jobs from all ${VALID_SOURCES.length} public sources (limit: ${options.limit})...`
   );
+  const scrape =
+    dependencies.scrape ?? ((source, sourceOptions) => getScraper(source)(sourceOptions));
+  const configuration = dependencies.configuration ?? getSourceConfiguration;
 
-  const perSource = await Promise.all(
+  const outcomes = await Promise.all(
     VALID_SOURCES.map(async (src) => {
+      const sourceConfiguration = configuration(src);
+      if (!sourceConfiguration.configured) {
+        logger.warn(`  Source "${src}" is not configured: ${sourceConfiguration.reason}`);
+        return { source: src, status: 'unconfigured' as const, jobs: [] };
+      }
+
       try {
-        const jobs = await getScraper(src)(options);
+        const jobs = await scrape(src, options);
         logger.debug(`  ${src}: ${jobs.length} job(s)`);
-        return jobs;
+        return { source: src, status: 'ok' as const, jobs };
       } catch (error) {
         logger.warn(`  Source "${src}" failed: ${(error as Error).message}`);
-        return [];
+        return { source: src, status: 'failed' as const, jobs: [] };
       }
     })
   );
 
+  const successful = outcomes.filter((outcome) => outcome.status === 'ok');
+  if (successful.length === 0) {
+    throw new SourceUnavailableError('all', 'All configured public job sources failed.');
+  }
+
+  const perSource = outcomes.map((outcome) => outcome.jobs);
   const merged = interleave(perSource).slice(0, options.limit);
   const contributing = perSource.filter((list) => list.length > 0).length;
   logger.info(
-    `Collected ${merged.length} job(s) from ${contributing}/${VALID_SOURCES.length} sources.`
+    `Collected ${merged.length} job(s) from ${contributing}/${successful.length} responding sources.`
   );
   return merged;
 }

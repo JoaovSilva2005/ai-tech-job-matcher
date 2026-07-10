@@ -3,7 +3,7 @@ import { logger } from '../utils/logger';
 import { AiRequestError, fetchAiResponse } from './aiHttpClient';
 
 /**
- * Minimal Anthropic Messages API client using global fetch (Node 18+).
+ * Minimal Anthropic Messages API client using global fetch (Node 22+).
  */
 export async function callAnthropic(systemPrompt: string, userPrompt: string): Promise<string> {
   const env = getEnv();

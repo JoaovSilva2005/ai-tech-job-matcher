@@ -102,7 +102,3 @@ export function normalizeSkills(skills: string[]): string[] {
   }
   return result;
 }
-
-export function getKnownSkillAliases(): Map<string, string> {
-  return new Map(ALIAS_TO_CANONICAL);
-}

@@ -1,15 +1,15 @@
 import { expect, test } from '@playwright/test';
-import { assertSingleSourceResults, interleave } from '../../src/scraper/jobScraper';
+import {
+  assertSingleSourceResults,
+  interleave,
+  scrapeAllPublicSources,
+} from '../../src/scraper/jobScraper';
 import { SELECTABLE_SOURCES, VALID_SOURCES } from '../../src/cli/cliTypes';
 import type { ScrapedJob } from '../../src/scraper/types';
 
 test.describe('interleave (all-sources merge)', () => {
   test('round-robins across lists to preserve variety', () => {
-    const result = interleave([
-      ['a1', 'a2', 'a3'],
-      ['b1', 'b2'],
-      ['c1'],
-    ]);
+    const result = interleave([['a1', 'a2', 'a3'], ['b1', 'b2'], ['c1']]);
     expect(result).toEqual(['a1', 'b1', 'c1', 'a2', 'b2', 'a3']);
   });
 
@@ -44,6 +44,56 @@ test.describe('selectable sources', () => {
   });
 });
 
+test.describe('all-sources reliability', () => {
+  test('fails explicitly when every configured source is unavailable', async () => {
+    await expect(
+      scrapeAllPublicSources(
+        { limit: 10, role: 'qa' },
+        {
+          configuration: () => ({ configured: true }),
+          scrape: async (source) => {
+            throw new Error(`${source} unavailable`);
+          },
+        }
+      )
+    ).rejects.toThrow('All configured public job sources failed');
+  });
+
+  test('skips unconfigured sources and preserves jobs from responding sources', async () => {
+    const called: string[] = [];
+    const jobs = await scrapeAllPublicSources(
+      { limit: 10, role: 'qa' },
+      {
+        configuration: (source) =>
+          source === 'lever'
+            ? { configured: false, reason: 'test configuration' }
+            : { configured: true },
+        scrape: async (source) => {
+          called.push(source);
+          return source === 'gupy'
+            ? [
+                {
+                  id: 'gupy-1',
+                  title: 'QA Analyst',
+                  company: 'Acme',
+                  workMode: 'remote',
+                  url: 'https://acme.gupy.io/jobs/1',
+                  description: 'A complete QA role description with automated and API testing.',
+                  source: 'gupy',
+                  scrapedAt: '2026-07-09T00:00:00.000Z',
+                },
+              ]
+            : [];
+        },
+      }
+    );
+
+    expect(called).not.toContain('lever');
+    expect(jobs).toHaveLength(1);
+    expect(jobs[0].source).toBe('gupy');
+  });
+});
+
 test.describe('single-source guard', () => {
   const baseJob: ScrapedJob = {
     id: '1',
@@ -61,8 +111,8 @@ test.describe('single-source guard', () => {
   });
 
   test('blocks mixed-source results for a specific source', () => {
-    expect(() =>
-      assertSingleSourceResults('gupy', [{ ...baseJob, source: 'themuse' }])
-    ).toThrow(/Refusing mixed-source results/);
+    expect(() => assertSingleSourceResults('gupy', [{ ...baseJob, source: 'themuse' }])).toThrow(
+      /Refusing mixed-source results/
+    );
   });
 });

@@ -1,9 +1,9 @@
 import { SourceUnavailableError } from '../sourceErrors';
 
-export const PUBLIC_SOURCE_USER_AGENT =
+const PUBLIC_SOURCE_USER_AGENT =
   'ai-tech-job-matcher (portfolio project; single low-volume request; contact via GitHub)';
 
-export const PUBLIC_API_TIMEOUT_MS = 15_000;
+const PUBLIC_API_TIMEOUT_MS = 15_000;
 
 export async function fetchPublicJson<T>(
   url: string,

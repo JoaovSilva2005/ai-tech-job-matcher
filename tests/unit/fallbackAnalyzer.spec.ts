@@ -89,6 +89,7 @@ test.describe('keyword detectors', () => {
   });
 
   test('detectEnglishLevel recognizes levels and absence', () => {
+    expect(detectEnglishLevel('native English speaker')).toBe('native');
     expect(detectEnglishLevel('fluent english required')).toBe('fluent');
     expect(detectEnglishLevel('advanced english')).toBe('advanced');
     expect(detectEnglishLevel('intermediate english')).toBe('intermediate');

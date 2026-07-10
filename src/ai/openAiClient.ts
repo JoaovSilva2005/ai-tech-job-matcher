@@ -3,7 +3,7 @@ import { logger } from '../utils/logger';
 import { AiRequestError, fetchAiResponse } from './aiHttpClient';
 
 /**
- * Minimal OpenAI Chat Completions client using global fetch (Node 18+).
+ * Minimal OpenAI Chat Completions client using global fetch (Node 22+).
  * No SDK dependency keeps the project light; errors bubble up so the
  * adapter layer can fall back to the local analyzer.
  */

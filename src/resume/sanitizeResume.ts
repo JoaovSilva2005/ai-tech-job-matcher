@@ -55,9 +55,3 @@ function redactLikelyNameHeader(text: string): string {
   }
   return lines.join('\n');
 }
-
-/** Short, safe preview used only in debug logs (never the whole resume). */
-export function safeResumePreview(text: string, maxLength = 80): string {
-  const sanitized = sanitizeResumeText(text).replace(/\s+/g, ' ');
-  return sanitized.slice(0, maxLength) + (sanitized.length > maxLength ? '…' : '');
-}

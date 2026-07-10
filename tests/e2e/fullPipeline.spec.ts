@@ -58,6 +58,7 @@ test.describe('full pipeline (sample source, no API key)', () => {
 
     const roles = new Set(result.matches.map((m) => m.analysis.role));
     expect(roles.size).toBeGreaterThanOrEqual(4);
+    expect(roles).not.toContain('unknown');
 
     const scores = result.matches.map((m) => m.score);
     const sorted = [...scores].sort((a, b) => b - a);

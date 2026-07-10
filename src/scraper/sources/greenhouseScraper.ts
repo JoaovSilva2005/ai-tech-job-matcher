@@ -1,6 +1,6 @@
 import type { ScrapedJob, ScrapeOptions } from '../types';
 import { getEnv } from '../../config/env';
-import { classifyRole } from '../../matcher/classifyRole';
+import { classifyRole, isLikelyTechJobTitle } from '../../matcher/classifyRole';
 import { nowIso } from '../../utils/date';
 import { normalizeWhitespace, stripHtml } from '../../utils/text';
 import { logger } from '../../utils/logger';
@@ -9,6 +9,7 @@ import { fetchPublicJson, parseCommaList } from './publicApiUtils';
 
 const GREENHOUSE_API = 'https://boards-api.greenhouse.io/v1/boards';
 const MAX_GREENHOUSE_JOBS = 20;
+const MAX_GREENHOUSE_BOARDS = 5;
 const DEFAULT_GREENHOUSE_TOKENS = ['stripe'];
 
 interface GreenhouseResponse {
@@ -29,7 +30,11 @@ interface GreenhouseJob {
 
 export async function scrapeGreenhouseJobs(options: ScrapeOptions): Promise<ScrapedJob[]> {
   const envTokens = parseCommaList(getEnv().GREENHOUSE_BOARD_TOKENS);
-  const boardTokens = envTokens.length > 0 ? envTokens : DEFAULT_GREENHOUSE_TOKENS;
+  const configuredTokens = envTokens.length > 0 ? envTokens : DEFAULT_GREENHOUSE_TOKENS;
+  const boardTokens = configuredTokens.slice(0, MAX_GREENHOUSE_BOARDS);
+  if (configuredTokens.length > MAX_GREENHOUSE_BOARDS) {
+    logger.warn(`Greenhouse: using only the first ${MAX_GREENHOUSE_BOARDS} configured boards.`);
+  }
   const limit = Math.min(options.limit, MAX_GREENHOUSE_JOBS);
   const scrapedAt = nowIso();
   const jobs: ScrapedJob[] = [];
@@ -120,8 +125,10 @@ function normalizePublishedAt(value: string | undefined): string | undefined {
 }
 
 function jobMatchesRequestedRole(role: ScrapeOptions['role'], job: ScrapedJob): boolean {
-  if (!role || role === 'all' || role === 'internship' || role === 'unknown') return true;
-  return classifyRole(job.title, job.description) === role;
+  if (!role || role === 'unknown' || role === 'internship') return true;
+  if (role === 'all') return isLikelyTechJobTitle(job.title);
+  const classifiedRole = classifyRole(job.title, job.description);
+  return classifiedRole === role;
 }
 
 function humanizeBoardToken(token: string): string {

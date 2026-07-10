@@ -1,6 +1,6 @@
 import type { ScrapedJob, ScrapeOptions } from '../types';
 import { getEnv } from '../../config/env';
-import { classifyRole } from '../../matcher/classifyRole';
+import { classifyRole, isLikelyTechJobTitle } from '../../matcher/classifyRole';
 import { nowIso } from '../../utils/date';
 import { normalizeWhitespace, stripHtml } from '../../utils/text';
 import { logger } from '../../utils/logger';
@@ -9,6 +9,7 @@ import { fetchPublicJson, parseCommaList } from './publicApiUtils';
 
 const LEVER_API = 'https://api.lever.co/v0/postings';
 const MAX_LEVER_JOBS = 20;
+const MAX_LEVER_COMPANIES = 5;
 
 interface LeverPosting {
   id?: string;
@@ -30,12 +31,16 @@ interface LeverPosting {
 }
 
 export async function scrapeLeverJobs(options: ScrapeOptions): Promise<ScrapedJob[]> {
-  const companySlugs = parseCommaList(getEnv().LEVER_COMPANY_SLUGS);
-  if (companySlugs.length === 0) {
+  const configuredSlugs = parseCommaList(getEnv().LEVER_COMPANY_SLUGS);
+  if (configuredSlugs.length === 0) {
     logger.warn(
       'LEVER_COMPANY_SLUGS is not configured in .env; the "lever" source has nothing to collect.'
     );
     return [];
+  }
+  const companySlugs = configuredSlugs.slice(0, MAX_LEVER_COMPANIES);
+  if (configuredSlugs.length > MAX_LEVER_COMPANIES) {
+    logger.warn(`Lever: using only the first ${MAX_LEVER_COMPANIES} configured companies.`);
   }
 
   const limit = Math.min(options.limit, MAX_LEVER_JOBS);
@@ -133,8 +138,10 @@ function normalizePublishedAt(value: number | undefined): string | undefined {
 }
 
 function jobMatchesRequestedRole(role: ScrapeOptions['role'], job: ScrapedJob): boolean {
-  if (!role || role === 'all' || role === 'internship' || role === 'unknown') return true;
-  return classifyRole(job.title, job.description) === role;
+  if (!role || role === 'unknown' || role === 'internship') return true;
+  if (role === 'all') return isLikelyTechJobTitle(job.title);
+  const classifiedRole = classifyRole(job.title, job.description);
+  return classifiedRole === role;
 }
 
 function humanizeCompanySlug(slug: string): string {

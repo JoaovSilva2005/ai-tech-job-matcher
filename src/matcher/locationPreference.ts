@@ -6,7 +6,7 @@ export interface LocationPreference {
   distanceKm?: number;
 }
 
-export interface ParsedLocation {
+interface ParsedLocation {
   normalized: string;
   city?: string;
   state?: string;
@@ -134,7 +134,7 @@ export function scoreLocationPreference(job: ScrapedJob, userLocation: string): 
   return { score: 0, label: 'no location match' };
 }
 
-export function parseLocation(value: string): ParsedLocation {
+function parseLocation(value: string): ParsedLocation {
   const normalized = normalize(value);
   if (!normalized) return { normalized: '' };
 

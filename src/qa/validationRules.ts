@@ -1,8 +1,8 @@
 import type { JobIssue, ScrapedJob } from '../scraper/types';
 import { isValidUrl } from '../utils/url';
 
-export const MIN_DESCRIPTION_LENGTH = 100;
-export const GENERIC_DESCRIPTION_LENGTH = 180;
+const MIN_DESCRIPTION_LENGTH = 100;
+const GENERIC_DESCRIPTION_LENGTH = 180;
 
 export type ValidationRule = (job: ScrapedJob) => JobIssue | null;
 

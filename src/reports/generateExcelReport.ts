@@ -12,7 +12,7 @@ import { RECOMMENDATION_LABELS } from '../matcher/recommendation';
 import { ensureDir } from '../utils/fileSystem';
 import { formatDateHuman } from '../utils/date';
 
-export const EXCEL_REPORT_FILENAME = 'job-match-report.xlsx';
+const EXCEL_REPORT_FILENAME = 'job-match-report.xlsx';
 
 function joinList(items: string[], max = 8): string {
   if (items.length === 0) return '-';

@@ -55,7 +55,12 @@ test.describe('removeDuplicateJobs', () => {
     const jobs = [
       makeJob({ id: 'a', title: 'QA Junior Engineer', url: 'https://x.example.com/1' }),
       makeJob({ id: 'b', title: 'Frontend Developer', url: 'https://x.example.com/2' }),
-      makeJob({ id: 'c', title: 'QA Junior Engineer', company: 'Other Co', url: 'https://x.example.com/3' }),
+      makeJob({
+        id: 'c',
+        title: 'QA Junior Engineer',
+        company: 'Other Co',
+        url: 'https://x.example.com/3',
+      }),
     ];
     const { unique, duplicates } = removeDuplicateJobs(jobs);
     expect(unique).toHaveLength(3);

@@ -196,7 +196,8 @@ export function detectEnglishLevel(text: string): EnglishLevel {
   for (const pattern of patterns) {
     const found = lower.match(pattern)?.[1];
     if (!found) continue;
-    if (/fluent|fluente|native/.test(found)) return 'fluent';
+    if (/native/.test(found)) return 'native';
+    if (/fluent|fluente/.test(found)) return 'fluent';
     if (/advanced|avançado|avancado/.test(found)) return 'advanced';
     if (/intermediate|intermediário|intermediario/.test(found)) return 'intermediate';
     if (/basic|básico|basico/.test(found)) return 'basic';
@@ -242,7 +243,7 @@ export function fallbackAnalyzeResume(resumeText: string): ResumeAnalysis {
   if (qaSkills.length > 0) {
     strengths.push(`QA-oriented skills: ${qaSkills.slice(0, 4).join(', ')}`);
   }
-  if (englishLevel === 'advanced' || englishLevel === 'fluent') {
+  if (['advanced', 'fluent', 'native'].includes(englishLevel)) {
     strengths.push(`Strong English level (${englishLevel})`);
   }
   if (containsKeyword(resumeText, 'remote')) {
@@ -271,7 +272,7 @@ export function fallbackAnalyzeResume(resumeText: string): ResumeAnalysis {
     languages.push({ language: 'English', level: englishLevel });
   }
   if (/portugu[eê]s|portuguese/i.test(resumeText)) {
-    languages.push({ language: 'Portuguese', level: 'fluent' });
+    languages.push({ language: 'Portuguese', level: 'native' });
   }
 
   const summary =

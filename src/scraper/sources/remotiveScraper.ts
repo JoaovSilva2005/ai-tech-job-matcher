@@ -1,7 +1,7 @@
 import type { ScrapedJob, ScrapeOptions, TechRole } from '../types';
 import { nowIso } from '../../utils/date';
 import { normalizeWhitespace, stripHtml } from '../../utils/text';
-import { classifyRole } from '../../matcher/classifyRole';
+import { classifyRole, isLikelyTechJobTitle } from '../../matcher/classifyRole';
 import { logger } from '../../utils/logger';
 import { fetchPublicJson } from './publicApiUtils';
 import { SourceUnavailableError } from '../sourceErrors';
@@ -29,8 +29,8 @@ interface RemotiveResponse {
  * Client-side role filter. Remotive's free public API returns a fixed feed of
  * the most recent jobs across ALL categories and ignores query parameters
  * (category/search/limit), so we classify each job with the project's own
- * classifier and keep only the requested role. For "all"/"internship" we keep
- * everything and let the main pipeline apply the precise (analysis-based) filter.
+ * classifier and keep only the requested role. "all" means every recognized
+ * tech role; internship remains broad for the pipeline's detailed analysis.
  *
  * Exposed for unit testing.
  */
@@ -39,18 +39,18 @@ export function jobMatchesRole(
   title: string,
   description: string
 ): boolean {
-  if (!role || role === 'all' || role === 'internship' || role === 'unknown') {
-    return true;
-  }
-  return classifyRole(title, description) === role;
+  if (!role || role === 'unknown' || role === 'internship') return true;
+  if (role === 'all') return isLikelyTechJobTitle(title);
+  const classifiedRole = classifyRole(title, description);
+  return classifiedRole === role;
 }
 
 /**
  * Best-effort real source (Remotive public API — no key, no login).
  * Ethics mirror the RemoteOK source: a single GET request, honest User-Agent,
- * timeout, low result cap and graceful failure (returns an empty list, never
- * retries or bypasses anything). Each job keeps its original Remotive URL so
- * attribution and the apply link are preserved.
+ * timeout, low result cap and explicit failure reporting. It never retries or
+ * bypasses anything. Each job keeps its original Remotive URL so attribution
+ * and the apply link are preserved.
  */
 export async function scrapeRemotiveJobs(options: ScrapeOptions): Promise<ScrapedJob[]> {
   const payload = await fetchPublicJson<unknown>(REMOTIVE_API, 'Remotive');

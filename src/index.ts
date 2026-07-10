@@ -15,6 +15,7 @@ import { calculateDataQualityScore } from './qa/dataQualityScore';
 import { calculateMatchScore, JobMatchResult } from './matcher/calculateMatchScore';
 import { getRecommendation } from './matcher/recommendation';
 import { scoreLocationPreference } from './matcher/locationPreference';
+import { isLikelyTechJobTitle } from './matcher/classifyRole';
 import { generateExcelReport } from './reports/generateExcelReport';
 import { generateMarkdownSummary } from './reports/generateMarkdownSummary';
 import type {
@@ -322,10 +323,12 @@ function filterByRole(
   analyses: Map<string, JobAnalysis>,
   role: TechRole
 ): ScrapedJob[] {
-  if (role === 'all') return jobs;
   return jobs.filter((job) => {
     const analysis = analyses.get(job.id);
     if (!analysis) return false;
+    if (role === 'all') {
+      return analysis.role !== 'unknown' && isLikelyTechJobTitle(job.title);
+    }
     if (role === 'internship') {
       return analysis.role === 'internship' || analysis.seniorityLevel === 'intern';
     }

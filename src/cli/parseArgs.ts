@@ -9,7 +9,7 @@ const USAGE = `
 AI Tech Job Matcher
 
 Usage:
-  npm run dev -- -- --resume <path> [--role <role>] [--source <source>] [--work-mode <mode>] [--location <city>] [--job-file <path>] [--limit <n>] [--output <dir>] [--fallback] [--debug]
+  npx tsx src/index.ts --resume <path> [--role <role>] [--source <source>] [--work-mode <mode>] [--location <city>] [--job-file <path>] [--limit <n>] [--output <dir>] [--fallback] [--debug]
 
 Options:
   --resume    Path to the resume file (${SUPPORTED_RESUME_EXTENSIONS.join(', ')})   [required]
@@ -19,8 +19,8 @@ Options:
   --location  Candidate city/address used to prioritize nearby jobs
   --job-file  Analyze one specific job description instead of collecting jobs
   --job-desc  Specific job description text (alternative to --job-file)
-  --job-title Specific job title                            [default: Specific Job]
-  --job-company Specific job company                        [default: Company not provided]
+  --job-title Specific job title (required with --job-file/--job-desc)
+  --job-company Specific job company (required with --job-file/--job-desc)
   --job-url   Original application URL for the specific job
   --limit     Max number of jobs to collect                    [default: 16]
   --output    Output directory                                 [default: ./output]

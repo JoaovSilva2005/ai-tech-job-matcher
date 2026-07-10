@@ -15,9 +15,9 @@ export type WorkMode = 'remote' | 'hybrid' | 'onsite' | 'unknown';
 
 export type SeniorityLevel = 'intern' | 'junior' | 'mid' | 'senior' | 'unknown';
 
-export type EnglishLevel = 'basic' | 'intermediate' | 'advanced' | 'fluent' | 'unknown';
+export type EnglishLevel = 'basic' | 'intermediate' | 'advanced' | 'fluent' | 'native' | 'unknown';
 
-export type JobAvailability = 'active' | 'unknown' | 'closed';
+type JobAvailability = 'active' | 'unknown' | 'closed';
 
 export interface ScrapedJob {
   id: string;

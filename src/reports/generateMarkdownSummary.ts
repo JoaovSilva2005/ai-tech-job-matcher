@@ -4,7 +4,7 @@ import { RECOMMENDATION_LABELS } from '../matcher/recommendation';
 import { ensureDir, writeTextFile } from '../utils/fileSystem';
 import { formatDateHuman } from '../utils/date';
 
-export const MARKDOWN_SUMMARY_FILENAME = 'execution-summary.md';
+const MARKDOWN_SUMMARY_FILENAME = 'execution-summary.md';
 
 export function generateMarkdownSummary(data: ReportData, outputDir: string): string {
   ensureDir(outputDir);

@@ -1,13 +1,7 @@
 import type { TechRole, WorkMode } from '../scraper/types';
 
 export type JobSource =
-  | 'sample'
-  | 'remoteok'
-  | 'remotive'
-  | 'themuse'
-  | 'greenhouse'
-  | 'gupy'
-  | 'lever';
+  'sample' | 'remoteok' | 'remotive' | 'themuse' | 'greenhouse' | 'gupy' | 'lever';
 
 export type PublicJobSource = Exclude<JobSource, 'sample'>;
 

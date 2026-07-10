@@ -1,13 +1,13 @@
 import type ExcelJS from 'exceljs';
 import type { Recommendation } from '../matcher/recommendation';
 
-export const HEADER_FILL: ExcelJS.Fill = {
+const HEADER_FILL: ExcelJS.Fill = {
   type: 'pattern',
   pattern: 'solid',
   fgColor: { argb: 'FF2F4F6F' },
 };
 
-export const HEADER_FONT: Partial<ExcelJS.Font> = {
+const HEADER_FONT: Partial<ExcelJS.Font> = {
   bold: true,
   color: { argb: 'FFFFFFFF' },
   size: 11,

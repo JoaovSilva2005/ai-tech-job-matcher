@@ -22,7 +22,13 @@ export function explainMatch(input: ExplainInput): string {
   const { score, matchedSkills, missingSkills, criticalGaps, analysis } = input;
 
   const strengthLabel =
-    score >= 85 ? 'Strong match' : score >= 70 ? 'Good match' : score >= 50 ? 'Partial match' : 'Weak match';
+    score >= 85
+      ? 'Strong match'
+      : score >= 70
+        ? 'Good match'
+        : score >= 50
+          ? 'Partial match'
+          : 'Weak match';
 
   const parts: string[] = [];
 
@@ -37,7 +43,8 @@ export function explainMatch(input: ExplainInput): string {
   const englishOk =
     !analysis.englishRequired ||
     input.resume.languages.some(
-      (l) => l.language.toLowerCase() === 'english' && ['advanced', 'fluent'].includes(l.level)
+      (l) =>
+        l.language.toLowerCase() === 'english' && ['advanced', 'fluent', 'native'].includes(l.level)
     );
   if (analysis.englishRequired && englishOk) {
     parts.push('and meets the English requirement');

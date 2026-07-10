@@ -1,5 +1,5 @@
 import type { ScrapedJob, ScrapeOptions } from '../types';
-import { classifyRole } from '../../matcher/classifyRole';
+import { classifyRole, isLikelyTechJobTitle } from '../../matcher/classifyRole';
 import { nowIso } from '../../utils/date';
 import { normalizeWhitespace, stripHtml } from '../../utils/text';
 import { logger } from '../../utils/logger';
@@ -96,8 +96,10 @@ function normalizePublishedAt(value: string | undefined): string | undefined {
 }
 
 function jobMatchesRequestedRole(role: ScrapeOptions['role'], job: ScrapedJob): boolean {
-  if (!role || role === 'all' || role === 'internship' || role === 'unknown') return true;
-  return classifyRole(job.title, job.description) === role;
+  if (!role || role === 'unknown' || role === 'internship') return true;
+  if (role === 'all') return isLikelyTechJobTitle(job.title);
+  const classifiedRole = classifyRole(job.title, job.description);
+  return classifiedRole === role;
 }
 
 function slugForId(title: string, company: string): string {

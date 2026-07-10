@@ -35,6 +35,7 @@ const ENGLISH_ORDER: Record<string, number> = {
   intermediate: 2,
   advanced: 3,
   fluent: 4,
+  native: 5,
 };
 
 const RELATED_ROLES: Partial<Record<TechRole, TechRole[]>> = {
@@ -171,7 +172,11 @@ export function calculateMatchScore(
   }
 
   // 5. Required tools overlap (up to 10)
-  const jobTools = normalizeSkills([...analysis.tools, ...analysis.automationTools, ...analysis.apiTools]);
+  const jobTools = normalizeSkills([
+    ...analysis.tools,
+    ...analysis.automationTools,
+    ...analysis.apiTools,
+  ]);
   if (jobTools.length > 0) {
     const matchedTools = jobTools.filter((t) => candidateSkillSet.has(t.toLowerCase()));
     score += Math.round((matchedTools.length / jobTools.length) * 10);

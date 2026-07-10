@@ -3,7 +3,7 @@ import { nowIso } from '../../utils/date';
 import { normalizeWorkMode } from '../normalizeWorkMode';
 import { normalizeWhitespace, stripHtml } from '../../utils/text';
 import { logger } from '../../utils/logger';
-import { classifyRole } from '../../matcher/classifyRole';
+import { classifyRole, isLikelyTechJobTitle } from '../../matcher/classifyRole';
 import { fetchPublicJson } from './publicApiUtils';
 import { SourceUnavailableError } from '../sourceErrors';
 
@@ -27,8 +27,8 @@ interface RemoteOkEntry {
  * link back, which the generated report preserves through the original URL.
  *
  * Ethics: a single GET request with a low item cap, honest User-Agent and a
- * timeout. Any failure returns an empty list so the pipeline handles network
- * availability gracefully.
+ * timeout. Failures are reported explicitly so health checks can distinguish
+ * an outage from a valid empty response.
  */
 export async function scrapeRemoteOkJobs(options: ScrapeOptions): Promise<ScrapedJob[]> {
   const limit = Math.min(options.limit, MAX_REMOTE_JOBS);
@@ -74,8 +74,10 @@ function jobMatchesRequestedRole(
   title: string,
   description: string
 ): boolean {
-  if (!role || role === 'all' || role === 'internship' || role === 'unknown') return true;
-  return classifyRole(title, description) === role;
+  if (!role || role === 'unknown' || role === 'internship') return true;
+  if (role === 'all') return isLikelyTechJobTitle(title);
+  const classifiedRole = classifyRole(title, description);
+  return classifiedRole === role;
 }
 
 function normalizeRemoteOkUrl(url: string | undefined, id: string | number | undefined): string {

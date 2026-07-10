@@ -1,9 +1,5 @@
 export type Recommendation =
-  | 'strong_apply'
-  | 'apply'
-  | 'study_before_applying'
-  | 'low_priority'
-  | 'not_recommended';
+  'strong_apply' | 'apply' | 'study_before_applying' | 'low_priority' | 'not_recommended';
 
 /**
  * Score bands:

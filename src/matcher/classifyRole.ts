@@ -37,7 +37,18 @@ const ROLE_SIGNALS: RoleSignals[] = [
   },
   {
     role: 'backend',
-    keywords: ['backend', 'back-end', 'back end', 'node.js', 'java', 'python', 'api', 'sql', 'spring', 'microservices'],
+    keywords: [
+      'backend',
+      'back-end',
+      'back end',
+      'node.js',
+      'java',
+      'python',
+      'api',
+      'sql',
+      'spring',
+      'microservices',
+    ],
   },
   {
     role: 'mobile',
@@ -45,20 +56,122 @@ const ROLE_SIGNALS: RoleSignals[] = [
   },
   {
     role: 'data',
-    keywords: ['power bi', 'data analyst', 'data analysis', 'analytics', 'data engineer', 'etl', 'dashboard', 'tableau'],
+    keywords: [
+      'power bi',
+      'data analyst',
+      'data analysis',
+      'analytics',
+      'data engineer',
+      'etl',
+      'dashboard',
+      'tableau',
+    ],
   },
   {
     role: 'devops',
-    keywords: ['devops', 'docker', 'kubernetes', 'ci/cd', 'cloud', 'aws', 'azure', 'terraform', 'sre', 'infrastructure'],
+    keywords: [
+      'devops',
+      'docker',
+      'kubernetes',
+      'ci/cd',
+      'cloud',
+      'aws',
+      'azure',
+      'terraform',
+      'sre',
+      'infrastructure',
+    ],
   },
   {
     role: 'support',
-    keywords: ['support', 'help desk', 'helpdesk', 'service desk', 'troubleshooting', 'technical support'],
+    keywords: [
+      'support',
+      'help desk',
+      'helpdesk',
+      'service desk',
+      'troubleshooting',
+      'technical support',
+    ],
   },
 ];
 
 const FULLSTACK_KEYWORDS = ['full stack', 'fullstack', 'full-stack'];
 const INTERNSHIP_KEYWORDS = ['intern', 'internship', 'estágio', 'estagio', 'estagiário', 'trainee'];
+const TECH_TITLE_KEYWORDS = [
+  'software engineer',
+  'software developer',
+  'software development',
+  'developer',
+  'engenheiro de software',
+  'engenheira de software',
+  'desenvolvedor',
+  'desenvolvedora',
+  'qa',
+  'quality assurance',
+  'software quality',
+  'tester',
+  'sdet',
+  'test engineer',
+  'test analyst',
+  'test automation',
+  'analista de testes',
+  'analista de qualidade',
+  'engenheiro de qualidade',
+  'engenheira de qualidade',
+  'frontend',
+  'front-end',
+  'backend',
+  'back-end',
+  'full stack',
+  'fullstack',
+  'web developer',
+  'mobile developer',
+  'android developer',
+  'ios developer',
+  'data analyst',
+  'data engineer',
+  'data scientist',
+  'analista de dados',
+  'engenheiro de dados',
+  'cientista de dados',
+  'machine learning',
+  'ai engineer',
+  'ai analyst',
+  'devops',
+  'sre',
+  'cloud engineer',
+  'cloud architect',
+  'platform engineer',
+  'software architect',
+  'solution architect',
+  'solutions architect',
+  'infrastructure engineer',
+  'infrastructure analyst',
+  'analista de infraestrutura',
+  'network engineer',
+  'network analyst',
+  'analista de redes',
+  'systems administrator',
+  'system administrator',
+  'systems analyst',
+  'system analyst',
+  'analista de sistemas',
+  'it analyst',
+  'analista de ti',
+  'administrador de sistemas',
+  'cybersecurity',
+  'security engineer',
+  'technical support',
+  'application support',
+  'analista de suporte',
+  'it support',
+  'service desk',
+  'help desk',
+  'support engineer',
+  'it/av',
+  'database administrator',
+  'dba',
+];
 
 function scoreRole(keywords: string[], title: string, description: string): number {
   let score = 0;
@@ -73,6 +186,10 @@ export function isInternshipJob(jobTitle: string, description: string): boolean 
   return INTERNSHIP_KEYWORDS.some(
     (k) => containsKeyword(jobTitle, k) || containsKeyword(description, k)
   );
+}
+
+export function isLikelyTechJobTitle(jobTitle: string): boolean {
+  return TECH_TITLE_KEYWORDS.some((keyword) => containsKeyword(jobTitle, keyword));
 }
 
 export function classifyRole(jobTitle: string, description: string): TechRole {

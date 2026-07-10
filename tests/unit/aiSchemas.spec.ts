@@ -76,6 +76,12 @@ test.describe('AI response schemas', () => {
 
   test('accepts complete, useful analyses', () => {
     expect(resumeAnalysisSchema.safeParse(validResumeAnalysis).success).toBe(true);
+    expect(
+      resumeAnalysisSchema.safeParse({
+        ...validResumeAnalysis,
+        languages: [{ language: 'Portuguese', level: 'native' }],
+      }).success
+    ).toBe(true);
     expect(jobAnalysisSchema.safeParse(validJobAnalysis).success).toBe(true);
   });
 

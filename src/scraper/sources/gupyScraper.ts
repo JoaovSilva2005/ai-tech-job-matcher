@@ -1,5 +1,5 @@
 import { getEnv } from '../../config/env';
-import { classifyRole } from '../../matcher/classifyRole';
+import { classifyRole, isLikelyTechJobTitle } from '../../matcher/classifyRole';
 import { nowIso } from '../../utils/date';
 import { normalizeWhitespace, stripHtml } from '../../utils/text';
 import type { ScrapedJob, ScrapeOptions, WorkMode } from '../types';
@@ -285,8 +285,10 @@ function jobMatchesRequestedRole(
   title: string,
   description: string
 ): boolean {
-  if (!role || role === 'all' || role === 'unknown') return true;
-  return classifyRole(title, description) === role;
+  if (!role || role === 'unknown' || role === 'internship') return true;
+  if (role === 'all') return isLikelyTechJobTitle(title);
+  const classifiedRole = classifyRole(title, description);
+  return classifiedRole === role;
 }
 
 function candidateMayMatchRequestedRole(
@@ -294,7 +296,8 @@ function candidateMayMatchRequestedRole(
   title: string,
   department: string
 ): boolean {
-  if (!role || role === 'all' || role === 'unknown') return true;
+  if (!role || role === 'unknown') return true;
+  if (role === 'all') return isLikelyTechJobTitle(title);
   const preliminaryRole = classifyRole(title, department);
   return preliminaryRole === 'unknown' || preliminaryRole === role;
 }

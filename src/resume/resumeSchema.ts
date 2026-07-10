@@ -8,7 +8,7 @@ export interface ParsedResume {
   characterCount: number;
 }
 
-export interface ResumeLanguage {
+interface ResumeLanguage {
   language: string;
   level: EnglishLevel;
 }
@@ -30,7 +30,7 @@ export interface ResumeAnalysis {
   fallbackMode: boolean;
 }
 
-const levelSchema = z.enum(['basic', 'intermediate', 'advanced', 'fluent', 'unknown']);
+const levelSchema = z.enum(['basic', 'intermediate', 'advanced', 'fluent', 'native', 'unknown']);
 const senioritySchema = z.enum(['intern', 'junior', 'mid', 'senior', 'unknown']);
 const roleSchema = z.enum([
   'qa',

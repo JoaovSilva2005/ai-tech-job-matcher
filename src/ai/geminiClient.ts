@@ -11,7 +11,7 @@ interface GeminiGenerateContentResponse {
 }
 
 /**
- * Minimal Gemini generateContent client using global fetch (Node 18+).
+ * Minimal Gemini generateContent client using global fetch (Node 22+).
  * JSON mode keeps the response easier to validate with the existing Zod schemas.
  */
 export async function callGemini(systemPrompt: string, userPrompt: string): Promise<string> {
