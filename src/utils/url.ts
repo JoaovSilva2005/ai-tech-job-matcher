@@ -8,14 +8,22 @@ export function isValidUrl(value: string): boolean {
   }
 }
 
+export function isLikelyRealJobUrl(value: string): boolean {
+  if (!isValidUrl(value)) return false;
+  const hostname = new URL(value).hostname.toLowerCase();
+  return !(
+    hostname === 'example.com' ||
+    hostname.endsWith('.example.com') ||
+    hostname.endsWith('.example')
+  );
+}
+
 export function normalizeUrl(value: string): string {
   try {
     const url = new URL(value);
     url.hash = '';
     // strip common tracking params
-    ['utm_source', 'utm_medium', 'utm_campaign', 'ref'].forEach((p) =>
-      url.searchParams.delete(p)
-    );
+    ['utm_source', 'utm_medium', 'utm_campaign', 'ref'].forEach((p) => url.searchParams.delete(p));
     return url.toString().replace(/\/$/, '');
   } catch {
     return value.trim();

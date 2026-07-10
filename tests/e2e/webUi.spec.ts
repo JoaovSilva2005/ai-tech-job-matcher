@@ -48,6 +48,7 @@ test.describe('web UI real user flow', () => {
   test.afterEach(async () => {
     await new Promise<void>((resolve, reject) => {
       server.close((error) => (error ? reject(error) : resolve()));
+      server.closeAllConnections();
     });
     fs.rmSync(tempRoot, { recursive: true, force: true });
     process.env.AI_PROVIDER = originalAiProvider;
@@ -66,15 +67,19 @@ test.describe('web UI real user flow', () => {
     await expect(page.locator('#fileName')).toHaveText('resume.txt');
 
     await page.selectOption('#roleSelect', 'qa');
-    await page.selectOption('#sourceSelect', 'gupy');
-    await page.selectOption('#workModeSelect', 'remote');
     await page.fill('#locationInput', 'Campinas, SP');
+    await page.getByText('Analyze one job', { exact: true }).click();
+    await expect(page.locator('input[name="analysisMode"][value="specific"]')).toBeChecked();
+    await expect(page.locator('#specificJobFields')).toBeVisible();
+    await expect(page.locator('#sourceSelect')).toBeDisabled();
     await page.fill('#jobTitleInput', 'Analista de QA Jr');
     await page.fill('#jobCompanyInput', 'Venturus');
-    await page.fill('#jobUrlInput', 'https://jobs.example.com/venturus/qa-jr');
+    await page.fill('#jobUrlInput', 'https://venturus.gupy.io/jobs/123456');
+    await page.fill('#jobLocationInput', 'Remote - Brazil');
+    await page.selectOption('#jobWorkModeSelect', 'remote');
     await page.fill('#jobDescriptionInput', JOB_DESCRIPTION);
 
-    await page.getByRole('button', { name: 'Analyze jobs' }).click();
+    await page.getByRole('button', { name: 'Analyze this job' }).click();
 
     await expect(page.getByRole('heading', { name: 'Ranked matches' })).toBeVisible({
       timeout: 20_000,
@@ -86,7 +91,7 @@ test.describe('web UI real user flow', () => {
     await expect(page.locator('.chip.match', { hasText: 'Playwright' })).toBeVisible();
     await expect(page.locator('.apply-link')).toHaveAttribute(
       'href',
-      'https://jobs.example.com/venturus/qa-jr'
+      'https://venturus.gupy.io/jobs/123456'
     );
 
     const excelDownload = page.waitForEvent('download');

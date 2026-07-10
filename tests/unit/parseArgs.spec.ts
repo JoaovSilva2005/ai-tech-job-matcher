@@ -18,9 +18,9 @@ test.describe('parseArgs', () => {
       '--job-title',
       'QA Jr',
       '--job-company',
-      'Example Co',
+      'Venturus',
       '--job-url',
-      'https://jobs.example.com/qa-jr',
+      'https://venturus.gupy.io/jobs/123456',
       '--job-work-mode',
       'remote',
     ]);
@@ -29,8 +29,8 @@ test.describe('parseArgs', () => {
     expect(options.manualJob).toEqual(
       expect.objectContaining({
         title: 'QA Jr',
-        company: 'Example Co',
-        url: 'https://jobs.example.com/qa-jr',
+        company: 'Venturus',
+        url: 'https://venturus.gupy.io/jobs/123456',
         workMode: 'remote',
         description: fs.readFileSync(JOB_FILE, 'utf-8').trim(),
       })
@@ -42,11 +42,50 @@ test.describe('parseArgs', () => {
       '--resume',
       RESUME_PATH,
       '--job-desc',
-      'Specific QA job description with enough useful details for the analyzer.',
+      'Specific junior QA job description with Playwright, API testing, manual testing, bug reports, Git and enough useful details for the analyzer.',
+      '--job-title',
+      'QA Jr',
+      '--job-company',
+      'Venturus',
+      '--job-url',
+      'https://venturus.gupy.io/jobs/123456',
+      '--job-location',
+      'Remote - Brazil',
     ]);
 
-    expect(options.manualJob?.title).toBe('Specific Job');
-    expect(options.manualJob?.company).toBe('Company not provided');
-    expect(options.manualJob?.url).toBe('https://example.com/manual-job');
+    expect(options.manualJob).toEqual(
+      expect.objectContaining({
+        title: 'QA Jr',
+        company: 'Venturus',
+        url: 'https://venturus.gupy.io/jobs/123456',
+        location: 'Remote - Brazil',
+      })
+    );
+  });
+
+  test('rejects specific jobs without real identifying data', () => {
+    expect(() =>
+      parseArgs([
+        '--resume',
+        RESUME_PATH,
+        '--job-desc',
+        'Specific junior QA job description with Playwright, API testing, manual testing, bug reports, Git and enough useful details for the analyzer.',
+      ])
+    ).toThrow('--job-title is required');
+
+    expect(() =>
+      parseArgs([
+        '--resume',
+        RESUME_PATH,
+        '--job-desc',
+        'Specific junior QA job description with Playwright, API testing, manual testing, bug reports, Git and enough useful details for the analyzer.',
+        '--job-title',
+        'QA Jr',
+        '--job-company',
+        'Example Co',
+        '--job-url',
+        'https://example.com/job',
+      ])
+    ).toThrow('--job-url must be a real');
   });
 });

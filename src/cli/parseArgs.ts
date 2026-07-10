@@ -2,6 +2,7 @@ import { SELECTABLE_SOURCES, VALID_ROLES, VALID_WORK_MODES } from './cliTypes';
 import type { CliOptions, ManualJobInput, SelectableSource, WorkModeFilter } from './cliTypes';
 import type { TechRole, WorkMode } from '../scraper/types';
 import { SUPPORTED_RESUME_EXTENSIONS } from '../resume/parseResume';
+import { isLikelyRealJobUrl } from '../utils/url';
 import fs from 'fs';
 
 const USAGE = `
@@ -28,8 +29,6 @@ Options:
 `;
 
 export class CliError extends Error {}
-
-const DEFAULT_MANUAL_JOB_URL = 'https://example.com/manual-job';
 
 export function printUsage(): void {
   console.log(USAGE);
@@ -151,11 +150,22 @@ export function parseArgs(argv: string[]): CliOptions {
   }
 
   if (manualJob.description?.trim()) {
+    const title = manualJob.title?.trim();
+    const company = manualJob.company?.trim();
+    const url = manualJob.url?.trim();
+    if (!title) throw new CliError('--job-title is required when analyzing a specific job');
+    if (!company) throw new CliError('--job-company is required when analyzing a specific job');
+    if (!url || !isLikelyRealJobUrl(url)) {
+      throw new CliError('--job-url must be a real HTTP(S) application URL');
+    }
+    if (manualJob.description.trim().length < 100) {
+      throw new CliError('Specific job description must contain at least 100 characters');
+    }
     options.manualJob = {
-      title: manualJob.title?.trim() || 'Specific Job',
-      company: manualJob.company?.trim() || 'Company not provided',
-      url: manualJob.url?.trim() || DEFAULT_MANUAL_JOB_URL,
-      location: manualJob.location?.trim() || options.userLocation.trim() || 'Not specified',
+      title,
+      company,
+      url,
+      location: manualJob.location?.trim() || 'Not specified',
       workMode: manualJob.workMode ?? 'unknown',
       description: manualJob.description.trim(),
     };

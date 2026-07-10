@@ -11,9 +11,9 @@ test.describe('web page', () => {
     expect(html).toContain('apply-link');
     expect(html).toContain('Apply ↗');
 
-    // report download entry points wired to the server endpoints
-    expect(html).toContain('/api/download/excel');
-    expect(html).toContain('/api/download/summary');
+    // report download entry points consume run-specific URLs returned by the server
+    expect(html).toContain('data.downloadUrl');
+    expect(html).toContain('data.markdownUrl');
   });
 
   test('offers only public sources (no sample) with Gupy as default', () => {
@@ -37,9 +37,21 @@ test.describe('web page', () => {
     expect(html).toContain('name="jobTitle"');
     expect(html).toContain('name="jobCompany"');
     expect(html).toContain('name="jobUrl"');
-    expect(html).toContain('fd.append("workMode"');
-    expect(html).toContain('fd.append("userLocation"');
-    expect(html).toContain('fd.append("jobDescription"');
+    expect(html).toContain('name="jobLocation"');
+    expect(html).toContain('name="jobWorkMode"');
+    expect(html).toContain('name="analysisMode"');
+    expect(html).toContain("fd.append('workMode'");
+    expect(html).toContain("fd.append('userLocation'");
+    expect(html).toContain("fd.append('jobDescription'");
+  });
+
+  test('separates public search from specific-job analysis', () => {
+    const html = indexHtml();
+
+    expect(html).toContain('Search public jobs');
+    expect(html).toContain('Analyze one job');
+    expect(html).toContain('id="specificJobFields"');
+    expect(html).toContain('function syncAnalysisMode()');
   });
 
   test('does not render mock The Muse results when the backend is unreachable', () => {
