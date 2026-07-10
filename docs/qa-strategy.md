@@ -1,77 +1,54 @@
-# QA Strategy — AI Tech Job Matcher
+# QA Strategy
 
-This project treats scraped data the way a QA engineer treats an application under test:
-nothing is trusted until it is validated, and every quality decision is observable in the
-final report.
+The project treats resumes, external APIs, AI responses, and generated files as untrusted boundaries. Quality decisions are explicit and testable.
 
-## Data Validation
+## Data Quality Gate
 
-Every scraped job passes through a rule-based validation gate (`src/qa/validationRules.ts`)
-before analysis:
+Every job is checked before ranking:
 
-- Title and company must not be empty (**high** severity).
-- URL must be a valid http/https URL (**high**).
-- Description must have at least 100 characters (**medium**) and is flagged as generic when
-  it is suspiciously short (**low**).
-- Work mode must normalize to remote/hybrid/onsite (**low** when unknown).
-- Scrape timestamp must be a valid ISO date (**low**).
+| Rule                                                | Severity |
+| --------------------------------------------------- | -------- |
+| Missing title or company                            | High     |
+| Invalid application URL                             | High     |
+| Closed or expired posting                           | High     |
+| Description under 100 characters                    | Medium   |
+| Generic description under 180 characters            | Low      |
+| Unknown work mode or availability                   | Low      |
+| Invalid collection/publication/expiration timestamp | Low      |
+| Publication older than 180 days                     | Low      |
 
-Jobs with any high severity issue are marked `invalid` and excluded from the ranking; medium
-issues mark the job `needs_review` but keep it visible. All issues land in the **QA Issues**
-sheet of the Excel report — evidence, not silent filtering.
+High-severity issues make a job `invalid` and exclude it from ranking. Medium issues produce `needs_review`. Every issue remains visible in JSON, the web UI, and the Excel `QA Issues` sheet.
 
-## Error Handling
+Data quality starts at 100 and subtracts 30, 15, or 5 points for high, medium, or low issues. This score measures source-data confidence, not candidate compatibility.
 
-- CLI arguments are validated with explicit messages and usage help (`CliError`).
-- Resume parsing fails fast with actionable errors (file not found, unsupported format,
-  content too short).
-- AI calls are wrapped: invalid JSON triggers one self-fix retry, then a fallback to the
-  local analyzer. A missing API key never breaks the run.
-- Best-effort sources (remoteok, remotive, themuse, greenhouse, gupy and lever) catch
-  network/configuration errors and return empty lists with a warning instead of crashing the
-  pipeline.
+## Automated Test Layers
 
-## Logging
+| Layer            | Evidence                                                                                 |
+| ---------------- | ---------------------------------------------------------------------------------------- |
+| Unit             | Parsing, schemas, sanitization, matching, validation, source mappers, request caps       |
+| Integration      | Complete pipeline, fallback behavior, role/work-mode/location filters, artifacts         |
+| API              | Upload validation, report downloads, invalid selectors, run isolation, basic time budget |
+| Browser E2E      | Real upload and specific-job journey, application link, Excel/Markdown downloads         |
+| Accessibility    | Axe checks for serious/critical violations on form and results                           |
+| Responsive       | Mobile viewport assertions and horizontal-overflow check at 390 x 844                    |
+| Live diagnostics | Scheduled public-source health workflow outside the deterministic CI suite               |
 
-- Structured step-by-step logs (`[3/12] Analyzing resume...`) make every stage observable.
-- `--debug` enables verbose logs.
-- Privacy rule: the resume text is never logged; only a sanitized, truncated preview exists
-  for debug purposes.
+Playwright retains screenshots and video on failure and a trace on the first retry. GitHub Actions uploads those artifacts when CI fails.
 
-## Test Automation
+## Failure Handling
 
-- **Unit level**: pure functions (skill normalization, role classification, scoring,
-  validation, dedup, fallback analysis) tested deterministically with Playwright Test.
-- **E2E level**: a real Chromium browser scrapes the local fixture board, then the entire
-  pipeline runs end-to-end and the generated Excel/Markdown/JSON artifacts are opened and
-  asserted.
-- **Web UI level**: a real browser uploads a resume, fills a specific job, waits for ranked
-  results and downloads both generated reports.
-- **Source diagnostics**: `npm run sources:check` checks each public source and reports whether
-  it returned jobs, returned empty, or failed.
-- Config: screenshots only on failure, trace on first retry, video retained on failure —
-  the same evidence discipline expected in professional QA work.
+- CLI and web inputs fail with actionable 4xx messages.
+- Unsupported, oversized, too-short, or too-large resume content is rejected.
+- PDF and DOCX extraction use real generated documents in automated tests.
+- Source HTTP errors and timeouts remain distinguishable from an empty feed.
+- One source failure does not abort `all`; total source failure does.
+- AI calls have bounded timeout, retry, backoff, and concurrency.
+- Invalid provider output is never trusted; local fallback keeps the flow available.
 
-## Evidence Generation
+## Determinism
 
-Every run produces auditable artifacts: raw scraped data (`jobs-raw.json`), analyzed data
-(`jobs-analyzed.json`), match reasoning (`job-matches.json` with explanations) and the QA
-Issues sheet. A reviewer can trace any ranking decision back to its inputs.
+The main suite requires no API key and no live third-party source. HTTP providers are mocked, and the Playwright scraper runs against a local HTML board containing realistic jobs and an intentional duplicate. Live integrations are checked separately so CI failures represent product regressions rather than internet instability.
 
-## Safe Fallback Mode
+## Privacy Assertions
 
-The local keyword analyzer guarantees identical pipeline behavior with zero external
-dependencies. Tests always run in fallback mode, making the suite deterministic and free —
-a deliberate testability decision.
-
-## Data Quality Score
-
-Each job receives a 0–100 quality score (100 minus severity-weighted penalties: high −30,
-medium −15, low −5). The score is reported per job so low-quality sources are visible at a
-glance.
-
-## Duplicate Detection
-
-Jobs are deduplicated by normalized title+company and by normalized URL (tracking parameters
-stripped). The local fixture board intentionally ships one duplicate posting so the behavior is
-demonstrable and covered by tests.
+Tests verify that direct identifiers do not appear in structured analysis or Excel output, uploaded files are removed, concurrent runs stay isolated, and expired report directories are cleaned without deleting unrelated files.

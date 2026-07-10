@@ -1,30 +1,45 @@
-# Test Cases — AI Tech Job Matcher
+# Test Cases
 
-Automated coverage lives in `tests/unit` and `tests/e2e`. Each case below maps to at least one
-automated test (or is verifiable via CLI as noted).
+The executable suite is under `tests/unit` and `tests/e2e`. This table is a recruiter-friendly traceability sample, not a replacement for the test code.
 
-| ID | Title | Steps | Expected Result |
-|----|-------|-------|-----------------|
-| TC-01 | Valid TXT resume | Run pipeline with `--resume samples/sample-resume.txt` | Resume is parsed; skills, seniority and English level are detected |
-| TC-02 | Invalid resume path | Run pipeline with `--resume ./does-not-exist.txt` | Clear error "Resume file not found"; exit code 1; no crash |
-| TC-03 | Unsupported resume format | Run pipeline with a `.png` file as resume | Error listing supported formats (.txt, .md, .pdf, .docx) |
-| TC-04 | Scrape fixture jobs | Run the fixture scraper with limit 50 | ≥16 jobs extracted, all with title, company, URL, work mode, description ≥100 chars |
-| TC-05 | Filter QA jobs | Run with `--role qa` | Ranking contains only jobs classified as `qa` |
-| TC-06 | Filter frontend jobs | Run with `--role frontend` | Ranking contains only jobs classified as `frontend` |
-| TC-07 | Role `all` returns mixed jobs | Run with `--role all` | Ranking contains ≥4 different roles |
-| TC-08 | Remove duplicate jobs | Scrape fixture board (contains intentional duplicate tb-017) | `duplicatesRemoved ≥ 1`; no repeated title+company pair in ranking |
-| TC-09 | Validate required job fields | Feed fixture jobs with empty title / invalid URL (`tests/fixtures/sample-jobs.json`) | High severity issues on `title`/`url`; job status `invalid`; excluded from ranking |
-| TC-10 | Generate fallback resume analysis | Analyze sample resume with no API key | `fallbackMode: true`; JavaScript/TypeScript/Git/SQL/Playwright detected; English `advanced` |
-| TC-11 | Generate fallback job analysis | Analyze QA Playwright fixture job with no API key | Role `qa`, seniority `junior`, Playwright in automationTools, `testingRequired: true` |
-| TC-12 | Calculate match score | Score junior QA resume against junior QA job and against senior job | Scores in 0..100; junior job scores higher; senior job penalized below 50 |
-| TC-13 | Generate Excel report | Run full pipeline | `job-match-report.xlsx` with 6 sheets (Ranking, Details, QA Issues, Resume Analysis, Market Insights, Execution Summary); ranking sorted desc; frozen header; autofilter |
-| TC-14 | Handle missing API key | Set `AI_PROVIDER=openai` with empty key (or default env) | Pipeline completes using local fallback; summary reports fallback mode |
-| TC-15 | Description too short flags review | Feed fixture job with 18-char description | Medium severity issue; status `needs_review` |
-| TC-16 | Markdown summary generation | Run full pipeline | `execution-summary.md` with Top 5, skills, gaps, study plan and QA notes |
-| TC-17 | Intermediate JSONs generation | Run full pipeline | `jobs-raw.json`, `jobs-analyzed.json`, `resume-analysis.json`, `job-matches.json` created and consistent |
-| TC-18 | Privacy: no PII in outputs | Run pipeline with resume containing email/phone | Sanitized values never appear in Excel, Markdown or JSON outputs |
+| ID    | Scenario                                                    | Expected result                                                      |
+| ----- | ----------------------------------------------------------- | -------------------------------------------------------------------- |
+| TC-01 | Parse TXT and Markdown resumes                              | Correct format and extracted text                                    |
+| TC-02 | Parse generated PDF and DOCX resumes                        | Real document text is extracted                                      |
+| TC-03 | Upload missing, unsupported, or over-5-MB resume            | JSON 400 with actionable message                                     |
+| TC-04 | Extract local fixture board with Chromium                   | At least 16 complete jobs are collected                              |
+| TC-05 | Normalize The Muse, Greenhouse, Lever, and Gupy payloads    | Common `ScrapedJob` contract                                         |
+| TC-06 | Public API returns 503 or exceeds timeout                   | Explicit `SourceUnavailableError`                                    |
+| TC-07 | Configure more than five Greenhouse/Lever organizations     | At most five requests per source                                     |
+| TC-08 | Every source in `all` fails                                 | Aggregate fails explicitly                                           |
+| TC-09 | One aggregate source fails or is unconfigured               | Other responding sources still contribute                            |
+| TC-10 | Source returns closed or expired vacancy                    | High issue, invalid status, excluded from ranking                    |
+| TC-11 | Source returns unknown availability or old publication date | Low issue retained as review evidence                                |
+| TC-12 | Duplicate title/company or normalized URL                   | First job kept; duplicate count incremented                          |
+| TC-13 | Filter QA/frontend/all roles                                | Only classified target roles remain                                  |
+| TC-14 | Filter remote/hybrid/on-site jobs                           | Every result matches selected work mode                              |
+| TC-15 | Provide Campinas as candidate location                      | Same-city/nearby hybrid jobs are prioritized                         |
+| TC-16 | Analyze one specific real vacancy                           | Exactly one manual-source match and real apply URL                   |
+| TC-17 | Missing API key                                             | Pipeline completes with local fallback recorded                      |
+| TC-18 | Provider returns invalid or semantically empty JSON         | Strict schema rejects it and fallback is used                        |
+| TC-19 | Provider returns transient failure                          | Bounded retry succeeds or falls back                                 |
+| TC-20 | Analyze several jobs through a provider                     | Configured concurrency limit is respected; order preserved           |
+| TC-21 | Generate Excel                                              | Six sheets, filters, frozen headers, clickable job URLs, QA evidence |
+| TC-22 | Generate Markdown with application links                    | Valid table and links are produced                                   |
+| TC-23 | Persist structured outputs                                  | Four JSON files match pipeline counts                                |
+| TC-24 | Inspect output privacy                                      | Email, phone, name, address, and raw resume text are absent          |
+| TC-25 | Submit two web analyses concurrently                        | Different run IDs and non-overwritten workbooks                      |
+| TC-26 | Download invalid or expired run                             | JSON 404; no cross-directory access                                  |
+| TC-27 | Complete browser journey                                    | Upload, analysis, apply link, Excel and Markdown downloads pass      |
+| TC-28 | Render at 390 x 844                                         | No horizontal overflow; controls stay inside viewport                |
+| TC-29 | Scan form and results with Axe                              | No serious or critical accessibility violations                      |
+| TC-30 | Run specific-job fallback through API                       | Response completes within the 10-second smoke budget                 |
 
-Traceability: TC-01/10 → `fallbackAnalyzer.spec.ts`; TC-04/08 → `sampleScraper.spec.ts`;
-TC-05/06/07/08/09/14/16/17 → `fullPipeline.spec.ts`; TC-09/15 → `validateJob.spec.ts`;
-TC-12 → `calculateMatchScore.spec.ts`; TC-13/18 → `excelReport.spec.ts`;
-TC-02/03 → manual CLI verification (error paths also covered by `parseResume` unit behavior).
+## Traceability
+
+- Resume and privacy: `parseResume.spec.ts`, `sanitizeResume.spec.ts`, `excelReport.spec.ts`
+- AI contracts: `aiSchemas.spec.ts`, `aiHttpClient.spec.ts`, `geminiClient.spec.ts`
+- Source contracts: `publicApiUtils.spec.ts`, `publicJobSources.spec.ts`, `sourceRequestCaps.spec.ts`, `sourceHealth.spec.ts`
+- Matching and QA: `calculateMatchScore.spec.ts`, `locationPreference.spec.ts`, `validateJob.spec.ts`, `duplicateDetector.spec.ts`
+- Pipeline and reports: `fullPipeline.spec.ts`, `excelReport.spec.ts`
+- Web API and UI: `webApi.spec.ts`, `webUi.spec.ts`, `webRuns.spec.ts`

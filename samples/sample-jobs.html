@@ -1,259 +1,378 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <title>TechBoard — Sample Public Job Listings (Fictional)</title>
-  <style>
-    body { font-family: Arial, sans-serif; max-width: 900px; margin: 0 auto; padding: 20px; background: #f5f7fa; }
-    .job-card { background: #fff; border: 1px solid #dde3ea; border-radius: 8px; padding: 16px; margin-bottom: 16px; }
-    .job-title { margin: 0 0 4px; color: #2f4f6f; }
-    .job-meta span { margin-right: 12px; color: #555; font-size: 14px; }
-    .job-description { margin-top: 10px; font-size: 14px; line-height: 1.5; color: #333; white-space: pre-line; }
-    .job-url { font-size: 13px; }
-  </style>
-</head>
-<body>
-  <h1>TechBoard — Sample Job Listings</h1>
-  <p>All companies and positions below are fictional and exist only for demo/testing purposes.</p>
+  <head>
+    <meta charset="UTF-8" />
+    <title>TechBoard — Sample Public Job Listings (Fictional)</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        max-width: 900px;
+        margin: 0 auto;
+        padding: 20px;
+        background: #f5f7fa;
+      }
+      .job-card {
+        background: #fff;
+        border: 1px solid #dde3ea;
+        border-radius: 8px;
+        padding: 16px;
+        margin-bottom: 16px;
+      }
+      .job-title {
+        margin: 0 0 4px;
+        color: #2f4f6f;
+      }
+      .job-meta span {
+        margin-right: 12px;
+        color: #555;
+        font-size: 14px;
+      }
+      .job-description {
+        margin-top: 10px;
+        font-size: 14px;
+        line-height: 1.5;
+        color: #333;
+        white-space: pre-line;
+      }
+      .job-url {
+        font-size: 13px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>TechBoard — Sample Job Listings</h1>
+    <p>All companies and positions below are fictional and exist only for demo/testing purposes.</p>
 
-  <article class="job-card" data-job-id="tb-001">
-    <h2 class="job-title">QA Junior Engineer (Playwright)</h2>
-    <div class="job-meta">
-      <span class="job-company">BlueOrbit Software</span>
-      <span class="job-location">Remote - Brazil</span>
-      <span class="job-work-mode">remote</span>
-    </div>
-    <a class="job-url" href="https://jobs.example.com/blueorbit/qa-junior-playwright">View job</a>
-    <div class="job-description">We are looking for a QA Junior Engineer to join our web platform team. You will write and maintain end-to-end tests with Playwright and TypeScript, create test cases for new features, execute regression testing before releases and report bugs with clear evidence.
-Requirements: basic knowledge of JavaScript or TypeScript, Git, test case writing, bug report skills and intermediate English for documentation.
-Nice to have: Playwright or Cypress exposure, API testing with Postman, CI/CD basics with GitHub Actions.
-This is a junior-friendly position with mentorship from senior QA engineers. Fully remote within Brazil.</div>
-  </article>
+    <article class="job-card" data-job-id="tb-001">
+      <h2 class="job-title">QA Junior Engineer (Playwright)</h2>
+      <div class="job-meta">
+        <span class="job-company">BlueOrbit Software</span>
+        <span class="job-location">Remote - Brazil</span>
+        <span class="job-work-mode">remote</span>
+      </div>
+      <a class="job-url" href="https://jobs.example.com/blueorbit/qa-junior-playwright">View job</a>
+      <div class="job-description">
+        We are looking for a QA Junior Engineer to join our web platform team. You will write and
+        maintain end-to-end tests with Playwright and TypeScript, create test cases for new
+        features, execute regression testing before releases and report bugs with clear evidence.
+        Requirements: basic knowledge of JavaScript or TypeScript, Git, test case writing, bug
+        report skills and intermediate English for documentation. Nice to have: Playwright or
+        Cypress exposure, API testing with Postman, CI/CD basics with GitHub Actions. This is a
+        junior-friendly position with mentorship from senior QA engineers. Fully remote within
+        Brazil.
+      </div>
+    </article>
 
-  <article class="job-card" data-job-id="tb-002">
-    <h2 class="job-title">QA Junior Analyst (Cypress)</h2>
-    <div class="job-meta">
-      <span class="job-company">Nimbus Digital</span>
-      <span class="job-location">Sao Paulo, Brazil</span>
-      <span class="job-work-mode">hybrid</span>
-    </div>
-    <a class="job-url" href="https://jobs.example.com/nimbus/qa-junior-cypress">View job</a>
-    <div class="job-description">Join our quality assurance team to help test a fast-growing e-commerce platform. Daily activities include writing automated tests with Cypress and JavaScript, maintaining the regression testing suite, executing manual testing on new features and logging bugs in Jira.
-Requirements: JavaScript fundamentals, understanding of test cases and test plans, attention to detail, Scrum experience in team projects.
-Nice to have: Cypress hands-on practice, SQL for data validation, basic English.
-Junior level role with structured onboarding. Hybrid model: two days per week at our Sao Paulo office.</div>
-  </article>
+    <article class="job-card" data-job-id="tb-002">
+      <h2 class="job-title">QA Junior Analyst (Cypress)</h2>
+      <div class="job-meta">
+        <span class="job-company">Nimbus Digital</span>
+        <span class="job-location">Sao Paulo, Brazil</span>
+        <span class="job-work-mode">hybrid</span>
+      </div>
+      <a class="job-url" href="https://jobs.example.com/nimbus/qa-junior-cypress">View job</a>
+      <div class="job-description">
+        Join our quality assurance team to help test a fast-growing e-commerce platform. Daily
+        activities include writing automated tests with Cypress and JavaScript, maintaining the
+        regression testing suite, executing manual testing on new features and logging bugs in Jira.
+        Requirements: JavaScript fundamentals, understanding of test cases and test plans, attention
+        to detail, Scrum experience in team projects. Nice to have: Cypress hands-on practice, SQL
+        for data validation, basic English. Junior level role with structured onboarding. Hybrid
+        model: two days per week at our Sao Paulo office.
+      </div>
+    </article>
 
-  <article class="job-card" data-job-id="tb-003">
-    <h2 class="job-title">Manual QA Analyst</h2>
-    <div class="job-meta">
-      <span class="job-company">Verdant Systems</span>
-      <span class="job-location">Curitiba, Brazil</span>
-      <span class="job-work-mode">onsite</span>
-    </div>
-    <a class="job-url" href="https://jobs.example.com/verdant/manual-qa-analyst">View job</a>
-    <div class="job-description">We need a Manual QA Analyst to ensure the quality of our healthcare management system. You will design and execute test cases, perform exploratory and regression testing, document defects with detailed bug reports and validate fixes with the development team.
-Requirements: experience or strong interest in manual testing, test plan understanding, clear written communication, basic SQL for data checks.
-Nice to have: ISTQB foundation knowledge, exposure to test automation concepts, healthcare domain knowledge.
-Entry level candidates with QA coursework are welcome. Onsite position in Curitiba.</div>
-  </article>
+    <article class="job-card" data-job-id="tb-003">
+      <h2 class="job-title">Manual QA Analyst</h2>
+      <div class="job-meta">
+        <span class="job-company">Verdant Systems</span>
+        <span class="job-location">Curitiba, Brazil</span>
+        <span class="job-work-mode">onsite</span>
+      </div>
+      <a class="job-url" href="https://jobs.example.com/verdant/manual-qa-analyst">View job</a>
+      <div class="job-description">
+        We need a Manual QA Analyst to ensure the quality of our healthcare management system. You
+        will design and execute test cases, perform exploratory and regression testing, document
+        defects with detailed bug reports and validate fixes with the development team.
+        Requirements: experience or strong interest in manual testing, test plan understanding,
+        clear written communication, basic SQL for data checks. Nice to have: ISTQB foundation
+        knowledge, exposure to test automation concepts, healthcare domain knowledge. Entry level
+        candidates with QA coursework are welcome. Onsite position in Curitiba.
+      </div>
+    </article>
 
-  <article class="job-card" data-job-id="tb-004">
-    <h2 class="job-title">QA Automation Engineer (Mid-Level)</h2>
-    <div class="job-meta">
-      <span class="job-company">Skyline Fintech</span>
-      <span class="job-location">Remote - LATAM</span>
-      <span class="job-work-mode">remote</span>
-    </div>
-    <a class="job-url" href="https://jobs.example.com/skyline/qa-automation-mid">View job</a>
-    <div class="job-description">Skyline Fintech is hiring a mid-level QA Automation Engineer to own the automated testing strategy of our payments platform. You will build test frameworks with Playwright and TypeScript, integrate suites into CI/CD pipelines, perform API testing of REST services and mentor junior testers.
-Requirements: 3+ years in test automation, strong TypeScript or JavaScript, Playwright or Selenium experience, API testing with Postman or similar, Git, advanced English for daily meetings with US stakeholders.
-Nice to have: performance testing with k6, Docker, AWS basics.
-Remote across Latin America with quarterly onsite meetups.</div>
-  </article>
+    <article class="job-card" data-job-id="tb-004">
+      <h2 class="job-title">QA Automation Engineer (Mid-Level)</h2>
+      <div class="job-meta">
+        <span class="job-company">Skyline Fintech</span>
+        <span class="job-location">Remote - LATAM</span>
+        <span class="job-work-mode">remote</span>
+      </div>
+      <a class="job-url" href="https://jobs.example.com/skyline/qa-automation-mid">View job</a>
+      <div class="job-description">
+        Skyline Fintech is hiring a mid-level QA Automation Engineer to own the automated testing
+        strategy of our payments platform. You will build test frameworks with Playwright and
+        TypeScript, integrate suites into CI/CD pipelines, perform API testing of REST services and
+        mentor junior testers. Requirements: 3+ years in test automation, strong TypeScript or
+        JavaScript, Playwright or Selenium experience, API testing with Postman or similar, Git,
+        advanced English for daily meetings with US stakeholders. Nice to have: performance testing
+        with k6, Docker, AWS basics. Remote across Latin America with quarterly onsite meetups.
+      </div>
+    </article>
 
-  <article class="job-card" data-job-id="tb-005">
-    <h2 class="job-title">Frontend Junior React Developer</h2>
-    <div class="job-meta">
-      <span class="job-company">Aurora Labs</span>
-      <span class="job-location">Remote - Brazil</span>
-      <span class="job-work-mode">remote</span>
-    </div>
-    <a class="job-url" href="https://jobs.example.com/aurora/frontend-junior-react">View job</a>
-    <div class="job-description">Aurora Labs is looking for a Frontend Junior Developer to build user interfaces for our education platform. You will implement React components with TypeScript, style responsive layouts with HTML and CSS, consume REST APIs and collaborate with designers in an agile Scrum team.
-Requirements: JavaScript, HTML, CSS, React fundamentals, Git and GitHub workflow, willingness to learn testing practices.
-Nice to have: TypeScript, unit testing with Jest or Playwright component testing, Figma familiarity, intermediate English.
-Great opportunity for early-career developers. Fully remote with flexible hours.</div>
-  </article>
+    <article class="job-card" data-job-id="tb-005">
+      <h2 class="job-title">Frontend Junior React Developer</h2>
+      <div class="job-meta">
+        <span class="job-company">Aurora Labs</span>
+        <span class="job-location">Remote - Brazil</span>
+        <span class="job-work-mode">remote</span>
+      </div>
+      <a class="job-url" href="https://jobs.example.com/aurora/frontend-junior-react">View job</a>
+      <div class="job-description">
+        Aurora Labs is looking for a Frontend Junior Developer to build user interfaces for our
+        education platform. You will implement React components with TypeScript, style responsive
+        layouts with HTML and CSS, consume REST APIs and collaborate with designers in an agile
+        Scrum team. Requirements: JavaScript, HTML, CSS, React fundamentals, Git and GitHub
+        workflow, willingness to learn testing practices. Nice to have: TypeScript, unit testing
+        with Jest or Playwright component testing, Figma familiarity, intermediate English. Great
+        opportunity for early-career developers. Fully remote with flexible hours.
+      </div>
+    </article>
 
-  <article class="job-card" data-job-id="tb-006">
-    <h2 class="job-title">Frontend Development Intern</h2>
-    <div class="job-meta">
-      <span class="job-company">Horizonte Tech</span>
-      <span class="job-location">Belo Horizonte, Brazil</span>
-      <span class="job-work-mode">hybrid</span>
-    </div>
-    <a class="job-url" href="https://jobs.example.com/horizonte/frontend-intern">View job</a>
-    <div class="job-description">Internship opportunity for students who want to start a frontend career. As a Frontend Intern you will learn to build interfaces with HTML, CSS, JavaScript and React under the guidance of senior developers, participate in code reviews and help test features before release.
-Requirements: currently enrolled in a technology degree (Computer Science, Systems Analysis or similar), basic HTML/CSS/JavaScript knowledge, Git basics, curiosity and willingness to learn.
-Nice to have: personal or academic projects on GitHub, basic English reading skills.
-Paid internship, 6 hours per day, hybrid in Belo Horizonte with mentorship program.</div>
-  </article>
+    <article class="job-card" data-job-id="tb-006">
+      <h2 class="job-title">Frontend Development Intern</h2>
+      <div class="job-meta">
+        <span class="job-company">Horizonte Tech</span>
+        <span class="job-location">Belo Horizonte, Brazil</span>
+        <span class="job-work-mode">hybrid</span>
+      </div>
+      <a class="job-url" href="https://jobs.example.com/horizonte/frontend-intern">View job</a>
+      <div class="job-description">
+        Internship opportunity for students who want to start a frontend career. As a Frontend
+        Intern you will learn to build interfaces with HTML, CSS, JavaScript and React under the
+        guidance of senior developers, participate in code reviews and help test features before
+        release. Requirements: currently enrolled in a technology degree (Computer Science, Systems
+        Analysis or similar), basic HTML/CSS/JavaScript knowledge, Git basics, curiosity and
+        willingness to learn. Nice to have: personal or academic projects on GitHub, basic English
+        reading skills. Paid internship, 6 hours per day, hybrid in Belo Horizonte with mentorship
+        program.
+      </div>
+    </article>
 
-  <article class="job-card" data-job-id="tb-007">
-    <h2 class="job-title">Backend Junior Node.js Developer</h2>
-    <div class="job-meta">
-      <span class="job-company">Rio Data Solutions</span>
-      <span class="job-location">Rio de Janeiro, Brazil</span>
-      <span class="job-work-mode">hybrid</span>
-    </div>
-    <a class="job-url" href="https://jobs.example.com/riodata/backend-junior-node">View job</a>
-    <div class="job-description">We are expanding our backend team and looking for a Junior Node.js Developer. You will develop and maintain REST APIs with Node.js and Express, model data in PostgreSQL, write unit tests and participate in code reviews within a Scrum squad.
-Requirements: JavaScript or TypeScript, Node.js fundamentals, SQL basics, Git, API concepts (HTTP, JSON, REST).
-Nice to have: Express, Docker basics, automated testing experience, intermediate English for documentation.
-Junior position with a clear growth path to mid-level. Hybrid model in Rio de Janeiro.</div>
-  </article>
+    <article class="job-card" data-job-id="tb-007">
+      <h2 class="job-title">Backend Junior Node.js Developer</h2>
+      <div class="job-meta">
+        <span class="job-company">Rio Data Solutions</span>
+        <span class="job-location">Rio de Janeiro, Brazil</span>
+        <span class="job-work-mode">hybrid</span>
+      </div>
+      <a class="job-url" href="https://jobs.example.com/riodata/backend-junior-node">View job</a>
+      <div class="job-description">
+        We are expanding our backend team and looking for a Junior Node.js Developer. You will
+        develop and maintain REST APIs with Node.js and Express, model data in PostgreSQL, write
+        unit tests and participate in code reviews within a Scrum squad. Requirements: JavaScript or
+        TypeScript, Node.js fundamentals, SQL basics, Git, API concepts (HTTP, JSON, REST). Nice to
+        have: Express, Docker basics, automated testing experience, intermediate English for
+        documentation. Junior position with a clear growth path to mid-level. Hybrid model in Rio de
+        Janeiro.
+      </div>
+    </article>
 
-  <article class="job-card" data-job-id="tb-008">
-    <h2 class="job-title">Backend Java Developer</h2>
-    <div class="job-meta">
-      <span class="job-company">Fortis Banking Tech</span>
-      <span class="job-location">Sao Paulo, Brazil</span>
-      <span class="job-work-mode">onsite</span>
-    </div>
-    <a class="job-url" href="https://jobs.example.com/fortis/backend-java">View job</a>
-    <div class="job-description">Fortis Banking Tech seeks a Backend Java Developer to work on core banking microservices. Responsibilities include developing services with Java and Spring Boot, integrating with SQL databases, writing automated tests and ensuring API reliability and security standards.
-Requirements: solid Java experience, Spring framework, SQL, REST API design, Git, 2+ years of professional backend development.
-Nice to have: Kubernetes, Docker, messaging systems (Kafka), advanced English.
-Mid-level position, onsite at our Sao Paulo headquarters with banking industry benefits.</div>
-  </article>
+    <article class="job-card" data-job-id="tb-008">
+      <h2 class="job-title">Backend Java Developer</h2>
+      <div class="job-meta">
+        <span class="job-company">Fortis Banking Tech</span>
+        <span class="job-location">Sao Paulo, Brazil</span>
+        <span class="job-work-mode">onsite</span>
+      </div>
+      <a class="job-url" href="https://jobs.example.com/fortis/backend-java">View job</a>
+      <div class="job-description">
+        Fortis Banking Tech seeks a Backend Java Developer to work on core banking microservices.
+        Responsibilities include developing services with Java and Spring Boot, integrating with SQL
+        databases, writing automated tests and ensuring API reliability and security standards.
+        Requirements: solid Java experience, Spring framework, SQL, REST API design, Git, 2+ years
+        of professional backend development. Nice to have: Kubernetes, Docker, messaging systems
+        (Kafka), advanced English. Mid-level position, onsite at our Sao Paulo headquarters with
+        banking industry benefits.
+      </div>
+    </article>
 
-  <article class="job-card" data-job-id="tb-009">
-    <h2 class="job-title">Full Stack Junior Developer</h2>
-    <div class="job-meta">
-      <span class="job-company">Coastal Apps</span>
-      <span class="job-location">Florianopolis, Brazil</span>
-      <span class="job-work-mode">remote</span>
-    </div>
-    <a class="job-url" href="https://jobs.example.com/coastal/fullstack-junior">View job</a>
-    <div class="job-description">Coastal Apps is hiring a Full Stack Junior Developer for our SaaS product team. You will build features end to end: React and TypeScript on the frontend, Node.js REST APIs on the backend and PostgreSQL for persistence. You will also write basic automated tests for your own code.
-Requirements: JavaScript or TypeScript, React basics, Node.js basics, SQL fundamentals, Git and GitHub.
-Nice to have: Express, testing with Playwright or Jest, Docker exposure, intermediate English.
-Junior-friendly role with pair programming culture. 100% remote within Brazil.</div>
-  </article>
+    <article class="job-card" data-job-id="tb-009">
+      <h2 class="job-title">Full Stack Junior Developer</h2>
+      <div class="job-meta">
+        <span class="job-company">Coastal Apps</span>
+        <span class="job-location">Florianopolis, Brazil</span>
+        <span class="job-work-mode">remote</span>
+      </div>
+      <a class="job-url" href="https://jobs.example.com/coastal/fullstack-junior">View job</a>
+      <div class="job-description">
+        Coastal Apps is hiring a Full Stack Junior Developer for our SaaS product team. You will
+        build features end to end: React and TypeScript on the frontend, Node.js REST APIs on the
+        backend and PostgreSQL for persistence. You will also write basic automated tests for your
+        own code. Requirements: JavaScript or TypeScript, React basics, Node.js basics, SQL
+        fundamentals, Git and GitHub. Nice to have: Express, testing with Playwright or Jest, Docker
+        exposure, intermediate English. Junior-friendly role with pair programming culture. 100%
+        remote within Brazil.
+      </div>
+    </article>
 
-  <article class="job-card" data-job-id="tb-010">
-    <h2 class="job-title">Mobile React Native Developer</h2>
-    <div class="job-meta">
-      <span class="job-company">Vetta Mobile</span>
-      <span class="job-location">Remote - Brazil</span>
-      <span class="job-work-mode">remote</span>
-    </div>
-    <a class="job-url" href="https://jobs.example.com/vetta/mobile-react-native">View job</a>
-    <div class="job-description">Vetta Mobile builds delivery apps used by thousands of customers. We need a React Native Developer to implement new screens and features, integrate REST APIs, handle app state and collaborate with QA on release testing for Android and iOS.
-Requirements: JavaScript or TypeScript, React or React Native experience, REST API integration, Git.
-Nice to have: native Android/iOS knowledge, automated testing with Detox or Playwright, app store publishing experience, intermediate English.
-Junior to mid-level candidates accepted. Fully remote position.</div>
-  </article>
+    <article class="job-card" data-job-id="tb-010">
+      <h2 class="job-title">Mobile React Native Developer</h2>
+      <div class="job-meta">
+        <span class="job-company">Vetta Mobile</span>
+        <span class="job-location">Remote - Brazil</span>
+        <span class="job-work-mode">remote</span>
+      </div>
+      <a class="job-url" href="https://jobs.example.com/vetta/mobile-react-native">View job</a>
+      <div class="job-description">
+        Vetta Mobile builds delivery apps used by thousands of customers. We need a React Native
+        Developer to implement new screens and features, integrate REST APIs, handle app state and
+        collaborate with QA on release testing for Android and iOS. Requirements: JavaScript or
+        TypeScript, React or React Native experience, REST API integration, Git. Nice to have:
+        native Android/iOS knowledge, automated testing with Detox or Playwright, app store
+        publishing experience, intermediate English. Junior to mid-level candidates accepted. Fully
+        remote position.
+      </div>
+    </article>
 
-  <article class="job-card" data-job-id="tb-011">
-    <h2 class="job-title">Data Analyst Junior</h2>
-    <div class="job-meta">
-      <span class="job-company">Insight Metrics</span>
-      <span class="job-location">Campinas, Brazil</span>
-      <span class="job-work-mode">hybrid</span>
-    </div>
-    <a class="job-url" href="https://jobs.example.com/insight/data-analyst-junior">View job</a>
-    <div class="job-description">Insight Metrics is looking for a Junior Data Analyst to support business teams with reports and dashboards. You will query data with SQL, build Power BI dashboards, organize datasets in Excel, run basic data analysis and present findings to stakeholders.
-Requirements: SQL fundamentals, Excel proficiency, logical thinking, attention to data quality.
-Nice to have: Power BI or Tableau, Python with Pandas, statistics coursework, basic English.
-Junior role ideal for recent graduates or students in their final year. Hybrid in Campinas.</div>
-  </article>
+    <article class="job-card" data-job-id="tb-011">
+      <h2 class="job-title">Data Analyst Junior</h2>
+      <div class="job-meta">
+        <span class="job-company">Insight Metrics</span>
+        <span class="job-location">Campinas, Brazil</span>
+        <span class="job-work-mode">hybrid</span>
+      </div>
+      <a class="job-url" href="https://jobs.example.com/insight/data-analyst-junior">View job</a>
+      <div class="job-description">
+        Insight Metrics is looking for a Junior Data Analyst to support business teams with reports
+        and dashboards. You will query data with SQL, build Power BI dashboards, organize datasets
+        in Excel, run basic data analysis and present findings to stakeholders. Requirements: SQL
+        fundamentals, Excel proficiency, logical thinking, attention to data quality. Nice to have:
+        Power BI or Tableau, Python with Pandas, statistics coursework, basic English. Junior role
+        ideal for recent graduates or students in their final year. Hybrid in Campinas.
+      </div>
+    </article>
 
-  <article class="job-card" data-job-id="tb-012">
-    <h2 class="job-title">DevOps Intern</h2>
-    <div class="job-meta">
-      <span class="job-company">CloudBridge Services</span>
-      <span class="job-location">Remote - Brazil</span>
-      <span class="job-work-mode">remote</span>
-    </div>
-    <a class="job-url" href="https://jobs.example.com/cloudbridge/devops-intern">View job</a>
-    <div class="job-description">CloudBridge Services offers a DevOps internship for students who want to learn cloud and automation. You will support the infrastructure team with Docker containers, CI/CD pipelines on GitHub Actions, monitoring dashboards and scripting on Linux, always with senior supervision.
-Requirements: enrolled in a technology degree, Linux basics, Git, scripting curiosity (Bash or Python), willingness to learn cloud concepts.
-Nice to have: Docker exposure, AWS or Azure free-tier practice, basic English reading.
-Paid remote internship with weekly mentorship sessions and study time.</div>
-  </article>
+    <article class="job-card" data-job-id="tb-012">
+      <h2 class="job-title">DevOps Intern</h2>
+      <div class="job-meta">
+        <span class="job-company">CloudBridge Services</span>
+        <span class="job-location">Remote - Brazil</span>
+        <span class="job-work-mode">remote</span>
+      </div>
+      <a class="job-url" href="https://jobs.example.com/cloudbridge/devops-intern">View job</a>
+      <div class="job-description">
+        CloudBridge Services offers a DevOps internship for students who want to learn cloud and
+        automation. You will support the infrastructure team with Docker containers, CI/CD pipelines
+        on GitHub Actions, monitoring dashboards and scripting on Linux, always with senior
+        supervision. Requirements: enrolled in a technology degree, Linux basics, Git, scripting
+        curiosity (Bash or Python), willingness to learn cloud concepts. Nice to have: Docker
+        exposure, AWS or Azure free-tier practice, basic English reading. Paid remote internship
+        with weekly mentorship sessions and study time.
+      </div>
+    </article>
 
-  <article class="job-card" data-job-id="tb-013">
-    <h2 class="job-title">Technical Support Analyst</h2>
-    <div class="job-meta">
-      <span class="job-company">Atlas Retail Systems</span>
-      <span class="job-location">Porto Alegre, Brazil</span>
-      <span class="job-work-mode">hybrid</span>
-    </div>
-    <a class="job-url" href="https://jobs.example.com/atlas/technical-support-analyst">View job</a>
-    <div class="job-description">Atlas Retail Systems needs a Technical Support Analyst to help customers use our point-of-sale software. You will handle tickets within SLA targets, troubleshoot software and configuration issues, escalate bugs to engineering with clear reproduction steps and update the knowledge base.
-Requirements: customer support mindset, troubleshooting skills, basic SQL for data checks, clear written communication in Portuguese.
-Nice to have: help desk or service desk experience, basic networking knowledge, basic English, interest in QA or development career paths.
-Junior-friendly role; many of our QA engineers started in support. Hybrid in Porto Alegre.</div>
-  </article>
+    <article class="job-card" data-job-id="tb-013">
+      <h2 class="job-title">Technical Support Analyst</h2>
+      <div class="job-meta">
+        <span class="job-company">Atlas Retail Systems</span>
+        <span class="job-location">Porto Alegre, Brazil</span>
+        <span class="job-work-mode">hybrid</span>
+      </div>
+      <a class="job-url" href="https://jobs.example.com/atlas/technical-support-analyst"
+        >View job</a
+      >
+      <div class="job-description">
+        Atlas Retail Systems needs a Technical Support Analyst to help customers use our
+        point-of-sale software. You will handle tickets within SLA targets, troubleshoot software
+        and configuration issues, escalate bugs to engineering with clear reproduction steps and
+        update the knowledge base. Requirements: customer support mindset, troubleshooting skills,
+        basic SQL for data checks, clear written communication in Portuguese. Nice to have: help
+        desk or service desk experience, basic networking knowledge, basic English, interest in QA
+        or development career paths. Junior-friendly role; many of our QA engineers started in
+        support. Hybrid in Porto Alegre.
+      </div>
+    </article>
 
-  <article class="job-card" data-job-id="tb-014">
-    <h2 class="job-title">Help Desk Analyst</h2>
-    <div class="job-meta">
-      <span class="job-company">Prisma IT Services</span>
-      <span class="job-location">Recife, Brazil</span>
-      <span class="job-work-mode">onsite</span>
-    </div>
-    <a class="job-url" href="https://jobs.example.com/prisma/help-desk-analyst">View job</a>
-    <div class="job-description">Prisma IT Services is hiring a Help Desk Analyst for first-level support of corporate users. Activities include answering service desk tickets, troubleshooting Windows and Office issues, resetting accounts, tracking SLA compliance and documenting recurring solutions.
-Requirements: basic IT knowledge (hardware, Windows, networks), customer service attitude, organized ticket management.
-Nice to have: ITIL foundation awareness, previous help desk experience, technology degree in progress.
-Entry level position with training provided. Onsite in Recife with day shift schedule.</div>
-  </article>
+    <article class="job-card" data-job-id="tb-014">
+      <h2 class="job-title">Help Desk Analyst</h2>
+      <div class="job-meta">
+        <span class="job-company">Prisma IT Services</span>
+        <span class="job-location">Recife, Brazil</span>
+        <span class="job-work-mode">onsite</span>
+      </div>
+      <a class="job-url" href="https://jobs.example.com/prisma/help-desk-analyst">View job</a>
+      <div class="job-description">
+        Prisma IT Services is hiring a Help Desk Analyst for first-level support of corporate users.
+        Activities include answering service desk tickets, troubleshooting Windows and Office
+        issues, resetting accounts, tracking SLA compliance and documenting recurring solutions.
+        Requirements: basic IT knowledge (hardware, Windows, networks), customer service attitude,
+        organized ticket management. Nice to have: ITIL foundation awareness, previous help desk
+        experience, technology degree in progress. Entry level position with training provided.
+        Onsite in Recife with day shift schedule.
+      </div>
+    </article>
 
-  <article class="job-card" data-job-id="tb-015">
-    <h2 class="job-title">QA Analyst - API Testing</h2>
-    <div class="job-meta">
-      <span class="job-company">Lumen Integrations</span>
-      <span class="job-location">Remote - Brazil</span>
-      <span class="job-work-mode">remote</span>
-    </div>
-    <a class="job-url" href="https://jobs.example.com/lumen/qa-api-testing">View job</a>
-    <div class="job-description">Lumen Integrations connects ERPs and marketplaces through APIs, and we need a QA Analyst focused on API testing. You will validate REST endpoints with Postman, write test cases for integration flows, automate API checks with JavaScript, monitor data consistency with SQL and report defects with detailed evidence.
-Requirements: API concepts (HTTP methods, status codes, JSON), Postman, SQL basics, test case writing, JavaScript fundamentals.
-Nice to have: Playwright API testing, contract testing awareness, intermediate English for API documentation.
-Junior to mid-level role, fully remote within Brazil.</div>
-  </article>
+    <article class="job-card" data-job-id="tb-015">
+      <h2 class="job-title">QA Analyst - API Testing</h2>
+      <div class="job-meta">
+        <span class="job-company">Lumen Integrations</span>
+        <span class="job-location">Remote - Brazil</span>
+        <span class="job-work-mode">remote</span>
+      </div>
+      <a class="job-url" href="https://jobs.example.com/lumen/qa-api-testing">View job</a>
+      <div class="job-description">
+        Lumen Integrations connects ERPs and marketplaces through APIs, and we need a QA Analyst
+        focused on API testing. You will validate REST endpoints with Postman, write test cases for
+        integration flows, automate API checks with JavaScript, monitor data consistency with SQL
+        and report defects with detailed evidence. Requirements: API concepts (HTTP methods, status
+        codes, JSON), Postman, SQL basics, test case writing, JavaScript fundamentals. Nice to have:
+        Playwright API testing, contract testing awareness, intermediate English for API
+        documentation. Junior to mid-level role, fully remote within Brazil.
+      </div>
+    </article>
 
-  <article class="job-card" data-job-id="tb-016">
-    <h2 class="job-title">Performance QA Analyst</h2>
-    <div class="job-meta">
-      <span class="job-company">Meridian Commerce</span>
-      <span class="job-location">Remote - LATAM</span>
-      <span class="job-work-mode">remote</span>
-    </div>
-    <a class="job-url" href="https://jobs.example.com/meridian/performance-qa">View job</a>
-    <div class="job-description">Meridian Commerce is looking for a Performance QA Analyst to guarantee our checkout handles peak traffic. You will design performance testing scenarios, run load tests with k6 or JMeter, analyze response time metrics, work with DevOps on bottlenecks and document findings in performance test reports.
-Requirements: understanding of performance testing concepts, basic scripting (JavaScript or Python), SQL for results analysis, analytical mindset, intermediate English.
-Nice to have: k6, JMeter or Gatling experience, Grafana dashboards, CI/CD integration of performance suites.
-Mid-level position preferred, but strong juniors with performance testing studies will be considered.</div>
-  </article>
+    <article class="job-card" data-job-id="tb-016">
+      <h2 class="job-title">Performance QA Analyst</h2>
+      <div class="job-meta">
+        <span class="job-company">Meridian Commerce</span>
+        <span class="job-location">Remote - LATAM</span>
+        <span class="job-work-mode">remote</span>
+      </div>
+      <a class="job-url" href="https://jobs.example.com/meridian/performance-qa">View job</a>
+      <div class="job-description">
+        Meridian Commerce is looking for a Performance QA Analyst to guarantee our checkout handles
+        peak traffic. You will design performance testing scenarios, run load tests with k6 or
+        JMeter, analyze response time metrics, work with DevOps on bottlenecks and document findings
+        in performance test reports. Requirements: understanding of performance testing concepts,
+        basic scripting (JavaScript or Python), SQL for results analysis, analytical mindset,
+        intermediate English. Nice to have: k6, JMeter or Gatling experience, Grafana dashboards,
+        CI/CD integration of performance suites. Mid-level position preferred, but strong juniors
+        with performance testing studies will be considered.
+      </div>
+    </article>
 
-  <!-- Intentional duplicate of tb-001: demonstrates the duplicate detector in the QA pipeline -->
-  <article class="job-card" data-job-id="tb-017">
-    <h2 class="job-title">QA Junior Engineer (Playwright)</h2>
-    <div class="job-meta">
-      <span class="job-company">BlueOrbit Software</span>
-      <span class="job-location">Remote - Brazil</span>
-      <span class="job-work-mode">remote</span>
-    </div>
-    <a class="job-url" href="https://jobs.example.com/blueorbit/qa-junior-playwright?ref=partner">View job</a>
-    <div class="job-description">We are looking for a QA Junior Engineer to join our web platform team. You will write and maintain end-to-end tests with Playwright and TypeScript, create test cases for new features, execute regression testing before releases and report bugs with clear evidence.
-Requirements: basic knowledge of JavaScript or TypeScript, Git, test case writing, bug report skills and intermediate English for documentation.
-Nice to have: Playwright or Cypress exposure, API testing with Postman, CI/CD basics with GitHub Actions.
-This is a junior-friendly position with mentorship from senior QA engineers. Fully remote within Brazil.</div>
-  </article>
-
-</body>
+    <!-- Intentional duplicate of tb-001: demonstrates the duplicate detector in the QA pipeline -->
+    <article class="job-card" data-job-id="tb-017">
+      <h2 class="job-title">QA Junior Engineer (Playwright)</h2>
+      <div class="job-meta">
+        <span class="job-company">BlueOrbit Software</span>
+        <span class="job-location">Remote - Brazil</span>
+        <span class="job-work-mode">remote</span>
+      </div>
+      <a class="job-url" href="https://jobs.example.com/blueorbit/qa-junior-playwright?ref=partner"
+        >View job</a
+      >
+      <div class="job-description">
+        We are looking for a QA Junior Engineer to join our web platform team. You will write and
+        maintain end-to-end tests with Playwright and TypeScript, create test cases for new
+        features, execute regression testing before releases and report bugs with clear evidence.
+        Requirements: basic knowledge of JavaScript or TypeScript, Git, test case writing, bug
+        report skills and intermediate English for documentation. Nice to have: Playwright or
+        Cypress exposure, API testing with Postman, CI/CD basics with GitHub Actions. This is a
+        junior-friendly position with mentorship from senior QA engineers. Fully remote within
+        Brazil.
+      </div>
+    </article>
+  </body>
 </html>

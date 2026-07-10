@@ -1,67 +1,69 @@
-# Architecture — AI Tech Job Matcher
+# Architecture
 
-## Main Pipeline
+## Entry Points
 
-The CLI entry point (`src/index.ts`, `runPipeline`) orchestrates 12 sequential steps:
+| Entry point                 | Responsibility                                        |
+| --------------------------- | ----------------------------------------------------- |
+| `src/index.ts`              | CLI orchestration and reusable `runPipeline` function |
+| `src/web/server.ts`         | Express upload, analysis, and report-download API     |
+| `src/tools/checkSources.ts` | Live public-source diagnostics                        |
 
+The CLI and web API call the same production pipeline. E2E tests import `runPipeline`, so they do not duplicate business logic.
+
+## Pipeline
+
+```mermaid
+flowchart LR
+  A["Resume: TXT, MD, PDF, DOCX"] --> B["Parse and enforce limits"]
+  B --> C["Remove direct identifiers"]
+  C --> D["Analyze resume"]
+  E["Public job sources"] --> F["Normalize source contracts"]
+  F --> G["Validate and deduplicate"]
+  D --> H["Analyze jobs"]
+  G --> H
+  H --> I["Filter role and work mode"]
+  I --> J["Score skills, seniority, English, and location"]
+  J --> K["Excel, Markdown, JSON"]
 ```
-resume file ──► parse ──► sanitize (PII) ──► analyze resume (AI | fallback)
-                                                        │
-job source ──► collect (Playwright | public APIs) ──► validate (QA) ──► dedupe ──► analyze jobs (AI | fallback)
-                                                        │
-                                          filter by role ──► match score ──► rank
-                                                        │
-                       Excel (6 sheets) ◄── reports ──► Markdown summary + 4 JSON artifacts
-```
 
-`runPipeline` is exported, so E2E tests import and run the exact production pipeline without
-spawning subprocesses.
+The pipeline has 12 observable steps and returns typed results plus generated file paths.
 
-## Modules
+## Module Boundaries
 
-| Module | Responsibility |
-|--------|----------------|
-| `src/cli` | Argument parsing/validation and CLI types |
-| `src/config` | Environment loading with Zod validation (`.env`) |
-| `src/resume` | Parse (TXT/PDF/DOCX), sanitize PII, analyze resume |
-| `src/scraper` | Source registry, Playwright/API collectors, per-source parsers, job validation facade |
-| `src/ai` | AI adapter interface, Gemini/OpenAI/Anthropic clients, local fallback analyzer, prompts, JSON repair |
-| `src/matcher` | Skill normalization, role classification, hybrid match scoring, recommendations, explanations |
-| `src/qa` | Validation rules, issue detection, duplicate detector, data quality scoring |
-| `src/reports` | Excel workbook (ExcelJS), Markdown summary, shared report types and styles |
-| `src/web` | Optional Express web UI for resume upload, pipeline execution and report download |
-| `src/utils` | Logger, file system, date, text and URL helpers |
+| Module        | Responsibility                                                                            |
+| ------------- | ----------------------------------------------------------------------------------------- |
+| `src/ai`      | Provider adapters, strict response schemas, prompts, retry/timeout client, local fallback |
+| `src/cli`     | Argument parsing, validation, and CLI contracts                                           |
+| `src/config`  | Zod-validated environment configuration                                                   |
+| `src/matcher` | Role classification, skill normalization, scoring, location preference, explanations      |
+| `src/qa`      | Validation rules, deduplication, and data quality score                                   |
+| `src/reports` | Excel and Markdown generation                                                             |
+| `src/resume`  | File parsing, extraction limits, and personal-data sanitization                           |
+| `src/scraper` | Source registry, public collectors, normalization, health checks                          |
+| `src/web`     | Web API, isolated report runs, and browser UI                                             |
 
-## Data Flow
+The main typed flow is `ScrapedJob` -> `JobValidationResult` -> `JobAnalysis` -> `JobMatchResult` -> `ReportData`.
 
-All data crossing module boundaries is typed: `ScrapedJob` → `JobValidationResult` →
-`JobAnalysis` → `JobMatchResult` → `ReportData`. AI responses are untrusted input: they pass
-through a defensive JSON parser and Zod schemas (with `.catch()` defaults per field) before
-entering the typed domain.
+## External Boundaries
 
-## AI Adapter Strategy
+### Job Sources
 
-`AiClient` is a small interface (`analyzeResume`, `analyzeJob`). Three implementations:
+Each collector maps a third-party payload into `ScrapedJob`. HTTP failures throw `SourceUnavailableError`; an empty successful feed remains a valid empty result. The `all` source runs configured collectors in parallel, isolates individual failures, and fails explicitly if every configured source is unavailable.
 
-- `RemoteAiClient` wrapping **Gemini** (generateContent), **OpenAI** (Chat Completions) or **Anthropic** (Messages), all
-  via plain `fetch` — no SDK dependencies.
-- `FallbackAiClient` delegating to the local keyword analyzer.
+Greenhouse and Lever are capped at five configured organizations per run. Other collectors have fixed low result/request caps. The scheduled source-health workflow records `ok`, `empty`, `unconfigured`, or `failed` for each integration.
 
-`getAiClient()` selects the implementation from `AI_PROVIDER` + available keys, and every
-remote failure degrades to the fallback at the call site, so a single job analysis failure
-never aborts the run.
+### AI Providers
 
-## Fallback Mode
+`AiClient` supports Gemini, OpenAI, Anthropic, and local fallback. Remote calls share timeout, retry, backoff, and concurrency controls. Resume/job text is treated as untrusted content, and provider responses must pass strict Zod schemas before entering the domain.
 
-The fallback analyzer (`src/ai/fallbackAnalyzer.ts`) uses curated keyword dictionaries with
-alias matching (symbol-safe word boundaries for `node.js`, `c#`, `ci/cd`) to extract skills,
-seniority, English level and role classification. It shares the same output types as the AI
-path, so downstream code is provider-agnostic. `fallbackMode: true` is carried through to the
-reports for transparency.
+Missing keys, invalid JSON, rate limits, and provider failures degrade to local analysis. The report always records which engine was used.
 
-## Report Generation
+## Privacy and Web Report Lifecycle
 
-`ReportData` (matches + resume analysis + execution summary + market insights) feeds two
-generators: ExcelJS builds a six-sheet workbook (styles centralized in `excelStyles.ts`), and
-a Markdown generator writes the human-readable run summary. Intermediate JSONs are written for
-auditability. Reports never contain raw resume text — only the structured analysis.
+The resume is sanitized before any provider call. Raw text, names, contact details, and addresses are not persisted in reports. Web uploads are deleted in a `finally` block after each request.
+
+Every web request receives a UUID run directory under `output/web/`. Download URLs include that run ID, concurrent requests cannot overwrite each other, invalid paths are rejected, and expired run directories are removed automatically.
+
+## Outputs
+
+ExcelJS creates six worksheets. Markdown provides a portable summary with application links, while four JSON files preserve normalized source data, analysis, and match evidence for debugging and auditability.

@@ -1,67 +1,68 @@
-# Test Plan — AI Tech Job Matcher
+# Test Plan
 
 ## Objective
 
-Verify that the AI Tech Job Matcher pipeline reliably transforms a resume and a set of public
-job postings into an accurate, well-formatted Excel ranking — with correct data validation,
-duplicate removal, match scoring and report generation — in a fully offline setup (no API key).
+Verify that the application safely transforms a resume and public job data into accurate, traceable rankings and downloadable reports, with deterministic behavior when no API key is configured.
 
-## Scope
+## In Scope
 
-- Resume parsing (TXT, PDF, DOCX) and error handling for invalid inputs.
-- Resume sanitization (emails, phones, personal documents).
-- Job parsing from a local fixture board using a real Playwright browser.
-- Role classification, seniority detection and English level detection (fallback analyzer).
-- QA validation rules for scraped jobs (required fields, URL, description length, work mode).
-- Duplicate detection by normalized title+company and by normalized URL.
-- Match score calculation, recommendation bands and explanation generation.
-- Excel report structure (6 sheets), sorting, filtering and formatting.
-- Markdown summary and intermediate JSON outputs.
-- Fallback mode behavior when no AI API key is configured.
-- Web UI resume upload, specific-job analysis and report downloads.
-- Public source health check status mapping.
+- TXT, Markdown, PDF, and DOCX extraction, size limits, and invalid uploads.
+- Personal-data sanitization before provider calls and persistence.
+- Public-source mapping, request caps, failure semantics, and health status.
+- Job validation, availability, publication/expiration dates, and deduplication.
+- Role, work mode, seniority, English, skill, and location matching.
+- Local fallback plus mocked Gemini/OpenAI/Anthropic contracts.
+- Excel, Markdown, and JSON content and privacy.
+- Web API upload/download/error paths and concurrent report isolation.
+- Browser journey, application link, mobile layout, and accessibility.
+- Compiled production build smoke test.
 
 ## Out of Scope
 
-- Live third-party source calls in CI (remoteok, remotive, themuse, greenhouse, gupy and lever are
-  best-effort and intentionally covered by mapper/unit tests plus manual smoke
-  runs to keep the automated suite deterministic).
-- Real AI provider responses (OpenAI/Anthropic calls are exercised manually; automated tests
-  always run in fallback mode).
-- Visual/pixel-level validation of the Excel file (structure and data are validated instead).
-- Load/performance testing of the pipeline itself.
+- Live third-party source calls in the deterministic CI suite. A separate scheduled workflow covers them.
+- Live paid AI calls. Provider HTTP contracts and fallback paths are tested with mocks.
+- High-volume load testing or production capacity planning.
+- Pixel-perfect Excel rendering across every spreadsheet application.
 
-## Test Levels
+## Test Matrix
 
-| Level | Tooling | What it covers |
-|-------|---------|----------------|
-| Unit | Playwright Test (node) | normalizeSkills, classifyRole, calculateMatchScore, validateJob, duplicateDetector, fallbackAnalyzer |
-| Integration/E2E | Playwright Test + Chromium | fixture scraper against real HTML, full pipeline runs, web UI journey, Excel/Markdown/JSON artifact validation |
+| Level         | Tool                       | Main coverage                                                    |
+| ------------- | -------------------------- | ---------------------------------------------------------------- |
+| Unit          | Playwright Test            | Pure logic, parsers, validation rules, provider/source contracts |
+| Integration   | Playwright Test            | Full pipeline and generated artifacts                            |
+| API           | Playwright request context | Multipart upload, validation, downloads, concurrency             |
+| E2E           | Playwright Chromium        | Complete user journey and external application link              |
+| Accessibility | Axe + Chromium             | Serious/critical WCAG findings                                   |
+| Operational   | GitHub Actions             | CI and scheduled source health                                   |
 
-## Test Environment
+## Environment
 
-- Node.js 18+ (developed on Node 22), Windows/Linux/macOS.
-- Playwright Chromium installed via `npx playwright install chromium`.
-- No network access required; no environment variables required (fallback mode).
-- Config: `screenshot: only-on-failure`, `trace: on-first-retry`, `video: retain-on-failure`.
+- Node.js 22.3 or newer.
+- Playwright Chromium installed with `npx playwright install chromium`.
+- No `.env` or network required for `npm test`.
+- Failure evidence: screenshot, video, and trace.
 
-## Risks
+## Risks and Mitigations
 
-- Third-party job sources may change API shape or availability (mitigated: real sources fail
-  gracefully returning empty lists; deterministic tests use local fixtures).
-- Keyword-based fallback analysis may misclassify unusual job titles (mitigated: scoring
-  heuristics tested against 16 realistic fixtures; AI mode available for higher accuracy).
-- PDF text extraction quality varies by file (mitigated: minimum text length check + clear
-  error messages).
+| Risk                                        | Mitigation                                                               |
+| ------------------------------------------- | ------------------------------------------------------------------------ |
+| Public API or page changes                  | Mapper tests, explicit source errors, scheduled health evidence          |
+| Stale or closed vacancy                     | Availability/date rules and exclusion of high-severity issues            |
+| AI returns malformed or injected content    | Untrusted-content prompts, strict Zod schemas, bounded retry, fallback   |
+| Resume leaks personal information           | Sanitization, output assertions, upload deletion                         |
+| Concurrent users overwrite reports          | UUID run directories and concurrent API test                             |
+| Keyword fallback misclassifies unusual text | Transparent engine flag, deterministic tests, optional provider adapters |
 
 ## Entry Criteria
 
-- `npm install` and `npx playwright install chromium` completed successfully.
-- Sample fixtures present (`samples/sample-jobs.html`, `samples/sample-resume.txt`).
+- `npm install` completed.
+- Chromium installed.
+- Sample fixtures available.
 
 ## Exit Criteria
 
-- 100% of unit and E2E tests passing (`npm test`).
-- Both demo commands (`npm run demo:qa`, `npm run demo:all`) generate all six output artifacts.
-- Source diagnostics run with `npm run sources:check`.
-- No high-severity defects open against the ranking or report generation.
+- `npm run format:check`, `npm run build`, `npm run test:dist`, `npm run lint`, and `npm test` pass.
+- `npm audit --omit=dev --audit-level=high` reports no high-severity production vulnerability.
+- `npm run demo:qa` and `npm run demo:all` generate all report types.
+- `npm run sources:check` records at least one healthy public source.
+- No known high-severity defect remains in upload, ranking, privacy, or downloads.

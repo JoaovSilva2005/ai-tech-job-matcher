@@ -1,202 +1,173 @@
 # AI Tech Job Matcher
 
-A TypeScript application that compares a resume against real public tech jobs, ranks the best matches, and generates an Excel report with QA evidence.
+TypeScript application that reads a resume, collects real public tech jobs, validates source data, ranks opportunities, and exports auditable Excel and Markdown reports.
 
-The project is focused on practical QA Jr / Dev Jr skills: Playwright automation, automated tests, data validation, responsible public job collection, file processing, and clean TypeScript organization.
-
-![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)
-![Playwright](https://img.shields.io/badge/Playwright-tests%20%2B%20automation-2EAD33?logo=playwright&logoColor=white)
-![Tests](https://img.shields.io/badge/tests-103%20passing-brightgreen)
+[![CI](https://github.com/JoaovSilva2005/ai-tech-job-matcher/actions/workflows/ci.yml/badge.svg)](https://github.com/JoaovSilva2005/ai-tech-job-matcher/actions/workflows/ci.yml)
+![Tests](https://img.shields.io/badge/tests-144%20passing-brightgreen)
+![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 
-## What It Does
+![Web UI with a ranked job match and QA evidence](docs/assets/web-ui.png)
 
-1. Reads a resume from `.txt`, `.md`, `.pdf`, or `.docx`.
-2. Masks personal data before analysis.
-3. Collects real jobs from public sources.
-4. Validates collected job data.
-5. Compares resume and job requirements by skills, seniority, language, and role.
-6. Filters by work mode and prioritizes jobs near the candidate's city when provided.
-7. Analyzes a specific pasted job description when the user wants to target one opportunity.
-8. Ranks job matches by compatibility score, using location preference when provided.
-9. Exports an Excel report, Markdown summary, and JSON evidence files.
+Regenerate this screenshot with `npm run docs:screenshot`.
 
-The app works without an API key by using a local fallback analyzer. Optional AI providers can be configured through environment variables.
+## QA Evidence
 
-## QA Highlights
+- 144 automated tests covering unit, API, integration, and browser E2E flows.
+- Playwright exercises resume upload, specific-job analysis, downloads, mobile layout, and accessibility with Axe.
+- Every job receives validation status, severity-ranked issues, and a 0-100 data quality score.
+- Invalid, expired, or closed jobs are excluded with evidence in the Excel `QA Issues` sheet.
+- GitHub Actions runs formatting, dependency audit, build, compiled-app smoke test, lint, and the full suite.
+- A scheduled health workflow checks public sources and stores a JSON diagnostic artifact.
 
-- Playwright Test coverage for unit and E2E flows.
-- Real browser E2E test covering resume upload, analysis results and report downloads.
-- API tests for resume upload, upload validation and report downloads.
-- Playwright automation used for controlled scraping/test fixtures.
-- Data validation for required fields, URLs, descriptions, seniority, work mode, and duplicates.
-- Dedicated `QA Issues` sheet in the Excel report.
-- Graceful fallback when an external source or AI provider fails.
-- Excel, Markdown, and JSON outputs for traceability.
-- GitHub Actions CI for build, lint and tests.
-- Public source health check command for quick scraper diagnostics.
-- 103 automated tests passing.
+## Application Flow
 
-## Tech Stack
+1. Parse a `.txt`, `.md`, `.pdf`, or `.docx` resume.
+2. Remove direct identifiers before any remote AI request.
+3. Collect jobs from public APIs or explicitly configured public career pages.
+4. Validate availability, dates, URLs, descriptions, work mode, and duplicates.
+5. Analyze role, seniority, English, tools, and required skills.
+6. Filter remote, hybrid, or on-site jobs and prioritize the candidate's city when provided.
+7. Rank matches and generate Excel, Markdown, and JSON evidence.
 
-- Node.js
-- TypeScript strict mode
-- Playwright and Playwright Test
-- ExcelJS
-- Express
-- Zod
-- ESLint
-- Prettier
-- pdf-parse
-- mammoth
+The complete flow works without an API key through a deterministic local analyzer. Gemini, OpenAI, and Anthropic are optional adapters; failed or rate-limited calls fall back locally.
 
-## Getting Started
+## Quick Start
+
+Requirements: Node.js 22.3+ and npm.
 
 ```bash
 npm install
 npx playwright install chromium
-```
-
-Run the CLI with Gupy jobs:
-
-```bash
-npm run dev -- -- --resume ./samples/sample-resume.txt --role qa --source gupy --work-mode remote --location "Campinas, SP" --limit 5 --fallback
-```
-
-Analyze one specific job description:
-
-```bash
-npm run dev -- -- --resume ./samples/sample-resume.txt --role qa --job-file ./tests/fixtures/sample-job-description.txt --job-title "QA Jr" --job-company "Example Co" --job-url "https://jobs.example.com/qa-jr" --fallback
-```
-
-Run the web UI:
-
-```bash
 npm run web
 ```
 
-Open:
+Open [http://localhost:4180](http://localhost:4180).
 
-```text
-http://localhost:4180
-```
+The web UI supports public-job search and analysis of one specific vacancy. Each web run has an isolated report directory, and the uploaded resume is deleted immediately after processing.
 
-The web UI lets the user upload a resume, choose a target role, select a public job source, filter by work mode, add a city/address preference, paste a specific job description, and download the generated reports. `Gupy Brazil` is selected by default.
+### CLI
 
-## Main Commands
-
-```bash
-npm run build
-npm run lint
-npm test
-npm run test:unit
-npm run test:e2e
-npm run sources:check
-```
-
-Demo shortcuts:
+Run a deterministic QA demo with no API key:
 
 ```bash
 npm run demo:qa
+```
+
+Query all configured public sources:
+
+```bash
 npm run demo:all
 ```
 
-`demo:all` queries the public source aggregator (`--source all`) and interleaves results from the configured public job sources.
-
-Useful CLI filters:
+Run with custom filters:
 
 ```bash
---work-mode all|remote|hybrid|onsite
---location "Campinas, SP"
---job-file ./job-description.txt
---job-title "Analista de QA Jr"
---job-company "Company name"
---job-url "https://..."
+npx tsx src/index.ts --resume ./samples/sample-resume.txt --role qa --source gupy --work-mode hybrid --location "Campinas, SP" --limit 10 --fallback
 ```
 
-## Job Sources
+Use `npx tsx src/index.ts --help` for every CLI option.
 
-| Source | Type | Requires key? | Notes |
-|---|---|---:|---|
-| `gupy` | Public Brazilian career pages | No | Default source for CLI and Web UI |
-| `remoteok` | Public API | No | Remote jobs |
-| `remotive` | Public API | No | Remote jobs |
-| `themuse` | Public API | No | International jobs |
-| `greenhouse` | Public ATS API | No | Public Greenhouse boards |
-| `lever` | Public ATS API | No | Requires public slugs in `LEVER_COMPANY_SLUGS` |
-| `all` | Aggregator | No | Queries configured public sources |
-
-Check public source availability:
+## Validation Commands
 
 ```bash
+npm run format:check
+npm run build
+npm run test:dist
+npm run lint
+npm test
 npm run sources:check
 ```
 
-Example with Brazilian QA jobs:
+`sources:check` distinguishes healthy, empty, unconfigured, and failed sources and writes evidence to `output/source-health.json`.
 
-```bash
-npm run dev -- -- --resume ./samples/sample-resume.txt --role qa --source gupy --work-mode remote --location "Sao Paulo, SP" --limit 8 --fallback
-```
+## Public Job Sources
 
-## Generated Outputs
+| Source     | Public integration            | Key required | Configuration                      |
+| ---------- | ----------------------------- | -----------: | ---------------------------------- |
+| Gupy       | Public Brazilian career pages |           No | Optional `GUPY_CAREER_URLS`        |
+| RemoteOK   | Public JSON feed              |           No | None                               |
+| Remotive   | Public API                    |           No | None                               |
+| The Muse   | Public API                    |           No | None                               |
+| Greenhouse | Public Job Board API          |           No | Optional `GREENHOUSE_BOARD_TOKENS` |
+| Lever      | Public Postings API           |           No | `LEVER_COMPANY_SLUGS`              |
+| All        | Bounded parallel aggregation  |           No | Uses configured sources            |
 
-Files are saved under `output/`:
+Collection is intentionally low-volume. The project does not authenticate, bypass captchas, or scrape LinkedIn, Indeed, Catho, InfoJobs, or Glassdoor. See [scraping ethics](docs/scraping-ethics.md).
+
+## Reports
+
+CLI reports are written to `output/`. Web reports use isolated, expiring run directories under `output/web/`.
 
 ```text
-output/job-match-report.xlsx
-output/execution-summary.md
-output/job-matches.json
-output/jobs-analyzed.json
-output/jobs-raw.json
-output/resume-analysis.json
+job-match-report.xlsx
+execution-summary.md
+jobs-raw.json
+jobs-analyzed.json
+resume-analysis.json
+job-matches.json
 ```
 
-The Excel workbook contains six sheets:
+The Excel workbook contains:
 
-- `Ranking`: jobs sorted by match score, or by location preference first when a city/address is provided.
-- `Details`: detailed analysis for each job.
-- `QA Issues`: data quality issues found during validation.
-- `Resume Analysis`: structured candidate profile.
-- `Market Insights`: most requested skills across analyzed jobs.
-- `Execution Summary`: run metadata and totals.
+- `Ranking`: score, application hyperlink, source, availability, publication date, and data quality.
+- `Details`: parsed requirements, tools, gaps, explanation, and study topics.
+- `QA Issues`: field, severity, issue, status, quality score, and ranking inclusion.
+- `Resume Analysis`: sanitized structured profile, never raw resume text.
+- `Market Insights`: frequently requested skills by role.
+- `Execution Summary`: filters, engine, counts, and runtime.
 
-## Environment Variables
+## Configuration
 
-The app runs without `.env`. To configure AI providers or source-specific options, copy `.env.example` to `.env`.
+No `.env` file is required. Copy `.env.example` only when configuring an optional provider or source:
 
-| Variable | Purpose |
-|---|---|
-| `AI_PROVIDER` | `fallback`, `gemini`, `openai`, or `anthropic` |
-| `GEMINI_API_KEY` | Optional Gemini key |
-| `OPENAI_API_KEY` | Optional OpenAI key |
-| `ANTHROPIC_API_KEY` | Optional Anthropic key |
-| `GUPY_CAREER_URLS` | Public Gupy career page URLs separated by commas |
-| `GREENHOUSE_BOARD_TOKENS` | Public Greenhouse board tokens |
-| `LEVER_COMPANY_SLUGS` | Public Lever company slugs |
+```bash
+cp .env.example .env
+```
 
-## Project Structure
+PowerShell:
+
+```powershell
+Copy-Item .env.example .env
+```
+
+Important options:
+
+| Variable                  | Purpose                                        |
+| ------------------------- | ---------------------------------------------- |
+| `AI_PROVIDER`             | `fallback`, `gemini`, `openai`, or `anthropic` |
+| `GEMINI_API_KEY`          | Optional Gemini key                            |
+| `AI_REQUEST_TIMEOUT_MS`   | Remote AI request timeout                      |
+| `AI_MAX_RETRIES`          | Retry count for transient AI failures          |
+| `AI_JOB_CONCURRENCY`      | Maximum concurrent job analyses                |
+| `GUPY_CAREER_URLS`        | Comma-separated public Gupy career pages       |
+| `GREENHOUSE_BOARD_TOKENS` | Comma-separated public Greenhouse board tokens |
+| `LEVER_COMPANY_SLUGS`     | Comma-separated public Lever company slugs     |
+
+## Structure
 
 ```text
 src/
-  ai/        AI adapters and local fallback
-  cli/       argument parsing and validation
-  config/    environment configuration
-  matcher/   scoring, recommendation, and role classification
-  qa/        data quality rules
+  ai/        provider adapters, schemas, prompts, local fallback
+  matcher/   role classification, skills, location, scoring
+  qa/        validation rules, deduplication, quality score
   reports/   Excel and Markdown generation
-  resume/    resume parsing and sanitization
-  scraper/   job sources and validation
-  web/       Express API and web UI
+  resume/    parsing, limits, and personal-data sanitization
+  scraper/   source registry, collectors, health checks
+  web/       Express API and browser UI
+tests/
+  unit/      deterministic contracts and edge cases
+  e2e/       pipeline, API, Excel, browser, accessibility
 ```
 
-## Privacy and Safety
+## Documentation
 
-- Uploaded resumes are deleted after each web analysis.
-- Personal data is masked before analysis.
-- `.env`, `output/`, and `uploads/` are ignored by Git.
-- The app uses public job data only.
-- No login bypass, captcha bypass, or aggressive scraping.
+- [Architecture](docs/architecture.md)
+- [QA strategy](docs/qa-strategy.md)
+- [Test plan](docs/test-plan.md)
+- [Test cases](docs/test-cases.md)
+- [Bug report template](docs/bug-report-template.md)
 
 ## License
 
-MIT
+[MIT](LICENSE) - João Vitor da Silva

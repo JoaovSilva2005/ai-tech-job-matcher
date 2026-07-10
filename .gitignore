@@ -1,10 +1,14 @@
 node_modules/
 .env
+.env.*
+!.env.example
 dist/
 output/*
 !output/.gitkeep
 uploads/*
 !uploads/.gitkeep
+coverage/
 playwright-report/
 test-results/
 *.log
+.DS_Store

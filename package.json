@@ -1,6 +1,7 @@
 {
   "name": "ai-tech-job-matcher",
-  "version": "1.0.0",
+  "version": "1.1.0",
+  "private": true,
   "description": "A TypeScript project that uses Playwright, AI and Excel reports to match tech resumes with public job opportunities.",
   "main": "dist/index.js",
   "scripts": {
@@ -16,6 +17,7 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
+    "docs:screenshot": "npm run build && node scripts/capture-readme-screenshot.mjs",
     "demo:qa": "tsx src/index.ts --resume ./samples/sample-resume.txt --role qa --source gupy --work-mode remote --limit 10 --fallback",
     "demo:all": "tsx src/index.ts --resume ./samples/sample-resume.txt --role all --source all --limit 16 --fallback",
     "sources:check": "tsx src/tools/checkSources.ts",
@@ -31,8 +33,19 @@
     "excel-report",
     "job-matching"
   ],
-  "author": "Joao Victor Silva",
+  "author": "João Vitor da Silva",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JoaovSilva2005/ai-tech-job-matcher.git"
+  },
+  "bugs": {
+    "url": "https://github.com/JoaovSilva2005/ai-tech-job-matcher/issues"
+  },
+  "homepage": "https://github.com/JoaovSilva2005/ai-tech-job-matcher#readme",
+  "engines": {
+    "node": ">=22.3.0"
+  },
   "dependencies": {
     "dotenv": "^16.4.5",
     "exceljs": "^4.4.0",
