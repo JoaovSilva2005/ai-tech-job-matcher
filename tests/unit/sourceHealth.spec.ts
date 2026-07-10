@@ -1,5 +1,6 @@
 import { expect, test } from '@playwright/test';
-import { checkPublicSources, hasBlockingSourceFailure } from '../../src/scraper/sourceHealth';
+import { checkPublicSources, hasNoHealthySources } from '../../src/scraper/sourceHealth';
+import type { SourceHealthStatus } from '../../src/scraper/sourceHealth';
 import type { PublicJobSource } from '../../src/cli/cliTypes';
 import type { ScrapedJob } from '../../src/scraper/types';
 
@@ -33,12 +34,31 @@ test.describe('public source health check', () => {
 
   test('marks a source as empty when it returns no jobs', async () => {
     const results = await checkPublicSources({
-      sources: ['lever'],
+      sources: ['gupy'],
       scrape: async () => [],
     });
 
     expect(results[0].status).toBe('empty');
     expect(results[0].jobsFound).toBe(0);
+  });
+
+  test('marks a source as unconfigured without calling its scraper', async () => {
+    let scrapeCalled = false;
+    const results = await checkPublicSources({
+      sources: ['lever'],
+      configuration: () => ({ configured: false, reason: 'missing company slugs' }),
+      scrape: async () => {
+        scrapeCalled = true;
+        return [];
+      },
+    });
+
+    expect(results[0]).toMatchObject({
+      source: 'lever',
+      status: 'unconfigured',
+      error: 'missing company slugs',
+    });
+    expect(scrapeCalled).toBe(false);
   });
 
   test('marks a source as failed when the scraper throws', async () => {
@@ -53,25 +73,44 @@ test.describe('public source health check', () => {
     expect(results[0].error).toContain('network unavailable');
   });
 
-  test('only blocks when every checked source failed', () => {
+  test('blocks only when no checked source returned usable jobs', () => {
     expect(
-      hasBlockingSourceFailure([
+      hasNoHealthySources([
         result('gupy', 'failed'),
-        result('remotive', 'failed'),
+        result('remotive', 'empty'),
+        result('lever', 'unconfigured'),
       ])
     ).toBe(true);
 
     expect(
-      hasBlockingSourceFailure([
+      hasNoHealthySources([
         result('gupy', 'ok'),
         result('lever', 'empty'),
         result('remoteok', 'failed'),
       ])
     ).toBe(false);
   });
+
+  test('checks configured sources in parallel', async () => {
+    let active = 0;
+    let peak = 0;
+    const results = await checkPublicSources({
+      sources: ['gupy', 'remotive', 'remoteok'],
+      scrape: async () => {
+        active += 1;
+        peak = Math.max(peak, active);
+        await new Promise((resolve) => setTimeout(resolve, 20));
+        active -= 1;
+        return [baseJob];
+      },
+    });
+
+    expect(results.every((item) => item.status === 'ok')).toBe(true);
+    expect(peak).toBe(3);
+  });
 });
 
-function result(source: PublicJobSource, status: 'ok' | 'empty' | 'failed') {
+function result(source: PublicJobSource, status: SourceHealthStatus) {
   return {
     source,
     status,

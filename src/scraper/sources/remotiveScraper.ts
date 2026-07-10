@@ -1,13 +1,13 @@
-import { request } from 'playwright';
 import type { ScrapedJob, ScrapeOptions, TechRole } from '../types';
 import { nowIso } from '../../utils/date';
 import { normalizeWhitespace, stripHtml } from '../../utils/text';
 import { classifyRole } from '../../matcher/classifyRole';
 import { logger } from '../../utils/logger';
+import { fetchPublicJson } from './publicApiUtils';
+import { SourceUnavailableError } from '../sourceErrors';
 
 const REMOTIVE_API = 'https://remotive.com/api/remote-jobs';
 const MAX_REMOTIVE_JOBS = 20; // ethical low cap on what we keep per run
-const REQUEST_TIMEOUT_MS = 15_000;
 
 interface RemotiveEntry {
   id?: number;
@@ -18,6 +18,7 @@ interface RemotiveEntry {
   job_type?: string;
   candidate_required_location?: string;
   description?: string;
+  publication_date?: string;
 }
 
 interface RemotiveResponse {
@@ -52,71 +53,61 @@ export function jobMatchesRole(
  * attribution and the apply link are preserved.
  */
 export async function scrapeRemotiveJobs(options: ScrapeOptions): Promise<ScrapedJob[]> {
-  const context = await request.newContext({
-    extraHTTPHeaders: {
-      'User-Agent': 'ai-tech-job-matcher (portfolio project; single request; contact via GitHub)',
-    },
-    timeout: REQUEST_TIMEOUT_MS,
-  });
-
-  try {
-    const response = await context.get(REMOTIVE_API);
-    if (!response.ok()) {
-      logger.warn(`Remotive API returned status ${response.status()}; skipping this source.`);
-      return [];
-    }
-
-    const data = (await response.json()) as RemotiveResponse;
-    const entries = (data.jobs ?? []).filter(
-      (entry) => entry && entry.title && entry.company_name
-    );
-    logger.debug(`Remotive returned ${entries.length} job(s) in its public feed.`);
-
-    const scrapedAt = nowIso();
-    const limit = Math.min(options.limit, MAX_REMOTIVE_JOBS);
-
-    const jobs: ScrapedJob[] = [];
-    for (const entry of entries) {
-      const title = normalizeWhitespace(String(entry.title));
-      const description = buildDescription(entry);
-      if (!jobMatchesRole(options.role, title, description)) continue;
-
-      jobs.push({
-        id: `remotive-${entry.id ?? jobs.length}`,
-        title,
-        company: normalizeWhitespace(String(entry.company_name)),
-        location: entry.candidate_required_location
-          ? normalizeWhitespace(entry.candidate_required_location)
-          : 'Remote',
-        workMode: 'remote',
-        url: entry.url ?? '',
-        description,
-        source: 'remotive',
-        scrapedAt,
-      });
-      if (jobs.length >= limit) break;
-    }
-
-    const roleNote =
-      options.role && options.role !== 'all' ? ` matching role "${options.role}"` : '';
-    if (jobs.length === 0) {
-      logger.warn(
-        `Remotive: no jobs${roleNote} in the current public feed (${entries.length} recent jobs scanned). ` +
-          'The free feed only exposes the latest ~30 postings; try again later or use --role all.'
-      );
-    } else {
-      logger.info(`Remotive: collected ${jobs.length} public job(s)${roleNote}.`);
-    }
-    return jobs;
-  } catch (error) {
-    logger.warn(
-      `Remotive source unavailable (${(error as Error).message}); returning no jobs. ` +
-        'Try another real source such as --source themuse or --source greenhouse.'
-    );
-    return [];
-  } finally {
-    await context.dispose();
+  const payload = await fetchPublicJson<unknown>(REMOTIVE_API, 'Remotive');
+  if (!isRemotiveResponse(payload)) {
+    throw new SourceUnavailableError('Remotive', 'Remotive returned an invalid payload');
   }
+
+  const entries = payload.jobs.filter((entry) => entry && entry.title && entry.company_name);
+  logger.debug(`Remotive returned ${entries.length} job(s) in its public feed.`);
+
+  const scrapedAt = nowIso();
+  const limit = Math.min(options.limit, MAX_REMOTIVE_JOBS);
+  const jobs: ScrapedJob[] = [];
+  for (const entry of entries) {
+    const title = normalizeWhitespace(String(entry.title));
+    const description = buildDescription(entry);
+    if (!jobMatchesRole(options.role, title, description)) continue;
+
+    jobs.push({
+      id: `remotive-${entry.id ?? jobs.length}`,
+      title,
+      company: normalizeWhitespace(String(entry.company_name)),
+      location: entry.candidate_required_location
+        ? normalizeWhitespace(entry.candidate_required_location)
+        : 'Remote',
+      workMode: 'remote',
+      url: entry.url ?? '',
+      description,
+      source: 'remotive',
+      scrapedAt,
+      publishedAt: normalizePublishedAt(entry.publication_date),
+      availability: 'active',
+    });
+    if (jobs.length >= limit) break;
+  }
+
+  const roleNote = options.role && options.role !== 'all' ? ` matching role "${options.role}"` : '';
+  if (jobs.length === 0) {
+    logger.warn(
+      `Remotive: no jobs${roleNote} in the current public feed (${entries.length} recent jobs scanned). ` +
+        'The free feed only exposes the latest postings; try again later or use --role all.'
+    );
+  } else {
+    logger.info(`Remotive: collected ${jobs.length} public job(s)${roleNote}.`);
+  }
+  return jobs;
+}
+
+function isRemotiveResponse(value: unknown): value is Required<Pick<RemotiveResponse, 'jobs'>> {
+  return Boolean(
+    value && typeof value === 'object' && Array.isArray((value as RemotiveResponse).jobs)
+  );
+}
+
+function normalizePublishedAt(value: string | undefined): string | undefined {
+  if (!value || Number.isNaN(Date.parse(value))) return undefined;
+  return new Date(value).toISOString();
 }
 
 function buildDescription(entry: RemotiveEntry): string {

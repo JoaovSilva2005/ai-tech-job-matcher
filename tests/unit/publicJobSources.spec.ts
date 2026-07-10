@@ -124,6 +124,23 @@ test.describe('public job source mappers', () => {
     expect(job!.description).toContain('automacao de testes');
   });
 
+  test('rejects Gupy jobs whose public status is closed', () => {
+    const job = mapGupyJobDetail(
+      {
+        id: 11516071,
+        name: 'Jr QA Analyst',
+        careerPageName: 'Topaz Brasil',
+        status: 'closed',
+        description:
+          '<p>Garantir qualidade funcional com testes manuais e automatizados em sistemas web.</p>',
+      },
+      'https://topazbrasil.gupy.io/jobs/11516071',
+      SCRAPED_AT
+    );
+
+    expect(job).toBeNull();
+  });
+
   test('parses Gupy __NEXT_DATA__ safely', () => {
     const html =
       '<html><script id="__NEXT_DATA__" type="application/json">{"props":{"pageProps":{"jobs":[{"id":1,"title":"QA"}]}}}</script></html>';
@@ -136,10 +153,6 @@ test.describe('public job source mappers', () => {
   });
 
   test('parseCommaList trims blanks and ignores empty entries', () => {
-    expect(parseCommaList(' stripe, figma ,, coinbase ')).toEqual([
-      'stripe',
-      'figma',
-      'coinbase',
-    ]);
+    expect(parseCommaList(' stripe, figma ,, coinbase ')).toEqual(['stripe', 'figma', 'coinbase']);
   });
 });

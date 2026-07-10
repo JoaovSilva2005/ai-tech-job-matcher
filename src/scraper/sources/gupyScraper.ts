@@ -4,8 +4,9 @@ import { nowIso } from '../../utils/date';
 import { normalizeWhitespace, stripHtml } from '../../utils/text';
 import type { ScrapedJob, ScrapeOptions, WorkMode } from '../types';
 import { logger } from '../../utils/logger';
-import { normalizeWorkMode } from './sampleHtmlScraper';
+import { normalizeWorkMode } from '../normalizeWorkMode';
 import { fetchPublicText, parseCommaList } from './publicApiUtils';
+import { SourceUnavailableError } from '../sourceErrors';
 
 const DEFAULT_GUPY_CAREER_URLS = [
   'https://topazbrasil.gupy.io/',
@@ -14,6 +15,7 @@ const DEFAULT_GUPY_CAREER_URLS = [
 ];
 const MAX_GUPY_JOBS = 12;
 const MAX_GUPY_CAREER_PAGES = 3;
+const CLOSED_GUPY_STATUSES = new Set(['closed', 'cancelled', 'canceled', 'inactive', 'archived']);
 
 interface GupyNextData {
   props?: {
@@ -80,23 +82,46 @@ export async function scrapeGupyJobs(options: ScrapeOptions): Promise<ScrapedJob
   const careerUrls = getGupyCareerUrls();
   const scrapedAt = nowIso();
   const jobs: ScrapedJob[] = [];
+  let successfulCareerPages = 0;
+  let lastError: Error | undefined;
 
   for (const careerUrl of careerUrls.slice(0, MAX_GUPY_CAREER_PAGES)) {
     if (jobs.length >= limit) break;
 
-    const html = await fetchPublicText(careerUrl, 'Gupy');
-    if (!html) continue;
+    let data: GupyNextData;
+    try {
+      const html = await fetchPublicText(careerUrl, 'Gupy');
+      const parsed = parseGupyNextData(html);
+      if (!parsed) {
+        throw new SourceUnavailableError(
+          'Gupy',
+          `Gupy career page format changed or returned invalid data: ${careerUrl}`
+        );
+      }
+      data = parsed;
+      successfulCareerPages += 1;
+    } catch (error) {
+      lastError = error as Error;
+      logger.warn(lastError.message);
+      continue;
+    }
 
-    const data = parseGupyNextData(html);
     const pageProps = data?.props?.pageProps;
     const candidates = extractCareerCandidates(careerUrl, pageProps?.careerPage, pageProps?.jobs);
 
     for (const candidate of candidates) {
       if (jobs.length >= limit) break;
-      if (!jobMatchesRequestedRole(options.role, candidate.title, candidate.department)) continue;
+      if (!candidateMayMatchRequestedRole(options.role, candidate.title, candidate.department)) {
+        continue;
+      }
 
-      const detailHtml = await fetchPublicText(candidate.url, 'Gupy');
-      const detail = detailHtml ? parseGupyNextData(detailHtml)?.props?.pageProps?.job : null;
+      let detail: GupyJobDetail | null = null;
+      try {
+        const detailHtml = await fetchPublicText(candidate.url, 'Gupy');
+        detail = parseGupyNextData(detailHtml)?.props?.pageProps?.job ?? null;
+      } catch (error) {
+        logger.warn(`Gupy job detail unavailable for ${candidate.id}: ${(error as Error).message}`);
+      }
       const mapped = detail
         ? mapGupyJobDetail(detail, candidate.url, scrapedAt, candidate)
         : mapGupyCandidate(candidate, scrapedAt);
@@ -106,6 +131,8 @@ export async function scrapeGupyJobs(options: ScrapeOptions): Promise<ScrapedJob
       }
     }
   }
+
+  if (successfulCareerPages === 0 && lastError) throw lastError;
 
   if (jobs.length === 0) {
     logger.warn('Gupy: no matching public jobs found in the configured career pages.');
@@ -138,6 +165,8 @@ export function mapGupyJobDetail(
   scrapedAt: string,
   fallback?: GupyCandidate
 ): ScrapedJob | null {
+  if (detail.status && CLOSED_GUPY_STATUSES.has(detail.status.toLowerCase())) return null;
+
   const title = normalizeWhitespace(detail.name ?? fallback?.title ?? '');
   const company = normalizeWhitespace(
     detail.careerPageName ?? detail.companyName ?? fallback?.company ?? companyFromGupyUrl(url)
@@ -158,7 +187,9 @@ export function mapGupyJobDetail(
   if (!title || !company || !url || description.length < 60) return null;
 
   const location = buildDetailLocation(detail) || fallback?.location || 'Brasil';
-  const workplace = normalizeWhitespace(`${detail.workplaceType ?? ''} ${detail.remoteWorking ? 'remote' : ''}`);
+  const workplace = normalizeWhitespace(
+    `${detail.workplaceType ?? ''} ${detail.remoteWorking ? 'remote' : ''}`
+  );
 
   return {
     id: `gupy-${detail.id ?? fallback?.id ?? slugForId(title, company)}`,
@@ -174,6 +205,7 @@ export function mapGupyJobDetail(
     ),
     source: 'gupy',
     scrapedAt,
+    availability: 'active',
   };
 }
 
@@ -193,6 +225,7 @@ function mapGupyCandidate(candidate: GupyCandidate, scrapedAt: string): ScrapedJ
     description,
     source: 'gupy',
     scrapedAt,
+    availability: 'active',
   };
 }
 
@@ -237,7 +270,11 @@ function buildCareerLocation(entry: GupyCareerJob): string {
 }
 
 function buildDetailLocation(detail: GupyJobDetail): string {
-  return [detail.addressCity, detail.addressStateShortName ?? detail.addressState, detail.addressCountry]
+  return [
+    detail.addressCity,
+    detail.addressStateShortName ?? detail.addressState,
+    detail.addressCountry,
+  ]
     .map((part) => normalizeWhitespace(part ?? ''))
     .filter(Boolean)
     .join(', ');
@@ -252,6 +289,16 @@ function jobMatchesRequestedRole(
   return classifyRole(title, description) === role;
 }
 
+function candidateMayMatchRequestedRole(
+  role: ScrapeOptions['role'],
+  title: string,
+  department: string
+): boolean {
+  if (!role || role === 'all' || role === 'unknown') return true;
+  const preliminaryRole = classifyRole(title, department);
+  return preliminaryRole === 'unknown' || preliminaryRole === role;
+}
+
 function companyFromGupyUrl(url: string): string {
   const host = new URL(url).hostname;
   const subdomain = host.split('.')[0] ?? 'Gupy';
@@ -262,5 +309,8 @@ function companyFromGupyUrl(url: string): string {
 }
 
 function slugForId(title: string, company: string): string {
-  return `${company}-${title}`.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  return `${company}-${title}`
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
 }

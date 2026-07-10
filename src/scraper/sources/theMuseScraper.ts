@@ -3,7 +3,7 @@ import { classifyRole } from '../../matcher/classifyRole';
 import { nowIso } from '../../utils/date';
 import { normalizeWhitespace, stripHtml } from '../../utils/text';
 import { logger } from '../../utils/logger';
-import { normalizeWorkMode } from './sampleHtmlScraper';
+import { normalizeWorkMode } from '../normalizeWorkMode';
 import { fetchPublicJson } from './publicApiUtils';
 
 const THE_MUSE_API = 'https://www.themuse.com/api/public/jobs';
@@ -29,7 +29,6 @@ export async function scrapeTheMuseJobs(options: ScrapeOptions): Promise<Scraped
   const limit = Math.min(options.limit, MAX_THE_MUSE_JOBS);
   const url = `${THE_MUSE_API}?page=1&category=${encodeURIComponent('Computer and IT')}`;
   const data = await fetchPublicJson<TheMuseResponse>(url, 'The Muse');
-  if (!data) return [];
 
   const scrapedAt = nowIso();
   const jobs: ScrapedJob[] = [];
@@ -86,7 +85,14 @@ export function mapTheMuseJob(entry: TheMuseJob, scrapedAt: string): ScrapedJob 
     description: enrichedDescription,
     source: 'themuse',
     scrapedAt,
+    publishedAt: normalizePublishedAt(entry.publication_date),
+    availability: 'active',
   };
+}
+
+function normalizePublishedAt(value: string | undefined): string | undefined {
+  if (!value || Number.isNaN(Date.parse(value))) return undefined;
+  return new Date(value).toISOString();
 }
 
 function jobMatchesRequestedRole(role: ScrapeOptions['role'], job: ScrapedJob): boolean {
@@ -95,5 +101,8 @@ function jobMatchesRequestedRole(role: ScrapeOptions['role'], job: ScrapedJob): 
 }
 
 function slugForId(title: string, company: string): string {
-  return `${company}-${title}`.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  return `${company}-${title}`
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
 }

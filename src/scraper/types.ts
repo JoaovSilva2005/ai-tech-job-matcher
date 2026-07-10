@@ -17,6 +17,8 @@ export type SeniorityLevel = 'intern' | 'junior' | 'mid' | 'senior' | 'unknown';
 
 export type EnglishLevel = 'basic' | 'intermediate' | 'advanced' | 'fluent' | 'unknown';
 
+export type JobAvailability = 'active' | 'unknown' | 'closed';
+
 export interface ScrapedJob {
   id: string;
   title: string;
@@ -27,6 +29,9 @@ export interface ScrapedJob {
   description: string;
   source: string;
   scrapedAt: string;
+  publishedAt?: string;
+  expiresAt?: string;
+  availability?: JobAvailability;
   rawText?: string;
 }
 

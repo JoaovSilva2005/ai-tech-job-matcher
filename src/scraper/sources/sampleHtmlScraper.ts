@@ -1,7 +1,8 @@
 import path from 'path';
 import { pathToFileURL } from 'url';
 import { chromium } from 'playwright';
-import type { ScrapedJob, ScrapeOptions, WorkMode } from '../types';
+import type { ScrapedJob, ScrapeOptions } from '../types';
+import { normalizeWorkMode } from '../normalizeWorkMode';
 import { sampleSelectors } from '../selectors/sampleSelectors';
 import { fileExists } from '../../utils/fileSystem';
 import { nowIso } from '../../utils/date';
@@ -9,14 +10,6 @@ import { normalizeWhitespace } from '../../utils/text';
 import { logger } from '../../utils/logger';
 
 const SAMPLE_FILE = path.resolve(__dirname, '../../../samples/sample-jobs.html');
-
-export function normalizeWorkMode(raw: string): WorkMode {
-  const value = raw.trim().toLowerCase();
-  if (/remote|remoto/.test(value)) return 'remote';
-  if (/hybrid|híbrido|hibrido/.test(value)) return 'hybrid';
-  if (/onsite|on-site|presencial|office/.test(value)) return 'onsite';
-  return 'unknown';
-}
 
 /**
  * Scrapes the local sample job board with a real Playwright browser.
@@ -62,6 +55,7 @@ export async function scrapeSampleJobs(
         description: normalizeWhitespace(description),
         source: 'sample',
         scrapedAt,
+        availability: 'active',
         rawText: description,
       });
     }

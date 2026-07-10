@@ -1,0 +1,36 @@
+name: Public source health
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 12 * * 1'
+
+jobs:
+  source-health:
+    name: Check public job sources
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check sources
+        run: npm run sources:check
+
+      - name: Upload source health evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: source-health-report
+          path: output/source-health.json
+          if-no-files-found: warn
+          retention-days: 14

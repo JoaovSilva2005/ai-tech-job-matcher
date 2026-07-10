@@ -70,6 +70,42 @@ test.describe('validateJob', () => {
     expect(result.issues.some((i) => i.field === 'workMode' && i.severity === 'low')).toBe(true);
   });
 
+  test('closed or expired jobs are rejected from ranking', () => {
+    const closed = validateJob(makeJob({ availability: 'closed' }));
+    const expired = validateJob(
+      makeJob({
+        scrapedAt: '2026-07-09T12:00:00.000Z',
+        expiresAt: '2026-07-08T12:00:00.000Z',
+      })
+    );
+
+    expect(closed.status).toBe('invalid');
+    expect(closed.issues).toContainEqual(
+      expect.objectContaining({ field: 'availability', severity: 'high' })
+    );
+    expect(expired.status).toBe('invalid');
+    expect(expired.issues).toContainEqual(
+      expect.objectContaining({ field: 'expiresAt', severity: 'high' })
+    );
+  });
+
+  test('flags unconfirmed availability and stale publication dates for review evidence', () => {
+    const result = validateJob(
+      makeJob({
+        availability: 'unknown',
+        scrapedAt: '2026-07-09T12:00:00.000Z',
+        publishedAt: '2025-01-01T12:00:00.000Z',
+      })
+    );
+
+    expect(result.issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ field: 'availability', severity: 'low' }),
+        expect.objectContaining({ field: 'publishedAt', severity: 'low' }),
+      ])
+    );
+  });
+
   test('data quality score decreases as issues accumulate', () => {
     const clean = validateJob(makeJob());
     const dirty = validateJob(makeJob({ title: '', url: 'bad', workMode: 'unknown' }));

@@ -1,9 +1,10 @@
 import { VALID_SOURCES } from '../cli/cliTypes';
 import type { PublicJobSource } from '../cli/cliTypes';
 import type { ScrapedJob, ScrapeOptions, ScraperFn, TechRole } from './types';
-import { getScraper } from './sourceRegistry';
+import { getScraper, getSourceConfiguration } from './sourceRegistry';
+import type { SourceConfiguration } from './sourceRegistry';
 
-export type SourceHealthStatus = 'ok' | 'empty' | 'failed';
+export type SourceHealthStatus = 'ok' | 'empty' | 'unconfigured' | 'failed';
 
 export interface SourceHealthResult {
   source: PublicJobSource;
@@ -20,6 +21,7 @@ export interface SourceHealthOptions {
   role?: TechRole;
   timeoutMs?: number;
   scrape?: (source: PublicJobSource, options: ScrapeOptions) => Promise<ScrapedJob[]>;
+  configuration?: (source: PublicJobSource) => SourceConfiguration;
 }
 
 const DEFAULT_HEALTH_LIMIT = 3;
@@ -33,17 +35,28 @@ export async function checkPublicSources(
   const role = options.role ?? 'all';
   const timeoutMs = options.timeoutMs ?? DEFAULT_HEALTH_TIMEOUT_MS;
   const scrape = options.scrape ?? scrapeSource;
-  const results: SourceHealthResult[] = [];
+  const configuration = options.configuration ?? getSourceConfiguration;
 
-  for (const source of sources) {
-    results.push(await checkSource(source, { limit, role }, timeoutMs, scrape));
-  }
-
-  return results;
+  return Promise.all(
+    sources.map((source) => {
+      const sourceConfiguration = configuration(source);
+      if (!sourceConfiguration.configured) {
+        return {
+          source,
+          status: 'unconfigured' as const,
+          jobsFound: 0,
+          durationMs: 0,
+          sampleTitles: [],
+          error: sourceConfiguration.reason,
+        };
+      }
+      return checkSource(source, { limit, role }, timeoutMs, scrape);
+    })
+  );
 }
 
-export function hasBlockingSourceFailure(results: SourceHealthResult[]): boolean {
-  return results.every((result) => result.status === 'failed');
+export function hasNoHealthySources(results: SourceHealthResult[]): boolean {
+  return results.length === 0 || !results.some((result) => result.status === 'ok');
 }
 
 async function checkSource(

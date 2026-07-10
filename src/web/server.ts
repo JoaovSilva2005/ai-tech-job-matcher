@@ -13,6 +13,7 @@ import { ensureDir } from '../utils/fileSystem';
 import { logger, setDebug } from '../utils/logger';
 import { ResumeParseError, SUPPORTED_RESUME_EXTENSIONS } from '../resume/parseResume';
 import { isLikelyRealJobUrl } from '../utils/url';
+import { SourceUnavailableError } from '../scraper/sourceErrors';
 import { indexHtml } from './page';
 
 const PORT = Number(process.env.PORT ?? 4180);
@@ -151,13 +152,13 @@ export function createApp(options: WebAppOptions = {}): express.Application {
       if (runOutputDir) {
         fs.rmSync(runOutputDir, { recursive: true, force: true });
       }
-      const status = isClientError(error) ? 400 : 500;
+      const status = errorStatus(error);
       if (status === 500) {
         logger.error(`Web analysis failed: ${(error as Error).message}`);
       }
       res.status(status).json({
         error:
-          status === 400
+          status !== 500
             ? (error as Error).message
             : 'Analysis failed unexpectedly. Check the server logs and try again.',
       });
@@ -313,8 +314,10 @@ function uploadErrorHandler(
   res.status(500).json({ error: 'Unexpected server error.' });
 }
 
-function isClientError(error: unknown): boolean {
-  return error instanceof RequestValidationError || error instanceof ResumeParseError;
+function errorStatus(error: unknown): number {
+  if (error instanceof RequestValidationError || error instanceof ResumeParseError) return 400;
+  if (error instanceof SourceUnavailableError) return 503;
+  return 500;
 }
 
 function isPathInside(parent: string, candidate: string): boolean {

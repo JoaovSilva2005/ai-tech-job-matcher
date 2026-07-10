@@ -4,7 +4,7 @@ import { classifyRole } from '../../matcher/classifyRole';
 import { nowIso } from '../../utils/date';
 import { normalizeWhitespace, stripHtml } from '../../utils/text';
 import { logger } from '../../utils/logger';
-import { normalizeWorkMode } from './sampleHtmlScraper';
+import { normalizeWorkMode } from '../normalizeWorkMode';
 import { fetchPublicJson, parseCommaList } from './publicApiUtils';
 
 const GREENHOUSE_API = 'https://boards-api.greenhouse.io/v1/boards';
@@ -22,6 +22,7 @@ interface GreenhouseJob {
   content?: string;
   location?: { name?: string };
   company_name?: string;
+  updated_at?: string;
   departments?: { name?: string }[];
   offices?: { name?: string; location?: string }[];
 }
@@ -32,11 +33,20 @@ export async function scrapeGreenhouseJobs(options: ScrapeOptions): Promise<Scra
   const limit = Math.min(options.limit, MAX_GREENHOUSE_JOBS);
   const scrapedAt = nowIso();
   const jobs: ScrapedJob[] = [];
+  let successfulRequests = 0;
+  let lastError: Error | undefined;
 
   for (const token of boardTokens) {
     const url = `${GREENHOUSE_API}/${encodeURIComponent(token)}/jobs?content=true`;
-    const data = await fetchPublicJson<GreenhouseResponse>(url, `Greenhouse (${token})`);
-    if (!data) continue;
+    let data: GreenhouseResponse;
+    try {
+      data = await fetchPublicJson<GreenhouseResponse>(url, `Greenhouse (${token})`);
+      successfulRequests += 1;
+    } catch (error) {
+      lastError = error as Error;
+      logger.warn(lastError.message);
+      continue;
+    }
 
     for (const entry of data.jobs ?? []) {
       const job = mapGreenhouseJob(entry, token, scrapedAt);
@@ -49,6 +59,8 @@ export async function scrapeGreenhouseJobs(options: ScrapeOptions): Promise<Scra
 
     if (jobs.length >= limit) break;
   }
+
+  if (successfulRequests === 0 && lastError) throw lastError;
 
   if (jobs.length === 0) {
     logger.warn(
@@ -97,7 +109,14 @@ export function mapGreenhouseJob(
     ),
     source: 'greenhouse',
     scrapedAt,
+    publishedAt: normalizePublishedAt(entry.updated_at),
+    availability: 'active',
   };
+}
+
+function normalizePublishedAt(value: string | undefined): string | undefined {
+  if (!value || Number.isNaN(Date.parse(value))) return undefined;
+  return new Date(value).toISOString();
 }
 
 function jobMatchesRequestedRole(role: ScrapeOptions['role'], job: ScrapedJob): boolean {
@@ -113,5 +132,8 @@ function humanizeBoardToken(token: string): string {
 }
 
 function slugForId(title: string, company: string): string {
-  return `${company}-${title}`.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  return `${company}-${title}`
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '');
 }

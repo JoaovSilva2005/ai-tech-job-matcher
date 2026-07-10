@@ -59,7 +59,55 @@ export const validationRules: ValidationRule[] = [
   },
   function scrapedAtPresent(job) {
     if (!job.scrapedAt || Number.isNaN(Date.parse(job.scrapedAt))) {
-      return { field: 'scrapedAt', severity: 'low', message: 'Missing or invalid scrape timestamp' };
+      return {
+        field: 'scrapedAt',
+        severity: 'low',
+        message: 'Missing or invalid scrape timestamp',
+      };
+    }
+    return null;
+  },
+  function availabilityIsActive(job) {
+    if (job.availability === 'closed') {
+      return { field: 'availability', severity: 'high', message: 'Job is marked as closed' };
+    }
+    if (job.availability === 'unknown') {
+      return {
+        field: 'availability',
+        severity: 'low',
+        message: 'Job availability was not confirmed by its source',
+      };
+    }
+    return null;
+  },
+  function publicationDateIsUsable(job) {
+    if (!job.publishedAt) return null;
+    const publishedAt = Date.parse(job.publishedAt);
+    if (Number.isNaN(publishedAt)) {
+      return { field: 'publishedAt', severity: 'low', message: 'Invalid publication timestamp' };
+    }
+    const reference = Date.parse(job.scrapedAt);
+    const ageDays = Number.isNaN(reference)
+      ? 0
+      : Math.floor((reference - publishedAt) / (24 * 60 * 60 * 1000));
+    if (ageDays > 180) {
+      return {
+        field: 'publishedAt',
+        severity: 'low',
+        message: `Job was published ${ageDays} days before collection; verify it is still open`,
+      };
+    }
+    return null;
+  },
+  function expirationDateIsUsable(job) {
+    if (!job.expiresAt) return null;
+    const expiresAt = Date.parse(job.expiresAt);
+    if (Number.isNaN(expiresAt)) {
+      return { field: 'expiresAt', severity: 'low', message: 'Invalid expiration timestamp' };
+    }
+    const reference = Date.parse(job.scrapedAt);
+    if (!Number.isNaN(reference) && expiresAt < reference) {
+      return { field: 'expiresAt', severity: 'high', message: 'Job expired before collection' };
     }
     return null;
   },

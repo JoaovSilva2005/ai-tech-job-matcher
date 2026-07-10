@@ -25,14 +25,37 @@ test.describe('location preference', () => {
     expect(result.label).toContain('same city');
   });
 
-  test('scores same-state matches below exact city matches', () => {
+  test('uses geographic distance for regional matches', () => {
     const result = scoreLocationPreference(
       job({ location: 'Sao Paulo, Brazil', description: 'Hybrid role in Sao Paulo.' }),
       'Campinas, SP'
     );
 
     expect(result.score).toBe(7);
-    expect(result.label).toContain('same state');
+    expect(result.label).toContain('regional match');
+    expect(result.distanceKm).toBeGreaterThan(70);
+    expect(result.distanceKm).toBeLessThan(100);
+  });
+
+  test('scores a nearby city below an exact city and above a regional match', () => {
+    const result = scoreLocationPreference(
+      job({ location: 'Jundiai, SP', description: 'Hybrid role in Jundiai.' }),
+      'Campinas, SP'
+    );
+
+    expect(result.score).toBe(10);
+    expect(result.label).toContain('nearby');
+    expect(result.distanceKm).toBeLessThan(75);
+  });
+
+  test('falls back to all-state matching for cities outside the coordinate catalog', () => {
+    const result = scoreLocationPreference(
+      job({ location: 'Ribeirao Preto, SP', description: 'On-site role.' }),
+      'Americana, SP'
+    );
+
+    expect(result.score).toBe(6);
+    expect(result.label).toBe('same state (SP)');
   });
 
   test('keeps remote jobs relevant when city does not match', () => {

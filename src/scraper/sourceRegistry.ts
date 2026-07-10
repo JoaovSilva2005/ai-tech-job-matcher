@@ -7,6 +7,8 @@ import { scrapeTheMuseJobs } from './sources/theMuseScraper';
 import { scrapeGreenhouseJobs } from './sources/greenhouseScraper';
 import { scrapeGupyJobs } from './sources/gupyScraper';
 import { scrapeLeverJobs } from './sources/leverScraper';
+import { getEnv } from '../config/env';
+import { parseCommaList } from './sources/publicApiUtils';
 
 const registry: Record<JobSource, ScraperFn> = {
   sample: (options) => scrapeSampleJobs(options),
@@ -24,4 +26,19 @@ export function getScraper(source: JobSource): ScraperFn {
     throw new Error(`Unknown job source "${source}"`);
   }
   return scraper;
+}
+
+export interface SourceConfiguration {
+  configured: boolean;
+  reason?: string;
+}
+
+export function getSourceConfiguration(source: JobSource): SourceConfiguration {
+  if (source === 'lever' && parseCommaList(getEnv().LEVER_COMPANY_SLUGS).length === 0) {
+    return {
+      configured: false,
+      reason: 'LEVER_COMPANY_SLUGS is not configured',
+    };
+  }
+  return { configured: true };
 }

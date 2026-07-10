@@ -1,14 +1,25 @@
-import { checkPublicSources, hasBlockingSourceFailure } from '../scraper/sourceHealth';
+import path from 'path';
+import { checkPublicSources, hasNoHealthySources } from '../scraper/sourceHealth';
 import type { SourceHealthResult } from '../scraper/sourceHealth';
 import { logger } from '../utils/logger';
+import { writeJsonFile } from '../utils/fileSystem';
+import { nowIso } from '../utils/date';
+
+const HEALTH_REPORT_PATH = path.resolve('output/source-health.json');
 
 async function main(): Promise<void> {
   logger.info('Checking public job sources...');
   const results = await checkPublicSources();
 
   printResults(results);
+  writeJsonFile(HEALTH_REPORT_PATH, {
+    checkedAt: nowIso(),
+    summary: summarize(results),
+    sources: results,
+  });
+  logger.info(`Health evidence saved to ${HEALTH_REPORT_PATH}`);
 
-  if (hasBlockingSourceFailure(results)) {
+  if (hasNoHealthySources(results)) {
     process.exitCode = 1;
   }
 }
@@ -18,9 +29,7 @@ function printResults(results: SourceHealthResult[]): void {
   const statusWidth = Math.max(...results.map((result) => result.status.length), 'status'.length);
 
   console.log('');
-  console.log(
-    `${pad('source', sourceWidth)}  ${pad('status', statusWidth)}  jobs  ms     sample`
-  );
+  console.log(`${pad('source', sourceWidth)}  ${pad('status', statusWidth)}  jobs  ms     sample`);
   console.log(
     `${'-'.repeat(sourceWidth)}  ${'-'.repeat(statusWidth)}  ----  -----  ${'-'.repeat(40)}`
   );
@@ -35,12 +44,21 @@ function printResults(results: SourceHealthResult[]): void {
     );
   }
 
-  const ok = results.filter((result) => result.status === 'ok').length;
-  const empty = results.filter((result) => result.status === 'empty').length;
-  const failed = results.filter((result) => result.status === 'failed').length;
+  const summary = summarize(results);
 
   console.log('');
-  console.log(`Summary: ${ok} ok, ${empty} empty, ${failed} failed.`);
+  console.log(
+    `Summary: ${summary.ok} ok, ${summary.empty} empty, ${summary.unconfigured} unconfigured, ${summary.failed} failed.`
+  );
+}
+
+function summarize(results: SourceHealthResult[]) {
+  return {
+    ok: results.filter((result) => result.status === 'ok').length,
+    empty: results.filter((result) => result.status === 'empty').length,
+    unconfigured: results.filter((result) => result.status === 'unconfigured').length,
+    failed: results.filter((result) => result.status === 'failed').length,
+  };
 }
 
 function pad(value: string, length: number): string {

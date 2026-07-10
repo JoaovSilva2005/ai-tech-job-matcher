@@ -1,4 +1,4 @@
-import { logger } from '../../utils/logger';
+import { SourceUnavailableError } from '../sourceErrors';
 
 export const PUBLIC_SOURCE_USER_AGENT =
   'ai-tech-job-matcher (portfolio project; single low-volume request; contact via GitHub)';
@@ -9,7 +9,7 @@ export async function fetchPublicJson<T>(
   url: string,
   sourceName: string,
   timeoutMs = PUBLIC_API_TIMEOUT_MS
-): Promise<T | null> {
+): Promise<T> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
 
@@ -20,17 +20,20 @@ export async function fetchPublicJson<T>(
     });
 
     if (!response.ok) {
-      logger.warn(`${sourceName} API returned status ${response.status}; skipping this source.`);
-      return null;
+      throw new SourceUnavailableError(
+        sourceName,
+        `${sourceName} API returned status ${response.status}`,
+        response.status
+      );
     }
 
     return (await response.json()) as T;
   } catch (error) {
-    logger.warn(
-      `${sourceName} source unavailable (${(error as Error).message}); returning no jobs. ` +
-        'Try another real source such as --source themuse or --source greenhouse.'
-    );
-    return null;
+    if (error instanceof SourceUnavailableError) throw error;
+    const reason = controller.signal.aborted
+      ? `timed out after ${timeoutMs}ms`
+      : (error as Error).message;
+    throw new SourceUnavailableError(sourceName, `${sourceName} source unavailable (${reason})`);
   } finally {
     clearTimeout(timeout);
   }
@@ -40,7 +43,7 @@ export async function fetchPublicText(
   url: string,
   sourceName: string,
   timeoutMs = PUBLIC_API_TIMEOUT_MS
-): Promise<string | null> {
+): Promise<string> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), timeoutMs);
 
@@ -51,16 +54,23 @@ export async function fetchPublicText(
     });
 
     if (!response.ok) {
-      logger.warn(`${sourceName} public page returned status ${response.status}; skipping it.`);
-      return null;
+      throw new SourceUnavailableError(
+        sourceName,
+        `${sourceName} public page returned status ${response.status}`,
+        response.status
+      );
     }
 
     return await response.text();
   } catch (error) {
-    logger.warn(
-      `${sourceName} public page unavailable (${(error as Error).message}); returning no jobs.`
+    if (error instanceof SourceUnavailableError) throw error;
+    const reason = controller.signal.aborted
+      ? `timed out after ${timeoutMs}ms`
+      : (error as Error).message;
+    throw new SourceUnavailableError(
+      sourceName,
+      `${sourceName} public page unavailable (${reason})`
     );
-    return null;
   } finally {
     clearTimeout(timeout);
   }

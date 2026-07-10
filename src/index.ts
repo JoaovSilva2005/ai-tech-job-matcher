@@ -282,6 +282,7 @@ function buildManualJob(job: ManualJobInput): ScrapedJob {
     description: job.description,
     source: 'manual',
     scrapedAt: nowIso(),
+    availability: 'unknown',
     rawText: job.description,
   };
 }
@@ -304,15 +305,16 @@ function slugForId(title: string, company: string): string {
 }
 
 function rankMatches(matches: JobMatchResult[], userLocation: string): void {
-  if (userLocation.trim()) {
-    matches.sort(
-      (a, b) =>
-        (b.locationPreferenceScore ?? 0) - (a.locationPreferenceScore ?? 0) || b.score - a.score
-    );
-    return;
-  }
+  const prioritizeLocation = userLocation.trim().length > 0;
+  matches.sort((a, b) => {
+    if (prioritizeLocation) {
+      const locationDifference =
+        (b.locationPreferenceScore ?? 0) - (a.locationPreferenceScore ?? 0);
+      if (locationDifference !== 0) return locationDifference;
+    }
 
-  matches.sort((a, b) => b.score - a.score);
+    return b.score - a.score;
+  });
 }
 
 function filterByRole(
