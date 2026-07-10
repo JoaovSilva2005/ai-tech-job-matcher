@@ -4,6 +4,21 @@ All notable changes are documented here. The format follows [Keep a Changelog](h
 
 ## Unreleased
 
+## 1.2.0 - 2026-07-10
+
+### Added
+
+- Ashby, Recruitee, Jooble Brazil, SmartRecruiters, Jobicy, and Arbeitnow collectors.
+- Authorized JSON-LD `JobPosting` collection with `robots.txt`, private-URL, size, and page limits.
+- Mapper, authentication, cache, source-configuration, and request-cap coverage for the new integrations.
+
+### Changed
+
+- Public source aggregation now supports 13 sources and exposes configuration state in the web UI.
+- Candidate location is forwarded to sources with native location search, including Jooble.
+- Jobicy feed responses are cached for one hour to follow its documented fair-use guidance.
+- Repeated role-filter logic now uses a single shared source contract.
+
 ## 1.1.0 - 2026-07-09
 
 ### Added

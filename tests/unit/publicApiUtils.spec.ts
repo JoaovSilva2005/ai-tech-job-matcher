@@ -40,6 +40,32 @@ test.describe('public source HTTP client', () => {
     }
   });
 
+  test('supports authenticated JSON POST requests without dropping the user agent', async () => {
+    const originalFetch = globalThis.fetch;
+    let captured: RequestInit | undefined;
+    globalThis.fetch = async (_url, init) => {
+      captured = init;
+      return Response.json({ jobs: [] });
+    };
+
+    try {
+      await fetchPublicJson('https://example.com/search', 'Example', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-Api-Key': 'test-key' },
+        body: JSON.stringify({ role: 'qa' }),
+      });
+      expect(captured?.method).toBe('POST');
+      expect(captured?.headers).toMatchObject({
+        'Content-Type': 'application/json',
+        'X-Api-Key': 'test-key',
+        'User-Agent': expect.stringContaining('ai-tech-job-matcher'),
+      });
+      expect(captured?.body).toBe('{"role":"qa"}');
+    } finally {
+      globalThis.fetch = originalFetch;
+    }
+  });
+
   test('aborts slow public requests at the configured timeout', async () => {
     const originalFetch = globalThis.fetch;
     globalThis.fetch = async (_url, init) =>

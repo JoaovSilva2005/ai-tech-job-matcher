@@ -35,6 +35,8 @@ Data quality starts at 100 and subtracts 30, 15, or 5 points for high, medium, o
 
 Playwright retains screenshots and video on failure and a trace on the first retry. GitHub Actions uploads those artifacts when CI fails.
 
+The current suite contains 160 tests. New source coverage includes payload mappers, POST/header handling, configuration states, request caps, cache behavior, JSON-LD parsing, expiration, and authorized-page safety controls.
+
 ## Failure Handling
 
 - CLI and web inputs fail with actionable 4xx messages.

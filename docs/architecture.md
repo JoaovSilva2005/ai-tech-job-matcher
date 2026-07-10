@@ -50,7 +50,7 @@ The main typed flow is `ScrapedJob` -> `JobValidationResult` -> `JobAnalysis` ->
 
 Each collector maps a third-party payload into `ScrapedJob`. HTTP failures throw `SourceUnavailableError`; an empty successful feed remains a valid empty result. The `all` source runs configured collectors in parallel, isolates individual failures, and fails explicitly if every configured source is unavailable.
 
-Greenhouse and Lever are capped at five configured organizations per run. Other collectors have fixed low result/request caps. The scheduled source-health workflow records `ok`, `empty`, `unconfigured`, or `failed` for each integration.
+The registry contains 13 public sources across direct feeds, ATS APIs, a keyed Brazilian search API, and authorized JSON-LD pages. Greenhouse, Lever, Ashby, Recruitee, SmartRecruiters, Gupy, and JSON-LD have organization/page caps. Jobicy uses a one-hour in-memory cache to honor its fair-use guidance. The scheduled source-health workflow records `ok`, `empty`, `unconfigured`, or `failed` for every integration.
 
 ### AI Providers
 

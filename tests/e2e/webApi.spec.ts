@@ -68,10 +68,25 @@ test.describe('web API upload/download flow', () => {
     expect(body.status).toBe('ok');
     expect(body.roles).toContain('qa');
     expect(body.sources).toContain('gupy');
+    expect(body.sources).toEqual(
+      expect.arrayContaining([
+        'ashby',
+        'recruitee',
+        'jooble',
+        'smartrecruiters',
+        'jobicy',
+        'arbeitnow',
+        'jsonld',
+      ])
+    );
     expect(body.workModes).toEqual(expect.arrayContaining(['all', 'remote', 'hybrid', 'onsite']));
     expect(body.sourceConfiguration.lever).toMatchObject({
       configured: false,
       reason: expect.stringContaining('LEVER_COMPANY_SLUGS'),
+    });
+    expect(body.sourceConfiguration.jooble).toMatchObject({
+      configured: false,
+      reason: expect.stringContaining('JOOBLE_API_KEY'),
     });
   });
 

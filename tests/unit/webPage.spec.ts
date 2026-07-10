@@ -23,7 +23,19 @@ test.describe('web page', () => {
     expect(html).toContain('<option value="themuse">');
     expect(html).toContain('<option value="all">');
     expect(html).not.toContain('<option value="sample"');
-    for (const source of ['remoteok', 'remotive', 'greenhouse', 'lever']) {
+    for (const source of [
+      'remoteok',
+      'remotive',
+      'greenhouse',
+      'lever',
+      'ashby',
+      'recruitee',
+      'jooble',
+      'smartrecruiters',
+      'jobicy',
+      'arbeitnow',
+      'jsonld',
+    ]) {
       expect(html).toContain(`<option value="${source}">`);
     }
   });

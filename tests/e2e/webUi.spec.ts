@@ -65,6 +65,9 @@ test.describe('web UI real user flow', () => {
 
     await expect(page.getByRole('heading', { name: 'AI Tech Job Matcher' })).toBeVisible();
     await expect(page.locator('#sourceSelect option[value="lever"]')).toBeDisabled();
+    await expect(page.locator('#sourceSelect option[value="jooble"]')).toBeDisabled();
+    await expect(page.locator('#sourceSelect option[value="recruitee"]')).toBeDisabled();
+    await expect(page.locator('#sourceSelect option[value="jsonld"]')).toBeDisabled();
     await page.setInputFiles('#resumeInput', {
       name: 'resume.txt',
       mimeType: 'text/plain',

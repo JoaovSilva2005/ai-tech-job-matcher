@@ -11,19 +11,32 @@ Only vacancies available without an account are collected:
 - Greenhouse public Job Board API.
 - Lever public Postings API for explicitly configured company slugs.
 - Public Gupy career pages explicitly configured by URL.
+- Ashby public Job Postings API.
+- Recruitee public Careers Site API for configured company subdomains.
+- Jooble REST API with an operator-provided key.
+- SmartRecruiters public Posting API.
+- Jobicy and Arbeitnow public job APIs.
+- Explicitly authorized job-detail pages containing JSON-LD `JobPosting` data.
 
 LinkedIn, Indeed, Catho, InfoJobs, and Glassdoor are intentionally not scraped. Their access controls and terms make them inappropriate for this portfolio implementation without a formal partnership or approved API.
 
 ## Request Limits
 
-| Source     | Per-run behavior                                              |
-| ---------- | ------------------------------------------------------------- |
-| RemoteOK   | One request; keep at most 15 jobs                             |
-| Remotive   | One request; keep at most 20 jobs                             |
-| The Muse   | First public Computer and IT page; keep at most 20 jobs       |
-| Greenhouse | At most five configured boards; keep at most 20 jobs total    |
-| Lever      | At most five configured companies; keep at most 20 jobs total |
-| Gupy       | At most three career pages; keep at most 12 jobs total        |
+| Source          | Per-run behavior                                                     |
+| --------------- | -------------------------------------------------------------------- |
+| RemoteOK        | One request; keep at most 15 jobs                                    |
+| Remotive        | One request; keep at most 20 jobs                                    |
+| The Muse        | First public Computer and IT page; keep at most 20 jobs              |
+| Greenhouse      | At most five configured boards; keep at most 20 jobs total           |
+| Lever           | At most five configured companies; keep at most 20 jobs total        |
+| Gupy            | At most three career pages; keep at most 12 jobs total               |
+| Ashby           | At most five configured boards; keep at most 20 jobs total           |
+| Recruitee       | At most five configured companies; keep at most 20 jobs total        |
+| Jooble          | One keyed search request; keep at most 20 jobs                       |
+| SmartRecruiters | At most three companies and ten posting-detail requests total        |
+| Jobicy          | One 100-item feed cached for one hour; keep at most 20 jobs          |
+| Arbeitnow       | First API page cached for 15 minutes; keep at most 20 jobs           |
+| JSON-LD         | At most five authorized pages plus one `robots.txt` check per origin |
 
 The `all` source runs one bounded fan-out and interleaves results. It does not poll continuously or paginate through entire catalogs.
 
@@ -34,6 +47,8 @@ The `all` source runs one bounded fan-out and interleaves results. It does not p
 - No source-request retry loop.
 - No login, cookie reuse, captcha solving, proxy rotation, or access-control bypass.
 - Original source/application URLs remain in every report.
+- JSON-LD rejects localhost/private IPs, pages over 2 MB, expired jobs, and paths disallowed by `robots.txt`.
+- Configuring a JSON-LD URL confirms technical allowlisting only; the operator remains responsible for reviewing the site's terms and permission.
 
 ## Failure Semantics
 

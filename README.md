@@ -3,7 +3,7 @@
 TypeScript application that reads a resume, collects real public tech jobs, validates source data, ranks opportunities, and exports auditable Excel and Markdown reports.
 
 [![CI](https://github.com/JoaovSilva2005/ai-tech-job-matcher/actions/workflows/ci.yml/badge.svg)](https://github.com/JoaovSilva2005/ai-tech-job-matcher/actions/workflows/ci.yml)
-![Tests](https://img.shields.io/badge/tests-144%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-160%20passing-brightgreen)
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 
@@ -13,7 +13,7 @@ Regenerate this screenshot with `npm run docs:screenshot`.
 
 ## QA Evidence
 
-- 144 automated tests covering unit, API, integration, and browser E2E flows.
+- 160 automated tests covering unit, API, integration, and browser E2E flows.
 - Playwright exercises resume upload, specific-job analysis, downloads, mobile layout, and accessibility with Axe.
 - Every job receives validation status, severity-ranked issues, and a 0-100 data quality score.
 - Invalid, expired, or closed jobs are excluded with evidence in the Excel `QA Issues` sheet.
@@ -83,17 +83,24 @@ npm run sources:check
 
 ## Public Job Sources
 
-| Source     | Public integration            | Key required | Configuration                      |
-| ---------- | ----------------------------- | -----------: | ---------------------------------- |
-| Gupy       | Public Brazilian career pages |           No | Optional `GUPY_CAREER_URLS`        |
-| RemoteOK   | Public JSON feed              |           No | None                               |
-| Remotive   | Public API                    |           No | None                               |
-| The Muse   | Public API                    |           No | None                               |
-| Greenhouse | Public Job Board API          |           No | Optional `GREENHOUSE_BOARD_TOKENS` |
-| Lever      | Public Postings API           |           No | `LEVER_COMPANY_SLUGS`              |
-| All        | Bounded parallel aggregation  |           No | Uses configured sources            |
+| Source          | Public integration            | Key required | Configuration                       |
+| --------------- | ----------------------------- | -----------: | ----------------------------------- |
+| Gupy            | Brazilian public career pages |           No | Optional `GUPY_CAREER_URLS`         |
+| Jooble Brazil   | Brazilian REST search API     |          Yes | `JOOBLE_API_KEY`, `JOOBLE_LOCATION` |
+| RemoteOK        | Public JSON feed              |           No | None                                |
+| Remotive        | Public API                    |           No | None                                |
+| The Muse        | Public API                    |           No | None                                |
+| Jobicy          | Public remote-jobs API        |           No | Optional `JOBICY_GEO`               |
+| Arbeitnow       | Public job-board API          |           No | None                                |
+| Greenhouse      | Public Job Board API          |           No | Optional `GREENHOUSE_BOARD_TOKENS`  |
+| Lever           | Public Postings API           |           No | `LEVER_COMPANY_SLUGS`               |
+| Ashby           | Public Job Postings API       |           No | Optional `ASHBY_BOARD_NAMES`        |
+| Recruitee       | Public Careers Site API       |           No | `RECRUITEE_COMPANY_SUBDOMAINS`      |
+| SmartRecruiters | Public Posting API            |           No | Optional company IDs/key            |
+| JSON-LD         | Authorized `JobPosting` pages |           No | `JSONLD_JOB_URLS`                   |
+| All             | Bounded parallel aggregation  |           No | Uses every configured source        |
 
-Collection is intentionally low-volume. The project does not authenticate, bypass captchas, or scrape LinkedIn, Indeed, Catho, InfoJobs, or Glassdoor. See [scraping ethics](docs/scraping-ethics.md).
+Nine sources work without keys using the default configuration. Collection is intentionally low-volume. The project does not bypass authentication or captchas and does not scrape LinkedIn, Indeed, Catho, InfoJobs, or Glassdoor. See [scraping ethics](docs/scraping-ethics.md).
 
 ## Reports
 
@@ -133,16 +140,24 @@ Copy-Item .env.example .env
 
 Important options:
 
-| Variable                  | Purpose                                        |
-| ------------------------- | ---------------------------------------------- |
-| `AI_PROVIDER`             | `fallback`, `gemini`, `openai`, or `anthropic` |
-| `GEMINI_API_KEY`          | Optional Gemini key                            |
-| `AI_REQUEST_TIMEOUT_MS`   | Remote AI request timeout                      |
-| `AI_MAX_RETRIES`          | Retry count for transient AI failures          |
-| `AI_JOB_CONCURRENCY`      | Maximum concurrent job analyses                |
-| `GUPY_CAREER_URLS`        | Comma-separated public Gupy career pages       |
-| `GREENHOUSE_BOARD_TOKENS` | Comma-separated public Greenhouse board tokens |
-| `LEVER_COMPANY_SLUGS`     | Comma-separated public Lever company slugs     |
+| Variable                       | Purpose                                        |
+| ------------------------------ | ---------------------------------------------- |
+| `AI_PROVIDER`                  | `fallback`, `gemini`, `openai`, or `anthropic` |
+| `GEMINI_API_KEY`               | Optional Gemini key                            |
+| `AI_REQUEST_TIMEOUT_MS`        | Remote AI request timeout                      |
+| `AI_MAX_RETRIES`               | Retry count for transient AI failures          |
+| `AI_JOB_CONCURRENCY`           | Maximum concurrent job analyses                |
+| `GUPY_CAREER_URLS`             | Comma-separated public Gupy career pages       |
+| `GREENHOUSE_BOARD_TOKENS`      | Comma-separated public Greenhouse board tokens |
+| `LEVER_COMPANY_SLUGS`          | Comma-separated public Lever company slugs     |
+| `ASHBY_BOARD_NAMES`            | Comma-separated public Ashby board names       |
+| `RECRUITEE_COMPANY_SUBDOMAINS` | Public Recruitee careers-site subdomains       |
+| `JOOBLE_API_KEY`               | Jooble REST API key                            |
+| `JOOBLE_LOCATION`              | Default Jooble search location                 |
+| `SMARTRECRUITERS_COMPANY_IDS`  | Public SmartRecruiters company identifiers     |
+| `SMARTRECRUITERS_API_KEY`      | Optional SmartRecruiters `X-SmartToken`        |
+| `JOBICY_GEO`                   | Optional Jobicy region slug                    |
+| `JSONLD_JOB_URLS`              | Authorized JSON-LD job-detail pages            |
 
 ## Structure
 

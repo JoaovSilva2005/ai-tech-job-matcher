@@ -8,7 +8,8 @@ Verify that the application safely transforms a resume and public job data into 
 
 - TXT, Markdown, PDF, and DOCX extraction, size limits, and invalid uploads.
 - Personal-data sanitization before provider calls and persistence.
-- Public-source mapping, request caps, failure semantics, and health status.
+- Public-source mapping, authentication, caching, request caps, failure semantics, and health status.
+- Authorized JSON-LD parsing, expiration, robots policy, size limits, and private-URL rejection.
 - Job validation, availability, publication/expiration dates, and deduplication.
 - Role, work mode, seniority, English, skill, and location matching.
 - Local fallback plus mocked Gemini/OpenAI/Anthropic contracts.
@@ -44,14 +45,14 @@ Verify that the application safely transforms a resume and public job data into 
 
 ## Risks and Mitigations
 
-| Risk                                        | Mitigation                                                               |
-| ------------------------------------------- | ------------------------------------------------------------------------ |
-| Public API or page changes                  | Mapper tests, explicit source errors, scheduled health evidence          |
-| Stale or closed vacancy                     | Availability/date rules and exclusion of high-severity issues            |
-| AI returns malformed or injected content    | Untrusted-content prompts, strict Zod schemas, bounded retry, fallback   |
-| Resume leaks personal information           | Sanitization, output assertions, upload deletion                         |
-| Concurrent users overwrite reports          | UUID run directories and concurrent API test                             |
-| Keyword fallback misclassifies unusual text | Transparent engine flag, deterministic tests, optional provider adapters |
+| Risk                                        | Mitigation                                                                |
+| ------------------------------------------- | ------------------------------------------------------------------------- |
+| Public API or page changes                  | Mapper tests, explicit source errors, scheduled 13-source health evidence |
+| Stale or closed vacancy                     | Availability/date rules and exclusion of high-severity issues             |
+| AI returns malformed or injected content    | Untrusted-content prompts, strict Zod schemas, bounded retry, fallback    |
+| Resume leaks personal information           | Sanitization, output assertions, upload deletion                          |
+| Concurrent users overwrite reports          | UUID run directories and concurrent API test                              |
+| Keyword fallback misclassifies unusual text | Transparent engine flag, deterministic tests, optional provider adapters  |
 
 ## Entry Criteria
 
