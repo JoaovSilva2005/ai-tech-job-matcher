@@ -39,12 +39,16 @@ The executable suite is under `tests/unit` and `tests/e2e`. This table is a recr
 | TC-33 | Render at 390 x 844                                            | No horizontal overflow; controls stay inside viewport                |
 | TC-34 | Scan form and results with Axe                                 | No serious or critical accessibility violations                      |
 | TC-35 | Run specific-job fallback through API                          | Response completes within the 10-second smoke budget                 |
+| TC-36 | Compare a junior resume with a senior vacancy                  | Candidate warning is separate; vacancy QA score remains unchanged    |
+| TC-37 | Complete an analysis with zero ranked matches                  | Summary, counters, explanation, and both downloads remain visible    |
+| TC-38 | Inspect API and report execution summaries                     | Resume filename and local path are absent                            |
+| TC-39 | Start the web server with default/invalid bind settings        | Loopback default and validated host/port with defensive headers      |
 
 ## Traceability
 
-- Resume and privacy: `parseResume.spec.ts`, `sanitizeResume.spec.ts`, `excelReport.spec.ts`
+- Resume and privacy: `parseResume.spec.ts`, `sanitizeResume.spec.ts`, `excelReport.spec.ts`, `webApi.spec.ts`
 - AI contracts: `aiSchemas.spec.ts`, `aiHttpClient.spec.ts`, `geminiClient.spec.ts`
 - Source contracts: `publicApiUtils.spec.ts`, `publicJobSources.spec.ts`, `extendedPublicJobSources.spec.ts`, `sourceRegistry.spec.ts`, `sourceRequestCaps.spec.ts`, `sourceHealth.spec.ts`
-- Matching and QA: `calculateMatchScore.spec.ts`, `locationPreference.spec.ts`, `validateJob.spec.ts`, `duplicateDetector.spec.ts`
+- Matching and QA: `candidateWarnings.spec.ts`, `calculateMatchScore.spec.ts`, `locationPreference.spec.ts`, `validateJob.spec.ts`, `duplicateDetector.spec.ts`
 - Pipeline and reports: `fullPipeline.spec.ts`, `excelReport.spec.ts`
-- Web API and UI: `webApi.spec.ts`, `webUi.spec.ts`, `webRuns.spec.ts`
+- Web API and UI: `webApi.spec.ts`, `webUi.spec.ts`, `webRuns.spec.ts`, `webServerSecurity.spec.ts`

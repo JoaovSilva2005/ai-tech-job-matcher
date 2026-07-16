@@ -3,7 +3,7 @@
 TypeScript application that reads a resume, collects real public tech jobs, validates source data, ranks opportunities, and exports auditable Excel and Markdown reports.
 
 [![CI](https://github.com/JoaovSilva2005/ai-tech-job-matcher/actions/workflows/ci.yml/badge.svg)](https://github.com/JoaovSilva2005/ai-tech-job-matcher/actions/workflows/ci.yml)
-![Tests](https://img.shields.io/badge/tests-160%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-171%20passing-brightgreen)
 ![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white)
 ![License](https://img.shields.io/badge/license-MIT-blue)
 
@@ -13,9 +13,10 @@ Regenerate this screenshot with `npm run docs:screenshot`.
 
 ## QA Evidence
 
-- 160 automated tests covering unit, API, integration, and browser E2E flows.
+- 171 automated tests covering unit, API, integration, and browser E2E flows.
 - Playwright exercises resume upload, specific-job analysis, downloads, mobile layout, and accessibility with Axe.
 - Every job receives validation status, severity-ranked issues, and a 0-100 data quality score.
+- Candidate-specific compatibility warnings are reported separately and never change source-data quality.
 - Invalid, expired, or closed jobs are excluded with evidence in the Excel `QA Issues` sheet.
 - GitHub Actions runs formatting, dependency audit, build, compiled-app smoke test, lint, and the full suite.
 - A scheduled health workflow checks public sources and stores a JSON diagnostic artifact.
@@ -42,9 +43,10 @@ npx playwright install chromium
 npm run web
 ```
 
-Open [http://localhost:4180](http://localhost:4180).
+Open [http://127.0.0.1:4180](http://127.0.0.1:4180).
 
-The web UI supports public-job search and analysis of one specific vacancy. Each web run has an isolated report directory, and the uploaded resume is deleted immediately after processing.
+The web UI supports public-job search and analysis of one specific vacancy. Each web run has an isolated report directory, the uploaded resume is deleted immediately after processing, and report/API summaries expose only its format and extracted character count—not its filename or path.
+The server listens on `127.0.0.1` by default. `HOST` and `PORT` can be set explicitly when a different bind address is required; exposing it outside the local machine requires appropriate access controls.
 
 ### CLI
 
@@ -117,12 +119,12 @@ job-matches.json
 
 The Excel workbook contains:
 
-- `Ranking`: score, application hyperlink, source, availability, publication date, and data quality.
-- `Details`: parsed requirements, tools, gaps, explanation, and study topics.
+- `Ranking`: score, application hyperlink, source, availability, publication date, data quality, and candidate warnings.
+- `Details`: parsed requirements, tools, gaps, explanation, study topics, and candidate warnings.
 - `QA Issues`: field, severity, issue, status, quality score, and ranking inclusion.
 - `Resume Analysis`: sanitized structured profile, never raw resume text.
 - `Market Insights`: frequently requested skills by role.
-- `Execution Summary`: filters, engine, counts, and runtime.
+- `Execution Summary`: resume format/size, filters, engine, counts, and runtime; never the resume filename or path.
 
 ## Configuration
 
@@ -147,6 +149,8 @@ Important options:
 | `AI_REQUEST_TIMEOUT_MS`        | Remote AI request timeout                      |
 | `AI_MAX_RETRIES`               | Retry count for transient AI failures          |
 | `AI_JOB_CONCURRENCY`           | Maximum concurrent job analyses                |
+| `HOST`                         | Web bind host; defaults to loopback            |
+| `PORT`                         | Web port; defaults to `4180`                   |
 | `GUPY_CAREER_URLS`             | Comma-separated public Gupy career pages       |
 | `GREENHOUSE_BOARD_TOKENS`      | Comma-separated public Greenhouse board tokens |
 | `LEVER_COMPANY_SLUGS`          | Comma-separated public Lever company slugs     |
@@ -164,7 +168,7 @@ Important options:
 ```text
 src/
   ai/        provider adapters, schemas, prompts, local fallback
-  matcher/   role classification, skills, location, scoring
+  matcher/   role classification, skills, location, scoring, candidate warnings
   qa/        validation rules, deduplication, quality score
   reports/   Excel and Markdown generation
   resume/    parsing, limits, and personal-data sanitization

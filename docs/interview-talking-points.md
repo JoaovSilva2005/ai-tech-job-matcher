@@ -39,7 +39,7 @@ Public production sources use their official/public JSON endpoints or public car
 
 ## Current Evidence
 
-- 160 automated tests passing.
+- 171 automated tests passing.
 - Real PDF and DOCX extraction covered.
 - Thirteen-source public health diagnostics plus aggregate mode.
 - Excel workbook with six verified worksheets and clickable job links.

@@ -11,11 +11,12 @@ Verify that the application safely transforms a resume and public job data into 
 - Public-source mapping, authentication, caching, request caps, failure semantics, and health status.
 - Authorized JSON-LD parsing, expiration, robots policy, size limits, and private-URL rejection.
 - Job validation, availability, publication/expiration dates, and deduplication.
-- Role, work mode, seniority, English, skill, and location matching.
+- Role, work mode, seniority, English, skill, and location matching, with candidate warnings isolated from source QA.
 - Local fallback plus mocked Gemini/OpenAI/Anthropic contracts.
 - Excel, Markdown, and JSON content and privacy.
 - Web API upload/download/error paths and concurrent report isolation.
-- Browser journey, application link, mobile layout, and accessibility.
+- Browser journey, application link, empty-result audit summary/downloads, mobile layout, and accessibility.
+- Loopback server defaults, host/port validation, and defensive HTTP headers.
 - Compiled production build smoke test.
 
 ## Out of Scope

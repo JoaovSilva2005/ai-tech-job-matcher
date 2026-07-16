@@ -35,14 +35,14 @@ The pipeline has 12 observable steps and returns typed results plus generated fi
 | `src/ai`      | Provider adapters, strict response schemas, prompts, retry/timeout client, local fallback |
 | `src/cli`     | Argument parsing, validation, and CLI contracts                                           |
 | `src/config`  | Zod-validated environment configuration                                                   |
-| `src/matcher` | Role classification, skill normalization, scoring, location preference, explanations      |
+| `src/matcher` | Role classification, skill normalization, scoring, compatibility warnings, explanations   |
 | `src/qa`      | Validation rules, deduplication, and data quality score                                   |
 | `src/reports` | Excel and Markdown generation                                                             |
 | `src/resume`  | File parsing, extraction limits, and personal-data sanitization                           |
 | `src/scraper` | Source registry, public collectors, normalization, health checks                          |
 | `src/web`     | Web API, isolated report runs, and browser UI                                             |
 
-The main typed flow is `ScrapedJob` -> `JobValidationResult` -> `JobAnalysis` -> `JobMatchResult` -> `ReportData`.
+The main typed flow is `ScrapedJob` -> `JobValidationResult` -> `JobAnalysis` -> `JobMatchResult` -> `ReportData`. `JobValidationResult` is vacancy-intrinsic; candidate-dependent warnings live only on `JobMatchResult`.
 
 ## External Boundaries
 
@@ -60,10 +60,12 @@ Missing keys, invalid JSON, rate limits, and provider failures degrade to local 
 
 ## Privacy and Web Report Lifecycle
 
-The resume is sanitized before any provider call. Raw text, names, contact details, and addresses are not persisted in reports. Web uploads are deleted in a `finally` block after each request.
+The resume is sanitized before any provider call. Raw text, names, contact details, addresses, source filenames, and local paths are not persisted in reports or API summaries. Summaries retain only format and extracted character count. Web uploads are deleted in a `finally` block after each request.
 
 Every web request receives a UUID run directory under `output/web/`. Download URLs include that run ID, concurrent requests cannot overwrite each other, invalid paths are rejected, and expired run directories are removed automatically.
 
+The web server binds to `127.0.0.1` by default, validates explicit `HOST`/`PORT` values, suppresses the Express signature, and returns defensive browser headers. Network exposure is an explicit operator decision and still requires suitable access controls.
+
 ## Outputs
 
-ExcelJS creates six worksheets. Markdown provides a portable summary with application links, while four JSON files preserve normalized source data, analysis, and match evidence for debugging and auditability.
+ExcelJS creates six worksheets. Candidate compatibility notes appear separately from source QA in Excel, Markdown, JSON, and the web UI. Markdown provides a portable summary with application links, while four JSON files preserve normalized source data, analysis, and match evidence for debugging and auditability.

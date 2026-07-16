@@ -21,6 +21,10 @@ High-severity issues make a job `invalid` and exclude it from ranking. Medium is
 
 Data quality starts at 100 and subtracts 30, 15, or 5 points for high, medium, or low issues. This score measures source-data confidence, not candidate compatibility.
 
+## Candidate Compatibility
+
+Seniority gaps depend on the current resume, so they are stored as `candidateWarnings` on a match. They are visible in JSON, API responses, the web UI, Excel, and Markdown, but never alter `JobValidationResult`, the data-quality score, or inclusion in the ranking.
+
 ## Automated Test Layers
 
 | Layer            | Evidence                                                                                 |
@@ -35,7 +39,7 @@ Data quality starts at 100 and subtracts 30, 15, or 5 points for high, medium, o
 
 Playwright retains screenshots and video on failure and a trace on the first retry. GitHub Actions uploads those artifacts when CI fails.
 
-The current suite contains 160 tests. New source coverage includes payload mappers, POST/header handling, configuration states, request caps, cache behavior, JSON-LD parsing, expiration, and authorized-page safety controls.
+The current suite contains 171 tests. Coverage includes source contracts, candidate-warning isolation, report/API privacy, loopback server defaults, empty-result UX, document parsing, and browser accessibility.
 
 ## Failure Handling
 
@@ -46,6 +50,7 @@ The current suite contains 160 tests. New source coverage includes payload mappe
 - One source failure does not abort `all`; total source failure does.
 - AI calls have bounded timeout, retry, backoff, and concurrency.
 - Invalid provider output is never trusted; local fallback keeps the flow available.
+- The web server binds to loopback by default and emits defensive response headers.
 
 ## Determinism
 
@@ -53,4 +58,4 @@ The main suite requires no API key and no live third-party source. HTTP provider
 
 ## Privacy Assertions
 
-Tests verify that direct identifiers do not appear in structured analysis or Excel output, uploaded files are removed, concurrent runs stay isolated, and expired report directories are cleaned without deleting unrelated files.
+Tests verify that direct identifiers, resume filenames, and local resume paths do not appear in structured outputs, reports, or API summaries; uploaded files are removed, concurrent runs stay isolated, and expired report directories are cleaned without deleting unrelated files.
