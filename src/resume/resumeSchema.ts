@@ -2,7 +2,6 @@ import { z } from 'zod';
 import type { EnglishLevel, SeniorityLevel, TechRole } from '../scraper/types';
 
 export interface ParsedResume {
-  sourcePath: string;
   format: 'txt' | 'md' | 'pdf' | 'docx';
   text: string;
   characterCount: number;

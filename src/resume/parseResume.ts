@@ -9,7 +9,7 @@ export const MAX_RESUME_CHARACTERS = 100_000;
 
 export async function parseResume(filePath: string): Promise<ParsedResume> {
   if (!fileExists(filePath)) {
-    throw new ResumeParseError(`Resume file not found: ${filePath}`);
+    throw new ResumeParseError('Resume file was not found. Check the selected file and try again.');
   }
 
   const ext = getExtension(filePath);
@@ -46,7 +46,6 @@ export async function parseResume(filePath: string): Promise<ParsedResume> {
   }
 
   return {
-    sourcePath: filePath,
     format,
     text: trimmed,
     characterCount: trimmed.length,
@@ -60,8 +59,10 @@ async function parsePdf(filePath: string): Promise<string> {
   try {
     const result = await parser.getText();
     return result.text;
-  } catch (error) {
-    throw new ResumeParseError(`Failed to parse PDF resume: ${(error as Error).message}`);
+  } catch {
+    throw new ResumeParseError(
+      'Failed to parse PDF resume. Check that the file is valid and not encrypted.'
+    );
   } finally {
     await parser.destroy().catch(() => undefined);
   }
@@ -72,7 +73,7 @@ async function parseDocx(filePath: string): Promise<string> {
   try {
     const result = await mammoth.extractRawText({ path: filePath });
     return result.value;
-  } catch (error) {
-    throw new ResumeParseError(`Failed to parse DOCX resume: ${(error as Error).message}`);
+  } catch {
+    throw new ResumeParseError('Failed to parse DOCX resume. Check that the file is valid.');
   }
 }

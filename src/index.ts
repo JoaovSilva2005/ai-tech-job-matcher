@@ -10,8 +10,6 @@ import { scrapeJobs } from './scraper/jobScraper';
 import { validateJob } from './scraper/validateJob';
 import type { JobValidationResult, ScrapedJob, TechRole } from './scraper/types';
 import { removeDuplicateJobs } from './qa/duplicateDetector';
-import { detectSeniorityMismatch } from './qa/detectJobIssues';
-import { calculateDataQualityScore } from './qa/dataQualityScore';
 import { calculateMatchScore, JobMatchResult } from './matcher/calculateMatchScore';
 import { getRecommendation } from './matcher/recommendation';
 import { scoreLocationPreference } from './matcher/locationPreference';
@@ -53,7 +51,7 @@ export async function runPipeline(options: CliOptions): Promise<PipelineResult> 
   ensureDir(outputDir);
 
   // 1. Read resume
-  logger.step(1, TOTAL_STEPS, `Reading resume: ${options.resume}`);
+  logger.step(1, TOTAL_STEPS, 'Reading and validating resume...');
   const parsedResume = await parseResume(options.resume);
   logger.info(`Resume parsed (${parsedResume.format}, ${parsedResume.characterCount} chars).`);
 
@@ -139,15 +137,6 @@ export async function runPipeline(options: CliOptions): Promise<PipelineResult> 
   const matches: JobMatchResult[] = workModeFilteredJobs.map((job) => {
     const analysis = analyses.get(job.id)!;
     const validation = validations.get(job.id)!;
-    // QA cross-check: seniority above candidate level becomes a QA issue
-    const mismatch = detectSeniorityMismatch(
-      analysis.seniorityLevel,
-      resumeAnalysis.detectedSeniority
-    );
-    if (mismatch) {
-      validation.issues.push(mismatch);
-      validation.dataQualityScore = calculateDataQualityScore(validation.issues);
-    }
     const match = calculateMatchScore(resumeAnalysis, job, analysis, validation);
     const locationPreference = scoreLocationPreference(job, options.userLocation);
     if (locationPreference.score > 0) {
@@ -165,7 +154,8 @@ export async function runPipeline(options: CliOptions): Promise<PipelineResult> 
 
   const summary: ExecutionSummary = {
     executedAt: nowIso(),
-    resumeFile: options.resume,
+    resumeFormat: parsedResume.format,
+    resumeCharacterCount: parsedResume.characterCount,
     role: options.role,
     source: options.manualJob ? 'manual' : options.source,
     workMode: options.workMode,
@@ -250,6 +240,7 @@ export async function runPipeline(options: CliOptions): Promise<PipelineResult> 
       matchedSkills: m.matchedSkills,
       missingSkills: m.missingSkills,
       criticalGaps: m.criticalGaps,
+      candidateWarnings: m.candidateWarnings,
       explanation: m.explanation,
       studyPlan: m.studyPlan,
     }))

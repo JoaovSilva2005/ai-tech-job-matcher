@@ -63,6 +63,16 @@ test.describe('full pipeline (sample source, no API key)', () => {
     const scores = result.matches.map((m) => m.score);
     const sorted = [...scores].sort((a, b) => b - a);
     expect(scores).toEqual(sorted);
+
+    expect(
+      result.matches.some((match) =>
+        match.candidateWarnings.some((warning) => warning.field === 'seniority')
+      )
+    ).toBe(true);
+    for (const match of result.matches) {
+      expect(match.validation).toEqual(validateJob(match.job));
+      expect(match.validation.issues.some((issue) => issue.field === 'seniority')).toBe(false);
+    }
   });
 
   test('duplicates are removed and reported in the execution summary', async () => {
@@ -189,7 +199,14 @@ test.describe('full pipeline (sample source, no API key)', () => {
     const markdown = fs.readFileSync(result.outputFiles.markdown, 'utf-8');
     expect(markdown).toContain('# Execution Summary');
     expect(markdown).toContain('## Top 5 Job Matches');
+    expect(markdown).toContain('## Candidate Compatibility Notes');
     expect(markdown).toMatch(/\[[^\]]+\]\(https?:\/\//);
+    expect(markdown).not.toContain(path.basename(RESUME_PATH));
+    expect(markdown).not.toContain(RESUME_PATH);
+
+    expect(result.summary).not.toHaveProperty('resumeFile');
+    expect(result.summary.resumeFormat).toBe('txt');
+    expect(result.summary.resumeCharacterCount).toBeGreaterThan(0);
 
     const jobsRaw = JSON.parse(fs.readFileSync(result.outputFiles.jobsRaw, 'utf-8'));
     expect(Array.isArray(jobsRaw)).toBe(true);
@@ -210,6 +227,7 @@ test.describe('full pipeline (sample source, no API key)', () => {
         workMode: expect.any(String),
         location: expect.any(String),
         url: expect.stringMatching(/^https?:\/\//),
+        candidateWarnings: expect.any(Array),
       })
     );
   });

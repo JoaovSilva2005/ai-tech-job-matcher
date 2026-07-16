@@ -67,7 +67,11 @@ test.describe('Excel report generation', () => {
     expect(ranking.getCell('T1').value).toBe('Availability');
     expect(ranking.getCell('V1').value).toBe('Data Quality Score');
     expect(ranking.getCell('W1').value).toBe('Validation Status');
+    expect(ranking.getCell('X1').value).toBe('Candidate Warnings');
     expect(Number(ranking.getCell('V2').value)).toBeGreaterThan(0);
+
+    const details = workbook.getWorksheet('Details')!;
+    expect(details.getCell('M1').value).toBe('Candidate Warnings');
   });
 
   test('resume analysis sheet exposes skills but not personal contact data', async () => {
@@ -104,6 +108,9 @@ test.describe('Excel report generation', () => {
     });
 
     expect(rows.get('Used Fallback Mode')).toBe('Yes');
+    expect(rows.get('Resume Format')).toBe('txt');
+    expect(Number(rows.get('Resume Extracted Characters'))).toBeGreaterThan(0);
+    expect(rows.has('Resume File')).toBe(false);
     expect(rows.get('Job Source')).toBe('sample');
     expect(rows.get('Work Mode Filter')).toBe('all');
     expect(Number(rows.get('Jobs Collected'))).toBeGreaterThanOrEqual(16);
@@ -131,7 +138,8 @@ test.describe('Excel report generation', () => {
       },
       summary: {
         executedAt: new Date('2026-07-01T12:00:00.000Z').toISOString(),
-        resumeFile: RESUME_PATH,
+        resumeFormat: 'txt',
+        resumeCharacterCount: 128,
         role: 'qa',
         source: 'sample',
         workMode: 'all',

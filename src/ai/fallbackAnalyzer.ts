@@ -136,7 +136,6 @@ function detectSkills(text: string, skills: string[]): string[] {
 }
 
 export function detectSeniority(text: string): SeniorityLevel {
-  const lower = text.toLowerCase();
   const seniorSignals = [
     'senior',
     'sênior',
@@ -167,11 +166,12 @@ export function detectSeniority(text: string): SeniorityLevel {
     'student',
     'no prior experience',
   ];
+  const hasSignal = (signal: string): boolean => containsKeyword(text, signal.trim());
 
-  if (seniorSignals.some((s) => lower.includes(s))) return 'senior';
-  if (midSignals.some((s) => lower.includes(s))) return 'mid';
-  if (internSignals.some((s) => lower.includes(s))) return 'intern';
-  if (juniorSignals.some((s) => lower.includes(s))) return 'junior';
+  if (seniorSignals.some(hasSignal)) return 'senior';
+  if (midSignals.some(hasSignal)) return 'mid';
+  if (internSignals.some(hasSignal)) return 'intern';
+  if (juniorSignals.some(hasSignal)) return 'junior';
   return 'unknown';
 }
 

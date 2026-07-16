@@ -72,6 +72,7 @@ function buildRankingSheet(workbook: ExcelJS.Workbook, data: ReportData): void {
     { header: 'Published At', key: 'publishedAt', width: 20 },
     { header: 'Data Quality Score', key: 'quality', width: 18 },
     { header: 'Validation Status', key: 'validationStatus', width: 18 },
+    { header: 'Candidate Warnings', key: 'candidateWarnings', width: 48 },
   ];
 
   // matches are already sorted by the pipeline (score, or location preference first when provided)
@@ -104,6 +105,10 @@ function buildRankingSheet(workbook: ExcelJS.Workbook, data: ReportData): void {
       publishedAt: formatOptionalDate(match.job.publishedAt),
       quality: match.validation.dataQualityScore,
       validationStatus: match.validation.status,
+      candidateWarnings: joinList(
+        match.candidateWarnings.map((warning) => warning.message),
+        5
+      ),
     });
     fillCell(row.getCell('recommendation'), RECOMMENDATION_FILLS[match.recommendation]);
     row.getCell('score').alignment = { horizontal: 'center' };
@@ -113,7 +118,7 @@ function buildRankingSheet(workbook: ExcelJS.Workbook, data: ReportData): void {
   });
 
   styleHeaderRow(sheet);
-  applyAutoFilter(sheet, 'W');
+  applyAutoFilter(sheet, 'X');
 }
 
 function formatOptionalDate(value?: string): string {
@@ -137,6 +142,7 @@ function buildDetailsSheet(workbook: ExcelJS.Workbook, data: ReportData): void {
     { header: 'Red Flags', key: 'redFlags', width: 40 },
     { header: 'Study Topics', key: 'study', width: 36 },
     { header: 'Explanation', key: 'explanation', width: 60 },
+    { header: 'Candidate Warnings', key: 'candidateWarnings', width: 48 },
   ];
 
   for (const match of data.matches) {
@@ -153,12 +159,16 @@ function buildDetailsSheet(workbook: ExcelJS.Workbook, data: ReportData): void {
       redFlags: joinList(match.analysis.redFlags, 5),
       study: joinList(match.studyPlan),
       explanation: match.explanation,
+      candidateWarnings: joinList(
+        match.candidateWarnings.map((warning) => warning.message),
+        5
+      ),
     });
     row.alignment = { vertical: 'top', wrapText: true };
   }
 
   styleHeaderRow(sheet);
-  applyAutoFilter(sheet, 'L');
+  applyAutoFilter(sheet, 'M');
 }
 
 function buildQaIssuesSheet(workbook: ExcelJS.Workbook, data: ReportData): void {
@@ -261,7 +271,8 @@ function buildExecutionSummarySheet(workbook: ExcelJS.Workbook, data: ReportData
   const s = data.summary;
   const rows: Array<[string, string | number]> = [
     ['Executed At', formatDateHuman(new Date(s.executedAt))],
-    ['Resume File', path.basename(s.resumeFile)],
+    ['Resume Format', s.resumeFormat],
+    ['Resume Extracted Characters', s.resumeCharacterCount],
     ['Selected Role', s.role],
     ['Job Source', s.source],
     ['Work Mode Filter', s.workMode],

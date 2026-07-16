@@ -1,6 +1,8 @@
 import type { JobValidationResult, ScrapedJob, SeniorityLevel, TechRole } from '../scraper/types';
 import type { ResumeAnalysis } from '../resume/resumeSchema';
 import type { JobAnalysis } from '../ai/schemas';
+import { detectSeniorityMismatch } from './candidateWarnings';
+import type { CandidateWarning } from './candidateWarnings';
 import { normalizeSkills } from './normalizeSkills';
 import { getRecommendation, Recommendation } from './recommendation';
 import { explainMatch } from './explainMatch';
@@ -10,6 +12,8 @@ export interface JobMatchResult {
   job: ScrapedJob;
   analysis: JobAnalysis;
   validation: JobValidationResult;
+  /** Candidate-dependent observations. These never affect source data quality. */
+  candidateWarnings: CandidateWarning[];
   score: number;
   locationPreference?: string;
   locationPreferenceScore?: number;
@@ -226,6 +230,10 @@ export function calculateMatchScore(
     ...analysis.recommendedStudyTopics,
     ...missingRequired,
   ]).slice(0, 6);
+  const seniorityWarning = detectSeniorityMismatch(
+    analysis.seniorityLevel,
+    resume.detectedSeniority
+  );
 
   return {
     job,
@@ -236,6 +244,7 @@ export function calculateMatchScore(
       status: 'valid',
       issues: [],
     },
+    candidateWarnings: seniorityWarning ? [seniorityWarning] : [],
     score,
     recommendation,
     matchedSkills,

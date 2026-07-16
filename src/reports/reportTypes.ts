@@ -12,7 +12,8 @@ export interface SkillInsight {
 
 export interface ExecutionSummary {
   executedAt: string;
-  resumeFile: string;
+  resumeFormat: 'txt' | 'md' | 'pdf' | 'docx';
+  resumeCharacterCount: number;
   role: TechRole;
   source: string;
   workMode: WorkModeFilter;

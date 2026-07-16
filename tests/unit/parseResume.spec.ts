@@ -7,6 +7,21 @@ import PDFDocument from 'pdfkit';
 import { MAX_RESUME_CHARACTERS, parseResume, ResumeParseError } from '../../src/resume/parseResume';
 
 test.describe('parseResume input limits', () => {
+  test('does not expose a missing resume path in the parsing error', async () => {
+    const missingPath = path.join(os.tmpdir(), 'private-candidate-name.txt');
+    let error: ResumeParseError | undefined;
+
+    try {
+      await parseResume(missingPath);
+    } catch (caught) {
+      error = caught as ResumeParseError;
+    }
+
+    expect(error).toBeInstanceOf(ResumeParseError);
+    expect(error?.message).not.toContain(missingPath);
+    expect(error?.message).not.toContain(path.basename(missingPath));
+  });
+
   test('distinguishes Markdown from plain text', async () => {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), 'resume-format-'));
     const markdownPath = path.join(root, 'resume.md');

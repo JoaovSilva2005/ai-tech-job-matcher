@@ -13,6 +13,10 @@ const resumeText = fs.readFileSync(
   path.resolve(__dirname, '../fixtures/sample-resume.txt'),
   'utf-8'
 );
+const projectSampleResumeText = fs.readFileSync(
+  path.resolve(__dirname, '../../samples/sample-resume.txt'),
+  'utf-8'
+);
 const jobDescription = fs.readFileSync(
   path.resolve(__dirname, '../fixtures/sample-job-description.txt'),
   'utf-8'
@@ -39,6 +43,11 @@ test.describe('fallbackAnalyzeResume', () => {
     const analysis = fallbackAnalyzeResume(resumeText);
     expect(analysis.strengths.length).toBeGreaterThan(0);
     expect(analysis.summary.length).toBeGreaterThan(20);
+  });
+
+  test('detects the project sample resume as junior', () => {
+    const analysis = fallbackAnalyzeResume(projectSampleResumeText);
+    expect(analysis.detectedSeniority).toBe('junior');
   });
 });
 
@@ -86,6 +95,11 @@ test.describe('keyword detectors', () => {
     expect(detectSeniority('Junior developer')).toBe('junior');
     expect(detectSeniority('Internship program')).toBe('intern');
     expect(detectSeniority('Software engineer')).toBe('unknown');
+  });
+
+  test('does not mistake international experience for an internship', () => {
+    expect(detectSeniority('Worked daily with international teammates')).toBe('unknown');
+    expect(detectSeniority('Junior developer working with international teammates')).toBe('junior');
   });
 
   test('detectEnglishLevel recognizes levels and absence', () => {

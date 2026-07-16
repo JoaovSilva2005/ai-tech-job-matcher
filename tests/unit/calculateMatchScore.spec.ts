@@ -90,6 +90,10 @@ test.describe('calculateMatchScore', () => {
     );
     expect(seniorResult.score).toBeLessThan(juniorResult.score);
     expect(seniorResult.score).toBeLessThan(50);
+    expect(seniorResult.candidateWarnings).toEqual([
+      expect.objectContaining({ field: 'seniority', severity: 'medium' }),
+    ]);
+    expect(seniorResult.validation.issues).toEqual([]);
   });
 
   test('missing critical required skills appear as critical gaps', () => {

@@ -29,7 +29,8 @@ export function generateMarkdownSummary(data: ReportData, outputDir: string): st
     '# Execution Summary — AI Tech Job Matcher',
     '',
     `- **Executed at:** ${formatDateHuman(new Date(summary.executedAt))}`,
-    `- **Resume file:** \`${path.basename(summary.resumeFile)}\``,
+    `- **Resume format:** \`${summary.resumeFormat}\``,
+    `- **Resume size:** ${summary.resumeCharacterCount} extracted characters`,
     `- **Selected role:** \`${summary.role}\``,
     `- **Job source:** \`${summary.source}\``,
     `- **Work mode filter:** \`${summary.workMode}\``,
@@ -78,6 +79,10 @@ export function generateMarkdownSummary(data: ReportData, outputDir: string): st
     `- Candidate profile analysis mode: ${resume.fallbackMode ? 'fallback' : 'AI'}`,
     '- Full issue list available in the **QA Issues** sheet of `job-match-report.xlsx`.',
     '',
+    '## Candidate Compatibility Notes',
+    '',
+    ...formatCandidateWarnings(matches),
+    '',
     '---',
     '_Generated automatically by AI Tech Job Matcher._',
     '',
@@ -85,6 +90,18 @@ export function generateMarkdownSummary(data: ReportData, outputDir: string): st
 
   writeTextFile(filePath, lines.join('\n'));
   return filePath;
+}
+
+function formatCandidateWarnings(matches: ReportData['matches']): string[] {
+  const warnings = matches.flatMap((match) =>
+    match.candidateWarnings.map(
+      (warning) =>
+        `- **${escapeMarkdownInline(match.job.title)}:** ${escapeMarkdownInline(warning.message)}`
+    )
+  );
+  return warnings.length > 0
+    ? warnings
+    : ['- No candidate-specific compatibility warnings were detected.'];
 }
 
 function countOccurrences(items: string[]): Array<[string, number]> {
@@ -122,4 +139,11 @@ function escapeMarkdownTableCell(value: string): string {
 
 function escapeMarkdownUrl(value: string): string {
   return value.replace(/\(/g, '%28').replace(/\)/g, '%29').replace(/\s/g, '%20');
+}
+
+function escapeMarkdownInline(value: string): string {
+  return value
+    .replace(/([\\`*_{}[\]()<>#+.!|-])/g, '\\$1')
+    .replace(/[\r\n]+/g, ' ')
+    .trim();
 }
