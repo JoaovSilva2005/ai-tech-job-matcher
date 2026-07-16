@@ -708,12 +708,14 @@
       }
 
       details.study,
-      details.quality {
+      details.quality,
+      details.compatibility {
         border-top: 1px solid var(--border);
         padding-top: 10px;
       }
       details.study summary,
-      details.quality summary {
+      details.quality summary,
+      details.compatibility summary {
         cursor: pointer;
         font-size: 12.5px;
         font-weight: 600;
@@ -724,17 +726,20 @@
         gap: 6px;
       }
       details.study summary::before,
-      details.quality summary::before {
+      details.quality summary::before,
+      details.compatibility summary::before {
         content: '▸';
         font-size: 10px;
         transition: transform 0.15s;
       }
       details.study[open] summary::before,
-      details.quality[open] summary::before {
+      details.quality[open] summary::before,
+      details.compatibility[open] summary::before {
         transform: rotate(90deg);
       }
       details.study summary::-webkit-details-marker,
-      details.quality summary::-webkit-details-marker {
+      details.quality summary::-webkit-details-marker,
+      details.compatibility summary::-webkit-details-marker {
         display: none;
       }
       details.study ol {
@@ -749,13 +754,15 @@
         margin-bottom: 4px;
         break-inside: avoid;
       }
-      details.quality ul {
+      details.quality ul,
+      details.compatibility ul {
         margin: 10px 0 0;
         padding-left: 22px;
         font-size: 13px;
         color: var(--text-2);
       }
-      details.quality li + li {
+      details.quality li + li,
+      details.compatibility li + li {
         margin-top: 4px;
       }
 
@@ -1093,8 +1100,11 @@
           </div>
         </div>
 
-        <section id="resultsState" hidden aria-labelledby="resultsTitle">
+        <section id="analysisSummary" hidden aria-label="Analysis summary">
           <div class="summary-strip" id="summaryStrip"></div>
+        </section>
+
+        <section id="resultsState" hidden aria-labelledby="resultsTitle">
           <div class="results-head">
             <h2 id="resultsTitle">Ranked matches</h2>
             <span class="count" id="resultsCount"></span>
@@ -1198,6 +1208,7 @@
       /* ---------- state switching ---------- */
       function show(which) {
         for (const [name, node] of Object.entries(states)) node.hidden = name !== which;
+        $('analysisSummary').hidden = which !== 'results' && which !== 'empty';
         if (which === null) for (const node of Object.values(states)) node.hidden = true;
       }
       function analysisMode() {
@@ -1364,31 +1375,31 @@
 
       function renderResults(data) {
         const matches = Array.isArray(data.matches) ? [...data.matches] : [];
+        const s = data.summary || {};
+        const ra = data.resumeAnalysis || {};
 
         // engine badge
         const badge = $('engineBadge');
-        const usedFallback = data.summary?.usedFallback !== false;
+        const usedFallback = s.usedFallback !== false;
+        const engineLabel = usedFallback
+          ? 'Local fallback'
+          : 'AI · ' + (s.aiProvider || 'configured provider');
         badge.textContent = usedFallback
           ? 'engine: local fallback'
-          : 'engine: AI · ' + (data.summary?.aiProvider || 'ai');
+          : 'engine: AI · ' + (s.aiProvider || 'ai');
         badge.dataset.ai = String(!usedFallback);
 
-        if (matches.length === 0) {
-          show('empty');
-          return;
-        }
-
         // summary strip
-        const s = data.summary || {};
-        const ra = data.resumeAnalysis || {};
         const strip = $('summaryStrip');
         strip.replaceChildren(
+          stat(engineLabel, 'Analysis engine'),
           stat(s.jobsCollected, 'Jobs collected'),
           stat(s.jobsAfterRoleFilter, 'After role filter'),
           stat(s.jobsAfterWorkModeFilter, 'After mode filter'),
           stat(s.duplicatesRemoved, 'Duplicates removed'),
           stat(s.jobsValid, 'Valid data'),
           stat(s.jobsNeedingReview, 'Needs review'),
+          stat(s.jobsInvalid, 'Invalid data'),
           stat(ra.detectedSeniority || '—', 'Detected seniority'),
           stat(
             matches.filter(
@@ -1412,11 +1423,52 @@
           )
         );
 
+        if (matches.length === 0) {
+          $('emptyMsg').textContent = emptyResultMessage(s);
+          show('empty');
+          return;
+        }
+
         $('resultsCount').textContent =
           matches.length +
           (s.userLocation ? ' jobs, location preference first' : ' jobs, best match first');
         $('cardsList').replaceChildren(...matches.map(card));
         show('results');
+      }
+
+      function emptyResultMessage(summary) {
+        const count = (value) =>
+          typeof value === 'number' && Number.isFinite(value) && value >= 0 ? value : null;
+        const collected = count(summary.jobsCollected);
+        const invalid = count(summary.jobsInvalid);
+        const duplicates = count(summary.duplicatesRemoved);
+        const valid = count(summary.jobsValid);
+        const needsReview = count(summary.jobsNeedingReview);
+        const afterRole = count(summary.jobsAfterRoleFilter);
+        const afterMode = count(summary.jobsAfterWorkModeFilter);
+
+        if (collected === 0) {
+          return 'No jobs were collected from this source. It may have no current openings or be temporarily unavailable. Try another source or retry later.';
+        }
+
+        let afterValidation = null;
+        if (collected !== null && invalid !== null && duplicates !== null) {
+          afterValidation = Math.max(0, collected - invalid - duplicates);
+        } else if (valid !== null && needsReview !== null && duplicates !== null) {
+          afterValidation = Math.max(0, valid + needsReview - duplicates);
+        }
+
+        if (collected > 0 && afterValidation === 0) {
+          return 'Jobs were collected, but none remained after data validation and duplicate removal. Download the reports to review the excluded postings, or try another source.';
+        }
+        if (afterValidation !== null && afterValidation > 0 && afterRole === 0) {
+          return 'Jobs passed validation and duplicate removal, but none matched the selected role. Try “All roles” or a broader role.';
+        }
+        if (afterRole !== null && afterRole > 0 && afterMode === 0) {
+          return 'Jobs matched the selected role, but none matched the selected work mode. Widen the work mode filter and retry.';
+        }
+
+        return 'The analysis completed, but no ranked matches were produced. Review the execution summary and downloadable reports, then adjust the filters and retry.';
       }
 
       function stat(value, label) {
@@ -1575,6 +1627,25 @@
           const ol = el('ol');
           for (const t of m.studyPlan) ol.append(el('li', { text: String(t) }));
           body.append(el('details', { class: 'study' }, el('summary', {}, 'Study plan'), ol));
+        }
+
+        if (Array.isArray(m.candidateWarnings) && m.candidateWarnings.length) {
+          const list = el('ul');
+          for (const warning of m.candidateWarnings) {
+            list.append(
+              el('li', {
+                text: `${String(warning.severity || 'low').toUpperCase()} · ${warning.field || 'compatibility'}: ${warning.message || 'Review candidate compatibility'}`,
+              })
+            );
+          }
+          body.append(
+            el(
+              'details',
+              { class: 'compatibility' },
+              el('summary', {}, `Candidate compatibility notes (${m.candidateWarnings.length})`),
+              list
+            )
+          );
         }
 
         if (Array.isArray(m.qaIssues) && m.qaIssues.length) {

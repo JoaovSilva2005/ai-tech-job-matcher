@@ -22,6 +22,13 @@ create automated tests with Playwright, validate web systems, work with Git, Scr
 Kanban, and communicate in advanced English with global stakeholders.
 `;
 
+const SENIOR_JOB_DESCRIPTION = `
+We are hiring a Senior QA Lead to own the quality strategy for a global web platform.
+The role designs Playwright automation, reviews TypeScript test architecture, mentors engineers,
+coordinates API and regression testing, defines release gates, and communicates risk clearly with
+product and engineering stakeholders. Advanced English, Git, SQL, and hands-on test leadership are required.
+`;
+
 test.describe('web API upload/download flow', () => {
   let server: Server;
   let baseUrl: string;
@@ -167,6 +174,9 @@ test.describe('web API upload/download flow', () => {
     expect(Date.now() - startedAt).toBeLessThan(10_000);
     const body = await response.json();
     expect(body.summary.source).toBe('manual');
+    expect(body.summary.resumeFile).toBeUndefined();
+    expect(body.summary.resumeFormat).toBe('txt');
+    expect(body.summary.resumeCharacterCount).toBeGreaterThan(0);
     expect(body.summary.jobsCollected).toBe(1);
     expect(body.matches).toHaveLength(1);
     expect(body.matches[0].title).toBe('Analista de QA Jr');
@@ -176,6 +186,7 @@ test.describe('web API upload/download flow', () => {
     expect(body.matches[0].dataQualityScore).toBeGreaterThan(0);
     expect(body.matches[0].validationStatus).toMatch(/valid|needs_review/);
     expect(body.matches[0].qaIssues).toEqual(expect.any(Array));
+    expect(body.matches[0].candidateWarnings).toEqual(expect.any(Array));
     expect(body.runId).toMatch(/^[0-9a-f-]{36}$/);
     expect(body.downloadUrl).toBe(`/api/runs/${body.runId}/download/excel`);
     expect(body.markdownUrl).toBe(`/api/runs/${body.runId}/download/summary`);
@@ -186,10 +197,57 @@ test.describe('web API upload/download flow', () => {
 
     const markdown = await request.get(`${baseUrl}${body.markdownUrl}`);
     expect(markdown.ok()).toBe(true);
-    expect(await markdown.text()).toContain('# Execution Summary');
+    const markdownText = await markdown.text();
+    expect(markdownText).toContain('# Execution Summary');
+    expect(markdownText).not.toContain('resume.txt');
+
+    const serializedBody = JSON.stringify(body);
+    expect(serializedBody).not.toContain(path.basename(tempRoot));
+    expect(serializedBody).not.toContain('resume.txt');
 
     const uploadedFiles = fs.readdirSync(path.join(tempRoot, 'uploads'));
     expect(uploadedFiles).toEqual([]);
+  });
+
+  test('keeps candidate seniority warnings separate from source data quality', async ({
+    request,
+  }) => {
+    const response = await request.post(`${baseUrl}/api/analyze`, {
+      multipart: {
+        resume: {
+          name: 'resume.txt',
+          mimeType: 'text/plain',
+          buffer: Buffer.from(RESUME_TEXT),
+        },
+        analysisMode: 'specific',
+        role: 'qa',
+        jobTitle: 'Senior QA Lead',
+        jobCompany: 'Venturus',
+        jobUrl: 'https://venturus.gupy.io/jobs/654321',
+        jobLocation: 'Remote - Brazil',
+        jobWorkMode: 'remote',
+        jobDescription: SENIOR_JOB_DESCRIPTION,
+      },
+    });
+
+    expect(response.ok()).toBe(true);
+    const body = await response.json();
+    expect(body.matches).toHaveLength(1);
+    expect(body.matches[0].seniority).toBe('senior');
+    expect(body.matches[0].dataQualityScore).toBe(95);
+    expect(body.matches[0].validationStatus).toBe('valid');
+    expect(body.matches[0].qaIssues).toEqual([
+      expect.objectContaining({ field: 'availability', severity: 'low' }),
+    ]);
+    expect(body.matches[0].qaIssues).not.toEqual(
+      expect.arrayContaining([expect.objectContaining({ field: 'seniority' })])
+    );
+    expect(body.matches[0].candidateWarnings).toEqual([
+      expect.objectContaining({ field: 'seniority', severity: 'medium' }),
+    ]);
+
+    const markdown = await request.get(`${baseUrl}${body.markdownUrl}`);
+    expect(await markdown.text()).toContain('## Candidate Compatibility Notes');
   });
 
   test('specific job analysis rejects placeholder or missing application URLs', async ({

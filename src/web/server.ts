@@ -4,6 +4,7 @@ import { randomUUID } from 'crypto';
 import express, { NextFunction, Request, Response } from 'express';
 import multer from 'multer';
 import type { Server } from 'http';
+import { isIP } from 'net';
 import { runPipeline } from '../index';
 import type { CliOptions, ManualJobInput, SelectableSource, WorkModeFilter } from '../cli/cliTypes';
 import { VALID_ROLES, VALID_SOURCES, SELECTABLE_SOURCES, VALID_WORK_MODES } from '../cli/cliTypes';
@@ -17,7 +18,8 @@ import { SourceUnavailableError } from '../scraper/sourceErrors';
 import { getSourceConfiguration } from '../scraper/sourceRegistry';
 import { indexHtml } from './page';
 
-const PORT = Number(process.env.PORT ?? 4180);
+const DEFAULT_HOST = '127.0.0.1';
+const DEFAULT_PORT = 4180;
 const PROJECT_ROOT = path.resolve(__dirname, '../..');
 const UPLOAD_DIR = path.join(PROJECT_ROOT, 'uploads');
 const OUTPUT_DIR = path.join(PROJECT_ROOT, 'output', 'web');
@@ -25,6 +27,8 @@ const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
 const MAX_FORM_FIELD_BYTES = 64 * 1024;
 const DEFAULT_REPORT_TTL_MS = 30 * 60 * 1000;
 const RUN_ID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+const HOSTNAME_PATTERN =
+  /^(?=.{1,253}$)(?:[a-z\d](?:[a-z\d-]{0,61}[a-z\d])?\.)*[a-z\d](?:[a-z\d-]{0,61}[a-z\d])?$/i;
 
 const DOWNLOADS = {
   excel: { filename: 'job-match-report.xlsx', downloadName: 'job-match-report.xlsx' },
@@ -88,6 +92,16 @@ export function createApp(options: WebAppOptions = {}): express.Application {
   });
 
   const app = express();
+  app.disable('x-powered-by');
+  app.use((_req: Request, res: Response, next: NextFunction) => {
+    res.set({
+      'X-Content-Type-Options': 'nosniff',
+      'Referrer-Policy': 'no-referrer',
+      'X-Frame-Options': 'DENY',
+      'Permissions-Policy': 'camera=(), geolocation=(), microphone=(), payment=(), usb=()',
+    });
+    next();
+  });
 
   app.get('/', (_req: Request, res: Response) => {
     res.type('html').send(indexHtml());
@@ -195,10 +209,42 @@ export function createApp(options: WebAppOptions = {}): express.Application {
   return app;
 }
 
-export function startServer(port = PORT): Server {
+export function resolveServerHost(value?: string): string {
+  const host = value?.trim() || DEFAULT_HOST;
+  const isValidIp = isIP(host) !== 0;
+  const isValidHostname = HOSTNAME_PATTERN.test(host) && !/^[\d.]+$/.test(host);
+
+  if (!isValidIp && !isValidHostname) {
+    throw new Error(
+      `Invalid HOST "${host}". Use an IP address or hostname without a protocol or path.`
+    );
+  }
+  return host;
+}
+
+export function resolveServerPort(value?: string | number): number {
+  const rawPort = value === undefined || value === '' ? String(DEFAULT_PORT) : String(value).trim();
+  if (!/^\d+$/.test(rawPort)) {
+    throw new Error(`Invalid PORT "${rawPort}". Use an integer between 1 and 65535.`);
+  }
+
+  const port = Number(rawPort);
+  if (!Number.isInteger(port) || port < 1 || port > 65_535) {
+    throw new Error(`Invalid PORT "${rawPort}". Use an integer between 1 and 65535.`);
+  }
+  return port;
+}
+
+export function startServer(
+  port = resolveServerPort(process.env.PORT),
+  host = resolveServerHost(process.env.HOST)
+): Server {
+  const resolvedPort = resolveServerPort(port);
+  const resolvedHost = resolveServerHost(host);
   const app = createApp();
-  return app.listen(port, () => {
-    console.log(`AI Tech Job Matcher web UI running at http://localhost:${port}`);
+  return app.listen(resolvedPort, resolvedHost, () => {
+    const urlHost = isIP(resolvedHost) === 6 ? `[${resolvedHost}]` : resolvedHost;
+    console.log(`AI Tech Job Matcher web UI running at http://${urlHost}:${resolvedPort}`);
   });
 }
 
@@ -371,6 +417,11 @@ function toClientMatch(m: JobMatchResult) {
     dataQualityScore: m.validation.dataQualityScore,
     validationStatus: m.validation.status,
     qaIssues: m.validation.issues.map(({ field, severity, message }) => ({
+      field,
+      severity,
+      message,
+    })),
+    candidateWarnings: m.candidateWarnings.map(({ field, severity, message }) => ({
       field,
       severity,
       message,

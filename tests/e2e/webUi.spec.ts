@@ -17,9 +17,9 @@ Experience creating test cases, reporting bugs and automating web regression tes
 `;
 
 const JOB_DESCRIPTION = `
-We are looking for a junior QA analyst to understand business rules, prepare and execute
-manual tests, document defects, create automated tests with Playwright, validate web systems,
-run API tests, use Git, collaborate with Scrum/Kanban teams and communicate in advanced English.
+We are looking for a Senior QA Lead to own quality strategy, prepare and execute risk-based tests,
+document defects, design Playwright automation, validate web systems, mentor engineers, run API
+tests, use Git, collaborate with Scrum/Kanban teams and communicate in advanced English.
 `;
 
 test.describe('web UI real user flow', () => {
@@ -81,7 +81,7 @@ test.describe('web UI real user flow', () => {
     await expect(page.locator('input[name="analysisMode"][value="specific"]')).toBeChecked();
     await expect(page.locator('#specificJobFields')).toBeVisible();
     await expect(page.locator('#sourceSelect')).toBeDisabled();
-    await page.fill('#jobTitleInput', 'Analista de QA Jr');
+    await page.fill('#jobTitleInput', 'Senior QA Lead');
     await page.fill('#jobCompanyInput', 'Venturus');
     await page.fill('#jobUrlInput', 'https://venturus.gupy.io/jobs/123456');
     await page.fill('#jobLocationInput', 'Remote - Brazil');
@@ -94,12 +94,14 @@ test.describe('web UI real user flow', () => {
       timeout: 20_000,
     });
     await expect(page.locator('.card')).toHaveCount(1);
-    await expect(page.getByRole('heading', { name: 'Analista de QA Jr' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Senior QA Lead' })).toBeVisible();
     await expect(page.getByText('Venturus')).toBeVisible();
     await expect(page.getByText('Matched skills')).toBeVisible();
     await expect(page.locator('.chip.match', { hasText: 'Playwright' })).toBeVisible();
     await expect(page.locator('.quality-pill')).toContainText('QA:');
     await expect(page.getByText('Data quality', { exact: true })).toBeVisible();
+    await expect(page.getByText('Candidate compatibility notes (1)')).toBeVisible();
+    await expect(page.getByText('Data quality notes (1)')).toBeVisible();
     await expect(page.locator('.apply-link')).toHaveAttribute(
       'href',
       'https://venturus.gupy.io/jobs/123456'
@@ -121,6 +123,112 @@ test.describe('web UI real user flow', () => {
     ).toEqual([]);
 
     expect(fs.readdirSync(path.join(tempRoot, 'uploads'))).toEqual([]);
+  });
+
+  test('keeps empty analyses auditable and explains where jobs were removed', async ({ page }) => {
+    let responseBody: unknown;
+    await page.route('**/api/analyze', async (route) => {
+      await route.fulfill({ json: responseBody });
+    });
+    await page.goto(baseUrl);
+    await page.setInputFiles('#resumeInput', {
+      name: 'resume.txt',
+      mimeType: 'text/plain',
+      buffer: Buffer.from(RESUME_TEXT),
+    });
+
+    const baseSummary = {
+      aiProvider: 'gemini',
+      usedFallback: false,
+      jobsCollected: 4,
+      jobsValid: 3,
+      jobsNeedingReview: 0,
+      jobsInvalid: 1,
+      duplicatesRemoved: 0,
+      jobsAfterRoleFilter: 3,
+      jobsAfterWorkModeFilter: 3,
+    };
+    const runEmptyAnalysis = async (summary: object, expectedMessage: RegExp) => {
+      responseBody = {
+        summary,
+        resumeAnalysis: { detectedSeniority: 'junior' },
+        matches: [],
+        downloadUrl: '/api/runs/empty-run/download/excel',
+        markdownUrl: '/api/runs/empty-run/download/summary',
+      };
+
+      await page.getByRole('button', { name: 'Analyze jobs' }).click();
+      await expect(page.locator('#emptyState')).toBeVisible();
+      await expect(page.locator('#emptyMsg')).toHaveText(expectedMessage);
+      await expect(page.locator('#analysisSummary')).toBeVisible();
+      await expect(page.locator('#resultsState')).toBeHidden();
+    };
+
+    await runEmptyAnalysis(
+      {
+        ...baseSummary,
+        jobsCollected: 0,
+        jobsValid: 0,
+        jobsInvalid: 0,
+        jobsAfterRoleFilter: 0,
+        jobsAfterWorkModeFilter: 0,
+      },
+      /No jobs were collected from this source/
+    );
+
+    const summary = page.locator('#analysisSummary');
+    await expect(summary.getByText('AI · gemini', { exact: true })).toBeVisible();
+    await expect(summary.getByText('Analysis engine', { exact: true })).toBeVisible();
+    await expect(summary.getByText('Jobs collected', { exact: true })).toBeVisible();
+    await expect(summary.getByRole('link', { name: 'Download Excel report' })).toHaveAttribute(
+      'href',
+      '/api/runs/empty-run/download/excel'
+    );
+    await expect(summary.getByRole('link', { name: 'Download Markdown summary' })).toHaveAttribute(
+      'href',
+      '/api/runs/empty-run/download/summary'
+    );
+
+    await runEmptyAnalysis(
+      {
+        ...baseSummary,
+        jobsValid: 1,
+        jobsInvalid: 3,
+        duplicatesRemoved: 1,
+        jobsAfterRoleFilter: 0,
+        jobsAfterWorkModeFilter: 0,
+      },
+      /none remained after data validation and duplicate removal/
+    );
+    await runEmptyAnalysis(
+      {
+        ...baseSummary,
+        duplicatesRemoved: 1,
+        jobsAfterRoleFilter: 0,
+        jobsAfterWorkModeFilter: 0,
+      },
+      /none matched the selected role/
+    );
+    await runEmptyAnalysis(
+      {
+        ...baseSummary,
+        duplicatesRemoved: 1,
+        jobsAfterRoleFilter: 2,
+        jobsAfterWorkModeFilter: 0,
+      },
+      /none matched the selected work mode/
+    );
+    await runEmptyAnalysis(
+      { aiProvider: 'gemini', usedFallback: false },
+      /no ranked matches were produced/
+    );
+
+    const accessibility = await new AxeBuilder({ page }).include('#liveRegion').analyze();
+    expect(
+      accessibility.violations.filter((violation) =>
+        ['serious', 'critical'].includes(violation.impact ?? '')
+      )
+    ).toEqual([]);
   });
 
   test('keeps the complete form inside a mobile viewport', async ({ page }) => {
